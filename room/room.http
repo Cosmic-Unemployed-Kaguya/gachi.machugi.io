@@ -1,6 +1,0 @@
-@room_HostAddress = http://localhost:5243
-
-GET {{room_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

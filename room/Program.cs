@@ -1,41 +1,25 @@
+using StackExchange.Redis;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+//redis 설정 일단 appsettings에서 설정 불러오기
+var redisSection = builder.Configuration.GetSection("Redis:ConnectionString").Value;
+//설정했는지 확인
+if (string.IsNullOrEmpty(redisSection))
+{
+    throw new Exception("you idiot, redis setting is null or empty.");
+}
+var redis = ConnectionMultiplexer.Connect($"{redisSection},abortConnect=false");
+//레디스는 연결비용이 좀 있어서 싱글톤으로 연결
+builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
+
+builder.Services.AddControllers();
+
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
-
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.MapControllers();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
