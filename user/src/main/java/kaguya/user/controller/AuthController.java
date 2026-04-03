@@ -1,8 +1,8 @@
-package kaguya.user.user.controller;
+package kaguya.user.controller;
 
-import kaguya.user.user.model.dto.response.BaseRes;
-import kaguya.user.user.model.dto.response.RegisterRes;
-import kaguya.user.user.service.UserService;
+import kaguya.user.model.dto.response.BaseRes;
+import kaguya.user.model.dto.response.RegisterRes;
+import kaguya.user.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,15 +11,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/user")
-public class UserController {
+@RequestMapping("/auth")
+public class AuthController {
 
-    private final UserService userService;
+    private final AuthService authService;
 
     @PostMapping("/register")
     public ResponseEntity<BaseRes<RegisterRes>> register() {
 
-        RegisterRes data = userService.register();
+        RegisterRes data = authService.register();
         return ResponseEntity.ok(
                 new BaseRes<>("200", "회원가입 성공", data)
         );

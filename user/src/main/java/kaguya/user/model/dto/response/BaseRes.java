@@ -1,4 +1,4 @@
-package kaguya.user.user.model.dto.response;
+package kaguya.user.model.dto.response;
 
 public record BaseRes<T> (
         String code,

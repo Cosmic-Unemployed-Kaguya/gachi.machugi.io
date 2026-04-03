@@ -1,4 +1,4 @@
-package kaguya.user.user.model.eneity;
+package kaguya.user.model.eneity;
 
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;

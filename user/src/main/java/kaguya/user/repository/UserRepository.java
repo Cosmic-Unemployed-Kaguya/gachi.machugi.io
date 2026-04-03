@@ -1,6 +1,6 @@
-package kaguya.user.user.repository;
+package kaguya.user.repository;
 
-import kaguya.user.user.model.eneity.UserEntity;
+import kaguya.user.model.eneity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

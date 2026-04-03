@@ -1,4 +1,4 @@
-package kaguya.user.user.model.vo;
+package kaguya.user.model.vo;
 
 import lombok.Getter;
 
