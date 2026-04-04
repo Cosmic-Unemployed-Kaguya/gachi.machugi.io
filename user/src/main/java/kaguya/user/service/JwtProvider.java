@@ -19,10 +19,10 @@ public class JwtProvider {
 
     /**
      * AccessToken 생성 (접근)
-     * @param id: 토큰 식별자
+     * @param username: 토큰 식별자
      */
-    public String createAccessToken(String id) {
-        return issueToken(id, EXP_ACCESS_TOKEN);
+    public String createAccessToken(String username) {
+        return issueToken(username, EXP_ACCESS_TOKEN);
     }
 
     /**
@@ -35,14 +35,14 @@ public class JwtProvider {
 
     /**
      * 토큰 생성 로직
-     * @param id: 토큰 식별자
+     * @param username: 토큰 식별자
      * @param expTime: 토큰 만료일
      */
-    private String issueToken(String id, long expTime) {
+    private String issueToken(String username, long expTime) {
         long now = System.currentTimeMillis();
 
         return Jwts.builder()
-                .subject(id)  // 식별자
+                .subject(username)  // 식별자
                 .issuedAt(new Date(now))  // 발급일
                 .expiration(new Date(now + expTime))  // 만료일
                 .signWith(getSecretKey())  // 서명

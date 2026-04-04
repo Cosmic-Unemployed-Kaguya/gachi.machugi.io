@@ -1,6 +1,11 @@
-package kaguya.user.model.eneity;
+package kaguya.user.model.entity;
 
 import jakarta.persistence.*;
+import kaguya.user.model.vo.Gender;
+import kaguya.user.model.vo.Role;
+import kaguya.user.model.vo.Status;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -8,8 +13,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Entity
+@Getter
 @NoArgsConstructor
-@Table(name = "user")
+@Table(name = "users")
 public class UserEntity {
 
     @Id
@@ -18,7 +25,7 @@ public class UserEntity {
     private Long userIdx;
 
     @Column(name = "id", nullable = false)
-    private String id;
+    private String username;
 
     @Column(nullable = false)
     private String password;
@@ -34,24 +41,44 @@ public class UserEntity {
     private String phone;
 
     @Enumerated(EnumType.STRING)
-    private String gender;
+    private Gender gender;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private String role;
+    private Role role = Role.USER;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private String status;
+    private Status status = Status.ACTIVE;
 
-    @Column(name = "withdrawal_date", nullable = false)
+    @Column(name = "withdrawal_date")
     private LocalDateTime withdrawalDate;
 
     @CreationTimestamp
-    @Column(name = "join_date", nullable = false)
+    @Column(name = "join_date", nullable = false, updatable = false)
     private LocalDateTime joinDate;
 
     @UpdateTimestamp
     @Column(name = "update_date", nullable = false)
     private LocalDateTime updateDate;
+
+    @Builder
+    public UserEntity(String username, String password, String nickname, String email, String name, LocalDate birth, String phone, Gender gender) {
+        this.username = username;
+        this.password = password;
+        this.nickname = nickname;
+        this.email = email;
+        this.name = name;
+        this.birth = birth;
+        this.phone = phone;
+        this.gender = gender;
+    }
+
+    public void changeRole(Role role) {
+        this.role = role;
+    }
+
+    public void changeStatus(Status status) {
+        this.status = status;
+    }
 }
