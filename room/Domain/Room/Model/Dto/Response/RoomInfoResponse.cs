@@ -2,7 +2,7 @@ namespace Room.Model.Dto.Response;
 
 public record RoomInfoResponse(
     long Idx,
-    long HostIdx,
+    long hostIdx,
     string name,
     int maxOccupancy,
     long timeLimit,

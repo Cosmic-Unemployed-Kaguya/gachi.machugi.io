@@ -54,17 +54,18 @@ public class RoomServiceImpl : RoomService
         }
         return room.ToSetInfoResponse();
     }
-    //방 정보 수정, 일단 CreateRoomRequest로 수정하고 있긴 한데 나중에 바꿀 듯
-    public async Task<RoomInfoResponse> updateRoomInfo(long roomIdx, CreateRoomRequest request)
+    //방 정보 수정
+    public async Task<RoomInfoResponse> updateRoomInfo(long roomIdx, UpdateRoomRequest request)
     {
-        ERoom? room = request.ToEntity();
-        room.Idx = roomIdx;
-        room = await _roomRedis.UpdateRoomByIdxAsync(room);
-        if (room == null)
+        ERoom? updatedroom = await _roomRedis.UpdateRoomByIdxAsync(roomIdx, room =>
+        {
+            room.UpdateInfo(request);
+        });
+        if (updatedroom == null)
         {
             throw new Exception("room is not found");
         }
-        return room.ToInfoResponse();
+        return updatedroom.ToInfoResponse();
     }
     //플레이어 추가
     public Task<bool> addPlayerToRoom(long roomIdx, long playerIdx)

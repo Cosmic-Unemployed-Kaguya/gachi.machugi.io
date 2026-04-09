@@ -13,7 +13,7 @@ public interface RoomService
     public Task<RoomResponse> findRoom(long roomIdx);
     public Task<RoomInfoResponse> findRoomInfo(long roomIdx);
     public Task<RoomSetInfoResponse> findSetInfo(long roomIdx);
-    public Task<RoomInfoResponse> updateRoomInfo(long roomIdx, CreateRoomRequest request);
+    public Task<RoomInfoResponse> updateRoomInfo(long roomIdx, UpdateRoomRequest request);
     public Task<bool> addPlayerToRoom(long roomIdx, long playerIdx);
     public Task<bool> removePlayerToRoom(long roomIdx, long playerIdx);
     public Task<bool> deleteRoom(long roomIdx);

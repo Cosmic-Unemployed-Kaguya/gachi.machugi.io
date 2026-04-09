@@ -1,6 +1,7 @@
 using StackExchange.Redis;
 using Room.Model.Entity;
 using Common;
+using Room.Util;
 namespace Room.Repository;
 
 public class RoomRedis
@@ -22,16 +23,7 @@ public class RoomRedis
         //key 생성
         string roomKey = GetRoomKey(room.Idx);
         //hash로 넣을 거 정리해서 배열로 생성
-        var roomHashArr = new HashEntry[]
-        {
-            new("name", room.Name),
-            new("host_idx", room.HostIdx),
-            new("max_occupancy", room.MaxOccupancy),
-            new("time_limit", room.TimeLimit),
-            new("is_public", room.IsPublic.ToString().ToLower()),
-            new("password", room.Password ?? ""),
-            new("quiz_idx", room.QuizIdx),
-        };
+        var roomHashArr = room.ToHashArr();
         _ = tran.HashSetAsync(roomKey, roomHashArr);
         return roomKey;
     }
@@ -84,7 +76,7 @@ public class RoomRedis
         //받아온 식별자를 객체에 반영
         room.Idx = newIdx;
 
-        //마법의 함수 + 넣은 거 다시 반환 (확인 차원)
+        //마법의 저장 함수 + 넣은 거 다시 반환 (확인 차원)
         return await AllInOneAsync(room, true, true) ? await FindRoomByIdxAsync(newIdx) : null;
     }
     //조회 메소드
@@ -102,30 +94,28 @@ public class RoomRedis
         //set 정보 가져오기
         var playerIdArr = await _db.SetMembersAsync(playerSetKey);
         //가져온 거 합쳐서 서비스에서 사용하는 room 객체 생성
-        //마제타라 마제타라 나니 이로 나노카나
-        ERoom room = new(
-            idx,
-            long.Parse(roomHashArr.GetValue("host_idx", "0")),
-            roomHashArr.GetValue("name", ""),
-            int.Parse(roomHashArr.GetValue("max_occupancy", "1")),
-            long.Parse(roomHashArr.GetValue("time_limit", "600")),
-            bool.Parse(roomHashArr.GetValue("is_public", "true")),
-            roomHashArr.GetValue("password", ""),
-            long.Parse(roomHashArr.GetValue("quiz_idx", "0"))
-        );
-        if (playerIdArr != null)
-        {
-            room.PlayerSet = playerIdArr
-            .Where(id => !id.IsNull)
-            .Select(id => (long)id).ToHashSet();
-        }
-        //room!
+        //마제타라 마제타라 나니 이로 나노카나 room!
+        ERoom room = roomHashArr.ToEntity(idx, playerIdArr);
         return room;
     }
-    //수정 메소드 room을 받아서 hash만 변경
-    public async Task<ERoom?> UpdateRoomByIdxAsync(ERoom room)
+    /*
+    수정 메소드 room을 받아서 hash만 변경, 
+    Action<ERoom>이거 쓰면 람다식 넣을 수 있음
+    예를 들어 내가 여기서 Action<ERoom>이렇게 선언해 두면 이걸 쓰는 입장에서는 
+    UpdateRoomByIdxAsync(idx, i => ...) 같이 변수를 꺼내면 i의 자료형은 ERoom인거임
+    즉 입력값이 ERoom이고 반환값은 void인 간단한 람다식을 받게해주는 거
+    */
+    public async Task<ERoom?> UpdateRoomByIdxAsync(long idx, Action<ERoom> updateAction)
     {
-        //수정
+        //일단 찾아와
+        ERoom? room = await FindRoomByIdxAsync(idx);
+        if (room == null)
+        {
+            return null;
+        }
+        //받은 걸로 수정해, 던져주는 ERoom은 아까 만든 room을 쓴다는 뜻
+        updateAction(room);
+        //그리고 저장해
         return await AllInOneAsync(room, true, false, isUpdate: true) ? await FindRoomByIdxAsync(room.Idx) : null;
     }
     //삭제 메소드(true 성공, false 실패)
@@ -141,6 +131,7 @@ public class RoomRedis
         _ = tran.KeyDeleteAsync(playerSetKey);
         return await tran.ExecuteAsync();
     }
+    //아직 최대인원 제한 로직은 구현되지 않음
     //방에 플레이어 추가
     public async Task<bool> AddPlayerToRoomAsync(long roomIdx, long playerIdx)
     {
