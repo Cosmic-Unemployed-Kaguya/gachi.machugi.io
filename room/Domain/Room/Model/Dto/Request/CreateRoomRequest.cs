@@ -9,13 +9,13 @@ public record CreateRoomRequest
     [Required]
     int maxOccupancy,  //인원수
     [Required]
-    long time,          //시간
+    long timeLimit,          //제한시간
     [Required]
     bool isPublic,     //공개여부
     string? password,   //방 비밀번호
     [Required]
     long quizIdx,      //방에서 사용하는 퀴즈의 idx값
     [Required]
-    long hostId
+    long hostIdx //만든사람
 )
 { }

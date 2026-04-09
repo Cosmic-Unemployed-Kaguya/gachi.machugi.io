@@ -9,6 +9,11 @@ public class RoomRedis
     private readonly TimeSpan TTL = TimeSpan.FromMinutes(1);
     //이거 레디스 db, 편의성을 위해서 만드는 변수, 성능 거의 하락 없음
     private readonly IDatabase _db;
+    //생성자 + 의존성 주입
+    public RoomRedis(IConnectionMultiplexer redis)
+    {
+        _db = redis.GetDatabase();
+    }
     private string GetRoomKey(long idx) => $"room:{idx}";
     private string GetPlayerSetKey(long idx) => $"room:{idx}:players";
     //room의 hash를 넣는 걸 '트랜젝션 걸어주는' 함수
@@ -20,8 +25,9 @@ public class RoomRedis
         var roomHashArr = new HashEntry[]
         {
             new("name", room.Name),
+            new("host_idx", room.HostIdx),
             new("max_occupancy", room.MaxOccupancy),
-            new("time", room.Time),
+            new("time_limit", room.TimeLimit),
             new("is_public", room.IsPublic.ToString().ToLower()),
             new("password", room.Password ?? ""),
             new("quiz_idx", room.QuizIdx),
@@ -70,11 +76,6 @@ public class RoomRedis
         //이제 넣기
         return await tran.ExecuteAsync();
     }
-    //생성자 + 의존성 주입
-    public RoomRedis(IConnectionMultiplexer redis)
-    {
-        _db = redis.GetDatabase();
-    }
     //저장 메소드
     public async Task<ERoom?> CreateRoomAsync(ERoom room)
     {
@@ -104,9 +105,10 @@ public class RoomRedis
         //마제타라 마제타라 나니 이로 나노카나
         ERoom room = new(
             idx,
+            long.Parse(roomHashArr.GetValue("host_idx", "0")),
             roomHashArr.GetValue("name", ""),
             int.Parse(roomHashArr.GetValue("max_occupancy", "1")),
-            long.Parse(roomHashArr.GetValue("time", "600")),
+            long.Parse(roomHashArr.GetValue("time_limit", "600")),
             bool.Parse(roomHashArr.GetValue("is_public", "true")),
             roomHashArr.GetValue("password", ""),
             long.Parse(roomHashArr.GetValue("quiz_idx", "0"))

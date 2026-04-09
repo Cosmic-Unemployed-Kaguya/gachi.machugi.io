@@ -3,9 +3,10 @@ namespace Room.Model.Entity;
 public class ERoom
 {
     public long Idx { get; set; }// 식별자
+    public long HostIdx { get; set; }
     public string Name { get; set; } = string.Empty;//이름
     public int MaxOccupancy { get; set; } = 1;//인원수
-    public long Time { get; set; } = 600;//시간
+    public long TimeLimit { get; set; } = 600;//시간
     public bool IsPublic { get; set; } = true;//공개여부
     public string? Password { get; set; }//방 비밀번호
     public long QuizIdx { get; set; }//방에서 사용하는 퀴즈의 idx값
@@ -14,20 +15,23 @@ public class ERoom
 
     public ERoom(
         long idx,
+        long hostIdx,
         string name,
         int maxOccupancy,
-        long time,
+        long timeLimit,
         bool isPublic,
         string? password,
         long quizIdx
     )
     {
         Idx = idx;
+        HostIdx = hostIdx;
         Name = name;
         MaxOccupancy = maxOccupancy;
-        Time = time;
+        TimeLimit = timeLimit;
         IsPublic = isPublic;
         Password = password;
         QuizIdx = quizIdx;
+        PlayerSet.Add(hostIdx);
     }
 }
