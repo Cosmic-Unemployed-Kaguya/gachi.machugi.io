@@ -9,12 +9,12 @@ namespace Room.Service;
 */
 public interface RoomService
 {
-    public Task<RoomInfoResponse> createRoom(CreateRoomRequest request);
-    public Task<RoomResponse> findRoom(long roomIdx);
-    public Task<RoomInfoResponse> findRoomInfo(long roomIdx);
-    public Task<RoomSetInfoResponse> findSetInfo(long roomIdx);
-    public Task<RoomInfoResponse> updateRoomInfo(long roomIdx, UpdateRoomRequest request);
-    public Task<bool> addPlayerToRoom(long roomIdx, long playerIdx);
-    public Task<bool> removePlayerToRoom(long roomIdx, long playerIdx);
-    public Task<bool> deleteRoom(long roomIdx);
+    public Task<RoomInfoResponse> CreateRoom(CreateRoomRequest request);
+    public Task<RoomResponse> FindRoom(long roomIdx);
+    public Task<RoomInfoResponse> FindRoomInfo(long roomIdx);
+    public Task<RoomSetInfoResponse> FindSetInfo(long roomIdx);
+    public Task<RoomInfoResponse> UpdateRoomInfo(long roomIdx, UpdateRoomRequest request);
+    public Task<bool> AddPlayerToRoom(long roomIdx, UpdateSetRequest request);
+    public Task<bool> RemovePlayerFromRoom(long roomIdx, UpdateSetRequest request);
+    public Task<bool> DeleteRoom(long roomIdx);
 }

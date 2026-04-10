@@ -1,6 +1,5 @@
 using StackExchange.Redis;
 using Room.Model.Entity;
-using Common;
 using Room.Util;
 namespace Room.Repository;
 
