@@ -1,4 +1,4 @@
-package kaguya.user.service;
+package kaguya.domain.user.service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

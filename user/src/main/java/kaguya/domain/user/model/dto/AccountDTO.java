@@ -1,4 +1,4 @@
-package kaguya.user.model.dto;
+package kaguya.domain.user.model.dto;
 
 public record AccountDTO (
         String username,

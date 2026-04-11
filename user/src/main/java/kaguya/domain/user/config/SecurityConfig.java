@@ -1,4 +1,4 @@
-package kaguya.user.config;
+package kaguya.domain.user.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

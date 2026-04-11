@@ -1,4 +1,4 @@
-package kaguya.user.model.dto;
+package kaguya.domain.user.model.dto;
 
 import java.time.LocalDate;
 

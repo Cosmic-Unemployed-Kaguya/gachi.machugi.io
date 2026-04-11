@@ -1,4 +1,4 @@
-package kaguya.user.model.vo;
+package kaguya.domain.user.model.enums;
 
 import lombok.Getter;
 
