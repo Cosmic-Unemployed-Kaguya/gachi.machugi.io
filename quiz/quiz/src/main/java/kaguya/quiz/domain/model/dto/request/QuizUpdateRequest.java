@@ -5,11 +5,10 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class QuizCreateRequest {
+public class QuizUpdateRequest {
 
     private String title;
     private String description;
     private String thumbnail;
     private String category;
-    private Long creatorId;
 }

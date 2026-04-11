@@ -61,4 +61,18 @@ public class QuizEntity {
         this.category = category;
         this.creatorId = creatorId;
     }
+
+    // 퀴즈 수정 메서드
+    public void updateQuiz(
+            String title,
+            String description,
+            String thumbnail,
+            String category
+    ) {
+        this.title = title;
+        this.description = description;
+        this.thumbnail = thumbnail;
+        this.category = category;
+        this.updatedDate = OffsetDateTime.now();
+    }
 }

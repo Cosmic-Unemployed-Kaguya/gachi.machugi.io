@@ -1,6 +1,7 @@
 package kaguya.quiz.domain.mapper;
 
 import kaguya.quiz.domain.model.dto.request.QuizCreateRequest;
+import kaguya.quiz.domain.model.dto.request.QuizUpdateRequest;
 import kaguya.quiz.domain.model.entity.QuizEntity;
 import org.springframework.stereotype.Component;
 
@@ -15,5 +16,14 @@ public class QuizMapper {
                 .category(request.getCategory())
                 .creatorId(request.getCreatorId())
                 .build();
+    }
+
+    public void updateEntity(QuizEntity quizEntity, QuizUpdateRequest request) {
+        quizEntity.updateQuiz(
+                request.getTitle(),
+                request.getDescription(),
+                request.getThumbnail(),
+                request.getCategory()
+        );
     }
 }
