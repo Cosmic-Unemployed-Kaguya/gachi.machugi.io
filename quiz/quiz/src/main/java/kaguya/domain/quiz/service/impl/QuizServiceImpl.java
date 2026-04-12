@@ -1,18 +1,18 @@
-package kaguya.quiz.domain.service.impl;
+package kaguya.domain.quiz.service.impl;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
-import kaguya.quiz.domain.repository.QuizRepository;
+import kaguya.domain.quiz.mapper.QuizMapper;
+import kaguya.domain.quiz.model.dto.request.QuizCreateRequest;
+import kaguya.domain.quiz.model.dto.request.QuizUpdateRequest;
+import kaguya.domain.quiz.model.dto.response.QuizResponse;
+import kaguya.domain.quiz.model.entity.QuizEntity;
+import kaguya.domain.quiz.repository.QuizRepository;
+import kaguya.domain.quiz.service.QuizService;
 import lombok.RequiredArgsConstructor;
-import kaguya.quiz.domain.mapper.QuizMapper;
-import kaguya.quiz.domain.model.dto.request.QuizCreateRequest;
-import kaguya.quiz.domain.model.dto.request.QuizUpdateRequest;
-import kaguya.quiz.domain.model.dto.response.QuizResponse;
-import kaguya.quiz.domain.model.entity.QuizEntity;
-import kaguya.quiz.domain.service.QuizService;
 
 @Service
 @RequiredArgsConstructor

@@ -1,4 +1,4 @@
-package kaguya.quiz.domain.model.dto.request;
+package kaguya.domain.quiz.model.dto.request;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

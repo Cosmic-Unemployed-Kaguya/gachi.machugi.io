@@ -1,4 +1,4 @@
-package kaguya.quiz.domain.model.entity;
+package kaguya.domain.quiz.model.entity;
 
 import java.time.OffsetDateTime;
 import jakarta.persistence.*;

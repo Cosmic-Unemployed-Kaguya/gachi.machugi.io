@@ -1,4 +1,4 @@
-package kaguya.quiz.domain.controller;
+package kaguya.domain.quiz.controller;
 
 import java.util.List;
 
@@ -9,15 +9,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import kaguya.quiz.domain.service.QuizService;
-import kaguya.quiz.domain.model.dto.request.QuizCreateRequest;
-import kaguya.quiz.domain.model.dto.request.QuizUpdateRequest;
-import kaguya.quiz.domain.model.dto.response.QuizResponse;
+import kaguya.domain.quiz.model.dto.request.QuizCreateRequest;
+import kaguya.domain.quiz.model.dto.request.QuizUpdateRequest;
+import kaguya.domain.quiz.model.dto.response.QuizResponse;
+import kaguya.domain.quiz.service.QuizService;
 import lombok.RequiredArgsConstructor;
 
 

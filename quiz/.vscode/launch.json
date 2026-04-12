@@ -2,13 +2,21 @@
     "configurations": [
         {
             "type": "java",
+            "name": "QuizApplication",
+            "request": "launch",
+            "mainClass": "kaguya.domain.quiz.QuizApplication",
+            "projectName": "quiz"
+        },
+        {
+            "type": "java",
             "name": "Spring Boot-QuizApplication<quiz>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "mainClass": "kaguya.quiz.QuizApplication",
             "projectName": "quiz",
             "args": "",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": " -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=57766 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Djava.rmi.server.hostname=localhost -Dspring.application.admin.enabled=true -Dspring.boot.project.name=quiz"
         }
     ]
 }

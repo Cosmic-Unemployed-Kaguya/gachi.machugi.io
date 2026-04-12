@@ -1,10 +1,11 @@
-package kaguya.quiz.domain.model.dto.response;
+package kaguya.domain.quiz.model.dto.response;
 
-import kaguya.quiz.domain.model.entity.QuizEntity;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
+
+import kaguya.domain.quiz.model.entity.QuizEntity;
 
 @Getter
 @Builder

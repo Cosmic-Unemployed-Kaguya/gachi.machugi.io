@@ -1,9 +1,10 @@
-package kaguya.quiz.domain.mapper;
+package kaguya.domain.quiz.mapper;
 
-import kaguya.quiz.domain.model.dto.request.QuizCreateRequest;
-import kaguya.quiz.domain.model.dto.request.QuizUpdateRequest;
-import kaguya.quiz.domain.model.entity.QuizEntity;
 import org.springframework.stereotype.Component;
+
+import kaguya.domain.quiz.model.dto.request.QuizCreateRequest;
+import kaguya.domain.quiz.model.dto.request.QuizUpdateRequest;
+import kaguya.domain.quiz.model.entity.QuizEntity;
 
 @Component
 public class QuizMapper {
