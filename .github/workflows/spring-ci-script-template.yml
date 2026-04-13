@@ -1,7 +1,7 @@
 #이거 복사해서 써먹어야 함, {} 지우고 쓰셈
 #파일이름은 아래처럼
-#{사용하는 프레임워크}-{서비스이름}-ci-script.
-#예)spring-user-ci-script.yml
+#{사용하는 프레임워크}-{서비스이름}-ci-trigger.yml
+#예)spring-user-ci-trigger.yml
 name: {서비스 이름} CI 스크립트
 
 on:
