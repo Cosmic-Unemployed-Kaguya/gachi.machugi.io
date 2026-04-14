@@ -2,6 +2,11 @@ spring:
   application:
     name: user
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
 custom:
   jwt:
     # 로컬 환경에서의 테스트 할 키 (유출되도 상관 X)

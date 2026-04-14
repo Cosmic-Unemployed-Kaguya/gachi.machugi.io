@@ -26,6 +26,9 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * 비밀번호 암호화 (BCrypt - 단방향)
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

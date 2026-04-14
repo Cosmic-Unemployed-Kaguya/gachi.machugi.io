@@ -1,5 +1,6 @@
 package kaguya.domain.user.service;
 
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,8 +35,37 @@ public class JwtProvider {
     }
 
     /**
+     * 토큰이 유효한지 검증
+     * @param token: RefreshToken
+     */
+    public boolean validationToken(String token) {
+        try {
+            Jwts.parser()
+                    .verifyWith(getSecretKey())
+                    .build()
+                    .parseSignedClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 토큰으로 아이디 조회
+     * @param token: RefreshToken
+     */
+    public String getUsername(String token) {
+        return Jwts.parser()
+                .verifyWith(getSecretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject(); // 생성할 때 Subject()로 넣었던 값 (username)
+    }
+
+    /**
      * 토큰 생성 로직
-     * @param username: 토큰 식별자
+     * @param username: 토큰 식별자 (id)
      * @param expTime: 토큰 만료일
      */
     private String issueToken(String username, long expTime) {
