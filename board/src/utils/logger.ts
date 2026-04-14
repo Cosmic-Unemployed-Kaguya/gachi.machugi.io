@@ -20,8 +20,7 @@ if (config.profile !== "dev"){
   )
 }
 
-
-export const logger = winston.createLogger({
+const logger = winston.createLogger({
     level: config.logLevel,
     levels: winston.config.npm.levels,
     format: winston.format.combine(
@@ -35,3 +34,5 @@ export const logger = winston.createLogger({
     transports
 
 });
+
+export default logger;
