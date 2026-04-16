@@ -24,7 +24,8 @@
     "typedi": "^0.10.0",
     "typeorm": "^0.3.28",
     "typescript": "^6.0.2",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "zod": "^4.3.6"
   },
   "overrides": {
     "lodash": "^4.18.0"
