@@ -18,6 +18,7 @@
     "celebrate": "^15.0.3",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
+    "http-status": "^2.1.0",
     "pg": "^8.20.0",
     "pg-query-stream": "^4.14.0",
     "reflect-metadata": "^0.2.2",
