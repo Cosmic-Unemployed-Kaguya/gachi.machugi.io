@@ -1,16 +1,13 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, Timestamp, UpdateDateColumn } from "typeorm";
-import { BoardType } from "../vo/boardType";
-import { BoardState } from "../vo/boardState";
+import { BoardType } from "../enum/boardType";
+import { BoardState } from "../enum/boardState";
 import { DefaultEntity } from "./defaultEntity";
 
 @Entity('board')
 export class BoardEntity extends DefaultEntity{
 
-    
-
     /**
      * idx , createdAt, updatedAt, deletedAt 포함
-     *
      */
 
     @Column({
@@ -20,13 +17,25 @@ export class BoardEntity extends DefaultEntity{
     title : string;
 
     @Column({
+        name: "content",
+        nullable : false
+    })
+    content : string;
+
+    @Column({
+        name: "user_idx",
+        nullable : false,
+    })   
+    userIdx: number;
+
+    @Column({
         name: "type",
         type: "enum",
         enum : BoardType,
         nullable : false,
         default: BoardType.COMMUNITY,
     })
-    type: string;
+    type: BoardType;
 
     @Column({
         name: "state",
@@ -35,7 +44,7 @@ export class BoardEntity extends DefaultEntity{
         nullable : false,
         default: BoardState.PUBLIC,
     })   
-    state: string;
+    state: BoardState;
 
     @Column({
         name: "is_pinned",
@@ -49,5 +58,18 @@ export class BoardEntity extends DefaultEntity{
     })
     viewCount: number;
 
+    
 
+
+    public update(
+        title: string,
+        state : BoardState,
+        isPinned : boolean,
+        content : string,
+    ){
+        this.title = title;
+        this.state = state;
+        this.isPinned = isPinned; 
+        this.content = content;
+    }
 }

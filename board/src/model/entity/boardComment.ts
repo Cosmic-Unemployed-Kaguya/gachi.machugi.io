@@ -1,16 +1,15 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Timestamp, TreeParent, UpdateDateColumn } from "typeorm";
 import { BoardEntity } from './boardEntity';
 import { DefaultEntity } from "./defaultEntity";
-import { BoardState } from "../vo/boardState";
+import { BoardState } from "../enum/boardState";
+import { nullable } from './../../../node_modules/zod/v4/classic/schemas';
 
-@Entity('board_detail')
-export class BoardDetailEntity extends DefaultEntity{
+@Entity('board_comment')
+export class BoardCommentEntity extends DefaultEntity{
 
     /**
      * idx , createdAt, updatedAt, deletedAt 포함
-     *
      */
-
 
     @Column({
         name: "content",
@@ -39,6 +38,6 @@ export class BoardDetailEntity extends DefaultEntity{
 
     @TreeParent()
     @JoinColumn({name: "parent_idx"})
-    parent: BoardDetailEntity;
+    parent: BoardCommentEntity;
 
 }
