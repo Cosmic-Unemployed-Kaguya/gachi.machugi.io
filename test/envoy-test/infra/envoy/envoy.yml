@@ -1,0 +1,97 @@
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 8080 }
+    
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+          
+          route_config:
+            name: local_route
+            virtual_hosts:
+
+            # 유저(User/Auth) 도메인
+            - name: user_service_host
+              domains: ["user.example.com"]
+              routes:
+              - match: { prefix: "/" }   
+                route: { cluster: user_cluster }
+
+            # 퀴즈(Quiz) 도메인
+            - name: quiz_service_host
+              domains: ["quiz.example.com"]
+              routes:
+              - match: { prefix: "/" }
+                route: { cluster: quiz_cluster }
+
+            # 게시판(Board) 도메인
+            - name: board_service_host
+              domains: ["board.example.com"]
+              routes:
+              - match: { prefix: "/" }
+                route: { cluster: board_cluster }
+
+
+          http_filters:
+          - name: envoy.filters.http.grpc_json_transcoder
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder
+              proto_descriptor: "/tmp/descriptor.pb"
+              services: 
+                - "com.example.grpc.user.UserService"
+                - "com.example.grpc.quiz.QuizService"
+                - "com.example.grpc.board.BoardService"
+              print_options:
+                add_whitespace: true
+                always_print_primitive_fields: true
+          
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+
+  clusters:
+
+  # 유저(User) 클러스터
+  - name: user_cluster
+    connect_timeout: 0.25s 
+    type: LOGICAL_DNS
+    http2_protocol_options: {} 
+    load_assignment:
+      cluster_name: user_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address: { address: host.docker.internal, port_value: 9091 }
+
+  # 퀴즈(Quiz) 클러스터
+  - name: quiz_cluster
+    connect_timeout: 0.25s
+    type: LOGICAL_DNS
+    http2_protocol_options: {}
+    load_assignment:
+      cluster_name: quiz_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address: { address: host.docker.internal, port_value: 9092 }
+
+  # 게시판(Board) 클러스터
+  - name: board_cluster
+    connect_timeout: 0.25s
+    type: LOGICAL_DNS
+    http2_protocol_options: {}
+    load_assignment:
+      cluster_name: board_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address: { address: host.docker.internal, port_value: 9093 }

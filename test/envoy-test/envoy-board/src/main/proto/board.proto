@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package com.example.grpc.board;
+
+/**
+    이거 안잡히면 아래 작업을 해야됨
+    1. 최상위 프로젝트 폴더(root 폴더)에 third_party.google.api 폴더 만들고 안에 annotations.proto, http.proto 파일 넣기
+      - annotations.proto ( https://github.com/googleapis/googleapis/blob/master/google/api/annotations.proto )
+      - http.proto ( https://github.com/envoyproxy/data-plane-api/blob/main/envoy/type/v3/http.proto )
+    2. 자바의 file -> setting -> Languages & Frameworks -> Protocol Buffers -> Import Paths -> +버튼 눌러서 third_party 폴더 위치 잡기
+ */
+import "google/api/annotations.proto";
+
+option java_multiple_files = true;
+option java_package = "com.example.grpc.board";
+
+service BoardService {
+  rpc GetPost (GetPostRequest) returns (GetPostResponse) {
+    option (google.api.http) = {
+      get: "/board/{post_id}"
+    };
+  }
+}
+
+message GetPostRequest {
+  string post_id = 1;
+}
+
+message GetPostResponse {
+  string post_id = 1;
+  string title = 2;
+  string content = 3;
+}

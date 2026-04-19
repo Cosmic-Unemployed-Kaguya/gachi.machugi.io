@@ -1,0 +1,12 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: envoy-quiz
+
+grpc:
+  server:
+    port: 9092
+    security:
+      enabled: false  # 보안 기능을 명시적으로 끕니다.

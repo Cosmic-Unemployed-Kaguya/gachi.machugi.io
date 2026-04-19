@@ -1,0 +1,60 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.13'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.google.protobuf' version '0.9.4' // Protobuf 플러그인
+}
+
+group = 'test'
+version = '0.0.1-SNAPSHOT'
+description = 'envoy-user'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testCompileOnly 'org.projectlombok:lombok'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    /***
+     * gRPC 설정
+     ***/
+    // server, client 모두
+    implementation("net.devh:grpc-spring-boot-starter:3.1.0.RELEASE")
+
+    // server 만
+    implementation("net.devh:grpc-server-spring-boot-starter:3.1.0.RELEASE")
+
+    implementation 'io.grpc:grpc-stub:1.63.0'
+    implementation 'io.grpc:grpc-protobuf:1.63.0'
+    implementation 'com.google.protobuf:protobuf-java:4.28.2'
+
+    // proto 빌드 중 javax의 Generator 어노테이션을 사용함
+    compileOnly 'javax.annotation:javax.annotation-api:1.3.2'
+}
+
+protobuf {
+    protoc { artifact = 'com.google.protobuf:protoc:3.25.3' }
+    plugins {
+        grpc { artifact = 'io.grpc:protoc-gen-grpc-java:1.63.0' }
+    }
+    generateProtoTasks {
+        all()*.plugins { grpc {} }
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
