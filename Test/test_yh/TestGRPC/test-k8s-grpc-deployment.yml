@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+ 
+kind: Deployment
+
+metadata:
+  name: service-b
+  labels:
+    app: service-b
+
+spec:
+
+  selector:
+    matchLabels:
+      app: service-b
+
+  replicas: 2
+
+  template:
+    
+    metadata:
+      labels:
+        app: service-b
+
+    spec:
+      containers:
+        - name: service-b
+          image: test-service-b:1.1
+
+          ports:
+            - containerPort: 8080
+
+---
+apiVersion: apps/v1
+ 
+kind: Deployment
+
+metadata:
+  name: service-a
+  labels:
+    app: service-a
+
+spec:
+
+  selector:
+    matchLabels:
+      app: service-a
+
+  replicas: 1
+
+  template:
+    
+    metadata:
+      labels:
+        app: service-a
+
+    spec:
+      containers:
+        - name: service-a
+          image: test-service-a:1.2
+
+          ports:
+            - containerPort: 8081

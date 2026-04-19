@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: service-a-route
+          uri: http://service-a:8081 # K8s Service A 주소
+          predicates:
+            - Path=/test/**
+
+        - id: node-js
+          uri: http://node-a:3000 # K8s node-a 주소
+          predicates:
+            - Path=/api/**
+server:
+  port: 8080

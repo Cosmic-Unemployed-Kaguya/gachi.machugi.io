@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: TestGRPC1
+
+server:
+  port: 8081
+
+grpc:
+  client:
+    service-b: # gprc client에서 명시한 이름과 동일
+      # k8s 서비스 이름
+      address: 'static://service-b:9090'
+      negotiationType: plaintext # 로컬 테스트용 TLS 암호화 해제
