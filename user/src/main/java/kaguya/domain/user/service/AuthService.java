@@ -2,14 +2,16 @@ package kaguya.domain.user.service;
 
 import kaguya.domain.user.model.dto.request.LoginReq;
 import kaguya.domain.user.model.dto.request.RegisterReq;
-import kaguya.domain.user.model.dto.response.LoginRes;
+import kaguya.domain.user.model.dto.response.TokenRes;
 import kaguya.domain.user.model.entity.UserEntity;
 import kaguya.domain.user.repository.RedisRepository;
 import kaguya.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.concurrent.TimeUnit;
 
@@ -69,7 +71,7 @@ public class AuthService {
      * @param loginData: Id, Password
      */
     @Transactional(readOnly = true)
-    public LoginRes login(LoginReq loginData) {
+    public TokenRes login(LoginReq loginData) {
 
         // 아이디 존재하는지 확인
         UserEntity entity = userRepository.findByUsername(loginData.username())
@@ -88,7 +90,7 @@ public class AuthService {
         redisRepository.save("RT:" + entity.getUsername(), refreshToken, 14, TimeUnit.DAYS);
 
         // todo. mapper 도입
-        return new LoginRes(accessToken, refreshToken, entity.getNickname());
+        return new TokenRes(accessToken, refreshToken, entity.getNickname());
     }
 
     /**
@@ -101,7 +103,7 @@ public class AuthService {
 
         // 유효한 토큰인지 검증
         if(!jwtProvider.validationToken(refreshToken)) {
-            throw new IllegalArgumentException("유효하지 않는 갱신 토큰");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않는 접근 토큰");
         }
 
         // Refresh Token으로 id 조회
@@ -110,5 +112,32 @@ public class AuthService {
         // Redis
         redisRepository.delete("RT:" + username);  // Refresh 토큰 삭제
         redisRepository.save("BL:" + accessToken, "logout", 10, TimeUnit.MINUTES);  // Access 토큰 블랙리스트 등록
+    }
+
+    public void checkToken(String accessToken) {
+
+        if(!jwtProvider.validationToken(accessToken)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않는 접근 토큰");
+        }
+
+        if(redisRepository.exist("BL:" + accessToken)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않는 접근 토큰 (해킹 의심)");
+        }
+    }
+
+    public String renewToken(String refreshToken) {
+
+        if(!jwtProvider.validationToken(refreshToken)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않는 갱신 토큰");
+        }
+
+        String username = jwtProvider.getUsername(refreshToken);
+
+        String savedRefreshToken = redisRepository.get("RT:" + username);
+        if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "이미 로그아웃되었거나 유효하지 않은 갱신 토큰");
+        }
+
+        return jwtProvider.createAccessToken(username);
     }
 }

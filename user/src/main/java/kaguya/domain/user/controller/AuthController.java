@@ -3,7 +3,7 @@ package kaguya.domain.user.controller;
 import kaguya.domain.user.model.dto.request.LoginReq;
 import kaguya.domain.user.model.dto.request.RegisterReq;
 import kaguya.domain.user.model.dto.response.BaseRes;
-import kaguya.domain.user.model.dto.response.LoginRes;
+import kaguya.domain.user.model.dto.response.TokenRes;
 import kaguya.domain.user.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -20,7 +20,7 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * 회원가입
+     * 회원가입 (gRPC)
      * @param request: 회원가입 요청 DTO (계정 정보, 사용자 정보)
      * @return BaseRes<void>: HTTP 201 생성
      */
@@ -41,7 +41,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<BaseRes<String>> login(@RequestBody LoginReq request) {
 
-        LoginRes data = authService.login(request);
+        TokenRes data = authService.login(request);
 
         // Access Cookie 설정 (key: accessToken, value: AccessToken)
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", data.accessToken())
@@ -104,5 +104,46 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(new BaseRes<>("200", "로그아웃 성공", null));
+    }
+
+    /**
+     * 토큰 검증 (gRPC)
+     * @param accessToken: 접근 토큰
+     * @return <BaseRes<void>: HTTP 200 성공
+     */
+    @PostMapping("checkToken")
+    public ResponseEntity<BaseRes<Void>> checkToken (
+            @CookieValue("accessToken") String accessToken
+    ) {
+
+        authService.checkToken(accessToken);
+
+        return ResponseEntity.ok()
+                .body(new BaseRes<>("200", "인증 성공", null));
+    }
+
+    /**
+     * 토큰 갱신
+     * @param refreshToken: 갱신 토큰
+     * @return <BaseRes<void>: HTTP 200 성공
+     */
+    @PostMapping("/reissue")
+    public ResponseEntity<BaseRes<Void>> renewToken (
+            @CookieValue(name = "refreshToken") String refreshToken
+    ) {
+
+        String access = authService.renewToken(refreshToken);
+
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", access)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(10 * 60)
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .body(new BaseRes<>("200", "토큰 갱신", null));
     }
 }
