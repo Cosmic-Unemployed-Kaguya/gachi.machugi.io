@@ -37,9 +37,9 @@ public class EnvoyHeaderAuthenticationFilter extends OncePerRequestFilter {
 
             // 인증된 사용자 정보를 담은 객체
             UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(username, null, authorities);  // credentials 처리
+                    new UsernamePasswordAuthenticationToken(username, null, authorities);  // 인증된 사용자이므로 credentials(password)는 null
 
-            // HTTP 요청에 대한 메타데이터 WebAuthenticationDetails로 생성하여 설정
+            // HTTP 요청에 대한 메타데이터(IP, Session ID) WebAuthenticationDetails로 생성하여 설정 (로그용)
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
             // SecurityContextHolder에 객체 저장해서 이후 요청을 '인증된 사용자'로 인식 하도록
