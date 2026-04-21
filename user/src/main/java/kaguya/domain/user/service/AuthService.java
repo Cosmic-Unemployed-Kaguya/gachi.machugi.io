@@ -70,7 +70,7 @@ public class AuthService {
      * 로그인 로직
      * @param loginData: Id, Password
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public TokenRes login(LoginReq loginData) {
 
         // 아이디 존재하는지 확인
@@ -102,19 +102,25 @@ public class AuthService {
     public void logout(String accessToken, String refreshToken) {
 
         // 유효한 토큰인지 검증
-        if(!jwtProvider.validationToken(refreshToken)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않는 접근 토큰");
+        if(!jwtProvider.validationToken(refreshToken) && refreshToken != null) {
+
+            // Refresh Token으로 id 조회
+            String username = jwtProvider.getUsername(refreshToken);
+            redisRepository.delete("RT:" + username);  // Refresh 토큰 삭제
         }
 
-        // Refresh Token으로 id 조회
-        String username = jwtProvider.getUsername(refreshToken);
-
-        // Redis
-        redisRepository.delete("RT:" + username);  // Refresh 토큰 삭제
-        redisRepository.save("BL:" + accessToken, "logout", 10, TimeUnit.MINUTES);  // Access 토큰 블랙리스트 등록
+        // Access 토큰 블랙리스트 등록
+        if (accessToken != null) {
+            redisRepository.save("BL:" + accessToken, "logout", 10, TimeUnit.MINUTES);  // Access 토큰 블랙리스트 등록
+        }
     }
 
-    public void checkToken(String accessToken) {
+    /**
+     * 토큰 확인
+     * @param accessToken: 접근 토큰
+     */
+    @Transactional
+    public String checkToken(String accessToken) {
 
         if(!jwtProvider.validationToken(accessToken)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않는 접근 토큰");
@@ -123,8 +129,15 @@ public class AuthService {
         if(redisRepository.exist("BL:" + accessToken)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않는 접근 토큰 (해킹 의심)");
         }
+
+        return jwtProvider.getUsername(accessToken);
     }
 
+    /**
+     * 토큰 갱신
+     * @param refreshToken: 갱신 토큰
+     */
+    @Transactional
     public String renewToken(String refreshToken) {
 
         if(!jwtProvider.validationToken(refreshToken)) {

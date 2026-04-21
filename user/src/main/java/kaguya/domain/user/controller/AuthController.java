@@ -111,15 +111,15 @@ public class AuthController {
      * @param accessToken: 접근 토큰
      * @return <BaseRes<void>: HTTP 200 성공
      */
-    @PostMapping("checkToken")
-    public ResponseEntity<BaseRes<Void>> checkToken (
+    @PostMapping("/checkToken")
+    public ResponseEntity<BaseRes<String>> checkToken (
             @CookieValue("accessToken") String accessToken
     ) {
 
-        authService.checkToken(accessToken);
+        String id = authService.checkToken(accessToken);
 
         return ResponseEntity.ok()
-                .body(new BaseRes<>("200", "인증 성공", null));
+                .body(new BaseRes<>("200", "인증 성공", id));
     }
 
     /**
