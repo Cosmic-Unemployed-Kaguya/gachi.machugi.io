@@ -3,7 +3,7 @@ package kaguya.domain.user.controller;
 import kaguya.domain.user.model.dto.request.LoginReq;
 import kaguya.domain.user.model.dto.request.RegisterReq;
 import kaguya.domain.user.model.dto.response.BaseRes;
-import kaguya.domain.user.model.dto.response.TokenRes;
+import kaguya.domain.user.model.dto.response.LoginRes;
 import kaguya.domain.user.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -41,7 +41,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<BaseRes<String>> login(@RequestBody LoginReq request) {
 
-        TokenRes data = authService.login(request);
+        LoginRes data = authService.login(request);
 
         // Access Cookie 설정 (key: accessToken, value: AccessToken)
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", data.accessToken())

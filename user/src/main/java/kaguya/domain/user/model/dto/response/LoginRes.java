@@ -1,8 +1,8 @@
 package kaguya.domain.user.model.dto.response;
 
-public record TokenRes(
+public record LoginRes(
         String accessToken,
         String refreshToken,
 
-        String nickname
+        String nickname  // 화면에띄워줄 닉네임
 ) {}

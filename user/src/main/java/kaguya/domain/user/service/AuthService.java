@@ -2,10 +2,11 @@ package kaguya.domain.user.service;
 
 import kaguya.domain.user.model.dto.request.LoginReq;
 import kaguya.domain.user.model.dto.request.RegisterReq;
-import kaguya.domain.user.model.dto.response.TokenRes;
+import kaguya.domain.user.model.dto.response.LoginRes;
 import kaguya.domain.user.model.entity.UserEntity;
 import kaguya.domain.user.repository.RedisRepository;
 import kaguya.domain.user.repository.UserRepository;
+import kaguya.domain.user.util.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +22,8 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RedisRepository redisRepository;
+
+    private final UserMapper userMapper;
 
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
@@ -53,16 +56,7 @@ public class AuthService {
         String rawPassword = registerData.account().password();  // 암호화 전
         String encodedPassword = passwordEncoder.encode(rawPassword);  // 암호화
 
-        UserEntity entity = UserEntity.builder()
-                .username(registerData.account().username())
-                .password(encodedPassword)
-                .nickname(registerData.account().nickname())
-                .email(registerData.account().email())
-                .name(registerData.user().name())
-                .birth(registerData.user().birth())
-                .phone(registerData.user().phone())
-                .build();
-
+        UserEntity entity = userMapper.toEntity(registerData, encodedPassword);
         userRepository.save(entity);
     }
 
@@ -71,7 +65,7 @@ public class AuthService {
      * @param loginData: Id, Password
      */
     @Transactional
-    public TokenRes login(LoginReq loginData) {
+    public LoginRes login(LoginReq loginData) {
 
         // 아이디 존재하는지 확인
         UserEntity entity = userRepository.findByUsername(loginData.username())
@@ -89,8 +83,7 @@ public class AuthService {
         // 갱신 토큰 Redis 저장 (14일)
         redisRepository.save("RT:" + entity.getUsername(), refreshToken, 14, TimeUnit.DAYS);
 
-        // todo. mapper 도입
-        return new TokenRes(accessToken, refreshToken, entity.getNickname());
+        return userMapper.toLoginResponse(accessToken, refreshToken, entity);
     }
 
     /**
@@ -146,6 +139,7 @@ public class AuthService {
 
         String username = jwtProvider.getUsername(refreshToken);
 
+        // 갱신토큰 조회
         String savedRefreshToken = redisRepository.get("RT:" + username);
         if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "이미 로그아웃되었거나 유효하지 않은 갱신 토큰");
