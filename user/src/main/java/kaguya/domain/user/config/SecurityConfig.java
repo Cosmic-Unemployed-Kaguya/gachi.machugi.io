@@ -32,7 +32,7 @@ public class SecurityConfig {
                 )
 
                 // Envoy 필터
-                .addFilterBefore(new EnvoyHeaderAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new HeaderAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
