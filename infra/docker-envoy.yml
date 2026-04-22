@@ -1,0 +1,19 @@
+name: envoy
+
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.33-latest
+    container_name: envoy
+    ports:
+      - "8080:8080"  # 게이트웨이
+      - "9090:9090"  # 관리자 페이지
+    volumes:
+      - ./envoy/envoy.yml:/etc/envoy/envoy.yaml
+      - ./envoy/descriptor.pb:/tmp/descriptor.pb
+    restart: always
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
