@@ -7,11 +7,12 @@ import { BoardEntity } from "../entity/boardEntity";
 // Req : PagingReq
 
 // Res
-export interface NoticeListRes{
+export interface CommentListRes{
     idx: number,
-    title : string,
+    parent: number | null,
+    // idx : nickName 으로 보낼지 , nickName으로 보낼지 ?? user Id를 사용할 지?????
+    userNickName: string,
+    content : string,
     state : BoardState,
-    viewCount : number,
-    isPinned: boolean,
     updatedAt : Timestamp,
 };

@@ -5,7 +5,7 @@ import {addNotice, deleteNotice, getNoticeDetail, getNoticeList, updateNotice} f
 import { PagingReq } from '../model/dto/paging';
 import { UpsertNoticeReq } from '../model/dto/upsertNoticeReq';
 import { BoardIdxParamReq, CommentIdxParamReq } from '../model/dto/IdxParamReq';
-import { addComment, deleteComment, getComment, updateComment } from '../controller/commentController';
+import { addComment, deleteComment, getComment, getCommentReplies, updateComment } from '../controller/commentController';
 import { UserRole } from '../model/enum/userRole';
 import { UpsertCommentReq } from '../model/dto/upsertCommentReq';
 const route = Router();
@@ -45,6 +45,8 @@ route
  */
 route
     .route('/comment/:commentIdx')
+    // 대댓글~ 조회
+    .get(validate({params : CommentIdxParamReq, query : PagingReq}), getCommentReplies)
     // 본인 확인은 db 조회가 필요하기에 서비스 내에서
     .put(validate({params : CommentIdxParamReq , body : UpsertCommentReq}), getUserInfo, updateComment )
     .delete(validate({params : CommentIdxParamReq }), getUserIdx , deleteComment )

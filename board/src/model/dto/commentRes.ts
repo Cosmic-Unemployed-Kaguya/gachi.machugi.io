@@ -2,16 +2,15 @@ import { Timestamp } from "typeorm";
 import { BoardState } from "../enum/boardState";
 import { BoardEntity } from "../entity/boardEntity";
 
-// 전체 공지 목록
+// 댓글 하나만 반환 (추가 ,수정 시 )
 
-// Req : PagingReq
 
 // Res
-export interface NoticeListRes{
+export interface CommentRes{
     idx: number,
-    title : string,
+    parent: number | null,
+    userNickName: string,
+    content : string,
     state : BoardState,
-    viewCount : number,
-    isPinned: boolean,
     updatedAt : Timestamp,
 };

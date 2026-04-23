@@ -16,7 +16,7 @@ export class BoardRepository extends TypeOrmRepository<BoardEntity>{
 
         // 2. 검색 범위 설정
         if (pagingDTO.search){
-            qb.andWhere("board.title LIKE :search",{search: '%${pagingDTO.search}%' })
+            qb.andWhere("board.title LIKE :search",{search: `%${pagingDTO.search}%` })
         }
         // 3. filter는 일단 스킵
         // 4. 그 외 페이징 처리
