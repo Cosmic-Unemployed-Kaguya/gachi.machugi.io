@@ -1,50 +1,97 @@
 import {Request, Response, NextFunction } from 'express';
 import logger from '../utils/logger';
 import { AppRequest, UserData } from './appRequest';
-import { UserRole } from '../model/enum/userRole';
-import { ForbiddenError } from '../utils/error';
+import { ForbiddenError, UnauthorizedError } from '../utils/error';
+import Container from 'typedi';
+import UserClient from '../client/userClient';
+import { UserInfoReply, UserRole as GrpcRole } from '../generated/user';
+import { UserRole as AppRole } from '../model/enum/userRole';
+import { toAppRole, toGrpcRole } from '../utils/mapper/userRoleMapper';
+import { catchAsync } from '../utils/catchAsync';
 
 
+/**
+ * 유저 정보 가져오기 및 권환 확인까지
+ * @param allowedRoles 
+ */
+export const getUserAndRoleCheck = (allowedRoles :AppRole[])  => catchAsync( async (req: AppRequest, res: Response, next: NextFunction) =>{
 
 
-// 유저 본인 확인
-export const userCheck = async (req: AppRequest, res: Response, next: NextFunction) =>{
-    
-    /**  @TODO 본인 확인 로직 */
-    logger.info("대충 본인 확인")
-    next();
+    const userIdx :number =  await getUserIdxFromHeader(req);
 
-}
+    const userData :UserInfoReply = await getUserInfoToService(userIdx);
 
-// 유저 권한 확인
-export const userRoleCheck = (allowedRole :UserRole[])  => async (req: AppRequest, res: Response, next: NextFunction) =>{
-    
-    /**  @TODO 유저 정보 받아오기 */
 
-    // 받아온 user에 대한 정보 
-    // !!!!!! 테스트 용 데이터 !!!!!!!
-    const userData : UserData ={
-        userIdx : 1,
-        userRole : UserRole.ADMIN,
+    // role이 확인이 안 될 경우(role 데이터가 없으면)
+    if(!userData.role){
+        return next(new ForbiddenError())
     }
 
+    // proto에서 정의한 Enum  -> 내가 정의한 Enum
+    const getUserRole : AppRole =  toAppRole(userData.role);
+
     // 권한 체크
-    if (userData.userRole && !allowedRole.includes(userData.userRole)){
+    if (!allowedRoles.includes(getUserRole)){
         return next(new ForbiddenError())
     }
 
     // req에 userdata 넣어주기, 이후 로직에서 꺼낼 쓸 수 있도록
-    req.userData = userData
+    req.userData = {userIdx : userIdx,
+                    userNickName : userData.nickName,
+                    userRole : getUserRole}
 
     next();
+
+});
+
+/**
+ * 유저 정보 가져오기
+ * @param req 
+ * @param res 
+ * @param next 
+ */
+export const getUserInfo = catchAsync( async (req: AppRequest, res: Response, next: NextFunction)  =>{
+
+    const userIdx :number = await getUserIdxFromHeader(req);
+
+    const userData :UserInfoReply = await getUserInfoToService(userIdx);
+
+    req.userData = {userIdx : userIdx,
+                userNickName : userData.nickName,
+                userRole : toAppRole(userData.role)}
+
+    next();
+
+});
+
+/**
+ * userIdx 확인
+ * @param req 
+ * @param res 
+ * @param next 
+ */
+export const getUserIdx = catchAsync( async (req: AppRequest, res: Response, next: NextFunction)  =>{
+    const userIdx :number = await getUserIdxFromHeader(req);
+    req.userData = {userIdx : userIdx} ; 
+    next();
+});
+
+const getUserInfoToService = async (userIdx : number) : Promise<UserInfoReply> =>{
+    
+    const userClient = Container.get(UserClient);
+
+    return await userClient.getUserInfo({userIdx : userIdx});
 
 }
 
-// header의 useridx 확인
-export const getUserIdx = async (req: AppRequest, res: Response, next: NextFunction) =>{
+const getUserIdxFromHeader = async (req: AppRequest) : Promise<number> => {
 
-    /** @TODO 유저 idx 가져오는 로직 */
-    logger.info("유저 idx 가져오는 로직")
-    next();
+    /** @TODO 헤더에서 idx 가져오는 로직 */
+    const userIdx :number = 1 ;
 
+    if (!userIdx){
+        throw new UnauthorizedError();
+    }
+
+    return userIdx;
 }

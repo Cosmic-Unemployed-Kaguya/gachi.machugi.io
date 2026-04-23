@@ -15,5 +15,5 @@ export interface AppRequest extends Request {
 export interface UserData {
     userIdx : number;
     userRole? : UserRole;
-
+    userNickName? : string
 }
