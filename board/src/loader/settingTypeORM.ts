@@ -1,6 +1,9 @@
 import { DataSource } from "typeorm";
 import config from '../config'
 
+/**
+ * Type ORM을 통한 postgre와의 통신 연결
+ */
 export const AppDataSource = new DataSource({
     type : 'postgres',
     host : config.dbHost,

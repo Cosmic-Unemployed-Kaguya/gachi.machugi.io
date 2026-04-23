@@ -6,7 +6,7 @@ import { DataSource, EntityTarget } from 'typeorm';
  * entity를 받아 해당 repository가 컨테이너에 등록되면서 
  * AppDataSource까지 주입되도록 하는 데코레이터
  * JPA랑 비슷한 기능을 원했음
- * @TODO 코드에 대한 이해가 완벽하게 된게 아니라서 다시 봐야함!!!
+ * 
  * @param entity 
  */
 export function Repository(entity: EntityTarget<any>) :ClassDecorator{

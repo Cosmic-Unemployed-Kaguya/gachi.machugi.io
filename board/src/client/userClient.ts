@@ -17,7 +17,7 @@ import { UserInfoListRequset } from './../generated/user';
 export default class UserClient {
     
     private readonly grpcClient: UserServiceClient;
-
+    /** @TODO 하드코딩 XXXXXXXXXXXXXXXXX */
     constructor(){
         this.grpcClient = new UserServiceClient(
             'localhost:3001', 

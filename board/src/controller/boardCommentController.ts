@@ -12,13 +12,13 @@ import logger from "../utils/logger";
 
 export const getComment =  catchAsync(async(req :AppRequest, res : Response) =>{
     
-    const noticeIdx : BoardIdxParamReqType = req.paramsData;
+    const boardIdxReq : BoardIdxParamReqType = req.paramsData;
 
     const pageReq : PagingReqType = req.queryData;
 
     const commentService = Container.get(CommentService);
 
-    const data = await commentService.getCommentPage(noticeIdx,pageReq);
+    const data = await commentService.getCommentPage(boardIdxReq,pageReq);
 
     return sendSuccess(res,data);
 
@@ -26,13 +26,13 @@ export const getComment =  catchAsync(async(req :AppRequest, res : Response) =>{
 
 export const getCommentReplies =  catchAsync(async(req :AppRequest, res : Response) =>{
 
-    const commentIdx : CommentIdxParamReqType = req.paramsData;
+    const commentIdxReq : CommentIdxParamReqType = req.paramsData;
 
     const pageReq : PagingReqType = req.queryData;
 
     const commentService = Container.get(CommentService);
 
-    const data = await commentService.getCommentRepliesPage(commentIdx,pageReq);
+    const data = await commentService.getCommentRepliesPage(commentIdxReq,pageReq);
 
     return sendSuccess(res,data);
 
@@ -41,7 +41,7 @@ export const getCommentReplies =  catchAsync(async(req :AppRequest, res : Respon
 
 export const addComment =  catchAsync(async(req :AppRequest, res : Response) =>{
 
-    const noticeIdx : BoardIdxParamReqType = req.paramsData;
+    const boardIdxReq : BoardIdxParamReqType = req.paramsData;
 
     const userData : UserData  = req.userData!;
 
@@ -49,7 +49,7 @@ export const addComment =  catchAsync(async(req :AppRequest, res : Response) =>{
 
     const commentService = Container.get(CommentService);
 
-    const data = await commentService.addComment(userData, noticeIdx, upsertCommentReq);
+    const data = await commentService.addComment(userData, boardIdxReq, upsertCommentReq);
 
     return sendSuccess(res,data);
 

@@ -16,6 +16,17 @@ export abstract class TypeOrmRepository<T extends Object> extends Repository<T>{
         super(entity, appDataSource.createEntityManager())
     }
 
+    // 이하로는 repository들이 공통으로 사용 할 함수
+
+    /**
+     * 페이징 처리
+     * - 여기서 처리하는것은 sort, page, size 뿐 
+     * - search나 filter의 경우 예외가 많기에 따로 처리해줘야함.
+     * 
+     * @param qb 
+     * @param pagingDTO 
+     * @returns 
+     */
     protected async paginate(qb: SelectQueryBuilder<T>, pagingDTO : PagingReqType) : Promise<Page<T>> {
         const { page, size, sort } = pagingDTO;
 

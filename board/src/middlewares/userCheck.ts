@@ -76,6 +76,11 @@ export const getUserIdx = catchAsync( async (req: AppRequest, res: Response, nex
     next();
 });
 
+
+//--------------------------------------------------
+// 아래로는 해당 middle ware에서 사용 할 공통 함수
+//--------------------------------------------------
+
 const getUserInfoToService = async (userIdx : number) : Promise<UserInfoReply> =>{
     
     const userClient = Container.get(UserClient);
