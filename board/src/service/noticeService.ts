@@ -1,15 +1,16 @@
 import { Inject, Service } from "typedi";
-import { BoardRepository } from "../repository/BoardRepository";
+import { BoardRepository } from "../repository/boardRepository";
 import { Page, PagingReq, PagingReqType } from './../model/dto/paging';
 import { BoardEntity } from "../model/entity/boardEntity";
 import { NoticeListRes } from "../model/dto/noticeListDTO";
-import { createDTO, toPageDTO } from "../utils/mapper";
+import { createDTO, toPageDTO } from "../utils/mapper/pageMapper";
 import { BoardCommentEntity } from "../model/entity/boardComment";
-import { BoardCommentRepository } from './../repository/BoardCommentRepository';
+import { BoardCommentRepository } from '../repository/boardCommentRepository';
 import { UpsertNoticeType } from "../model/dto/upsertNoticeReq";
-import { NoticeDetailRes, toNoticeDetail } from "../model/dto/getNoticeDetailDTO";
-import { IdxParamReq, IdxParamReqType } from './../model/dto/IdxParamReq';
-import { ApiError, ForbiddenError } from "../utils/error";
+import { NoticeDetailRes } from "../model/dto/getNoticeDetailDTO";
+import { BoardIdxParamReqType } from './../model/dto/IdxParamReq';
+import { BoardType } from "../model/enum/boardType";
+import { toNoticeDetail, toNoticeListRes } from "../utils/mapper/noticeMapper";
 
 
 
@@ -27,14 +28,14 @@ export default class NoticeService{
      */
     public async getNoticeList(pagingReq : PagingReqType) : Promise<Page<NoticeListRes>>{
         // DB에서 조회한 Entity Page
-        const pagingData :Page<BoardEntity> = await this.boardRepository.findNoticeByPaging(pagingReq)
+        const pagingEntity :Page<BoardEntity> = await this.boardRepository.findNoticeByPaging(pagingReq)
         
         // // Page<Entity>  -> Page<DTO>
-        // const pagingRes : Page<NoticeListRes> = createDTO(pagingData, ['idx','title','state','viewCount','isPinned','updatedAt'])
+        // const pagingRes : Page<NoticeListRes> = createDTO(pagingEntity, ['idx','title','state','viewCount','isPinned','updatedAt'])
         
         // return pagingRes;
         
-        const pagingDtoRes : Page<NoticeListRes> = toPageDTO(pagingData, toNoticeDetail)
+        const pagingDtoRes : Page<NoticeListRes> = toPageDTO(pagingEntity, toNoticeListRes)
 
         return pagingDtoRes;
     }
@@ -52,6 +53,7 @@ export default class NoticeService{
             state : upsertNoticeReq.state,
             userIdx : userIdx,
             viewCount : 0,
+            type : BoardType.NOTICE,
         });
 
 
@@ -65,20 +67,18 @@ export default class NoticeService{
         
     }
 
-    public async getNoticeDetail(idxParamReq : IdxParamReqType) : Promise<NoticeDetailRes>{
+    public async getNoticeDetail(noticeIdxParam : BoardIdxParamReqType) : Promise<NoticeDetailRes>{
 
-        const board :BoardEntity = await this.boardRepository.findOneByOrFail({idx: idxParamReq.idx });
+        const board :BoardEntity = await this.boardRepository.findOneByOrFail({idx: noticeIdxParam.boardIdx });
 
-        const boardComment : BoardCommentEntity[] =  await this.boardCommentRepository.findBy({board: board});
-
-        return toNoticeDetail(board, boardComment);
+        return toNoticeDetail(board);
     }
 
 
-    public async updateNotice( upsertNoticeReq : UpsertNoticeType, idxParamReq : IdxParamReqType) : Promise<NoticeDetailRes>{
+    public async updateNotice( noticeIdxParam : BoardIdxParamReqType, upsertNoticeReq : UpsertNoticeType) : Promise<NoticeDetailRes>{
 
         // 1. board 조회 , 없을시 에러
-        const board :BoardEntity = await this.boardRepository.findOneByOrFail({idx: idxParamReq.idx });
+        const board :BoardEntity = await this.boardRepository.findOneByOrFail({idx: noticeIdxParam.boardIdx });
 
         // 2. board entity 수정
         board.update(upsertNoticeReq.title, upsertNoticeReq.state, upsertNoticeReq.isPinned , upsertNoticeReq.content);
@@ -86,19 +86,17 @@ export default class NoticeService{
         // 3. 수정 된 entity 저장(업데이트)
         const savedBoard = await this.boardRepository.save(board);
 
-        // 4. 반환 용 comment 조회 
-        const boardComment : BoardCommentEntity[] =  await this.boardCommentRepository.findBy({board: board});
 
         // 5. 반환
-        return toNoticeDetail(savedBoard, boardComment);
+        return toNoticeDetail(savedBoard);
 
 
     }
 
-    public async deleteNotice(idxParamReq : IdxParamReqType) :  Promise<Page<NoticeListRes>>{
+    public async deleteNotice(noticeIdxParam : BoardIdxParamReqType) :  Promise<Page<NoticeListRes>>{
 
         // 1. board 조회, 없을 시 에러
-        const board :BoardEntity = await this.boardRepository.findOneByOrFail({idx: idxParamReq.idx });
+        const board :BoardEntity = await this.boardRepository.findOneByOrFail({idx: noticeIdxParam.boardIdx });
 
         // 1.1 comment 조회
         const boardComment : BoardCommentEntity[] =  await this.boardCommentRepository.findBy({board: board});

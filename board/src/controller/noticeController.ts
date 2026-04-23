@@ -7,7 +7,7 @@ import { sendSuccess } from "../model/dto/baseRes";
 import { UpsertNoticeType } from '../model/dto/upsertNoticeReq';
 import { AppRequest } from "../middlewares/appRequest";
 import { catchAsync } from "../utils/catchAsync";
-import { IdxParamReqType } from "../model/dto/IdxParamReq";
+import { BoardIdxParamReqType } from "../model/dto/IdxParamReq";
 
 export const getNoticeList = catchAsync(async(req :AppRequest, res : Response) =>{
 
@@ -51,11 +51,11 @@ export const addNotice = catchAsync(async(req :AppRequest, res : Response) =>{
 
 
 export const getNoticeDetail = catchAsync(async(req :AppRequest, res : Response) =>{
-    const idxParamReqType : IdxParamReqType = req.paramsData;
+    const boardIdxParamReq : BoardIdxParamReqType = req.paramsData;
     
     const noticeService = Container.get(NoticeService);
 
-    const data = await noticeService.getNoticeDetail(idxParamReqType);
+    const data = await noticeService.getNoticeDetail(boardIdxParamReq);
 
     return sendSuccess(res,data);
 });
@@ -65,13 +65,13 @@ export const updateNotice = catchAsync(async(req :AppRequest, res : Response) =>
 
     const upsertNoticeBody :  UpsertNoticeType = req.bodyData;
 
-    const idxParamReqType : IdxParamReqType = req.paramsData;
+    const boardIdxParamReq : BoardIdxParamReqType = req.paramsData;
 
     // const userIDX : number = req.userData!.userIdx;
 
     const noticeService = Container.get(NoticeService);
 
-    const data = await noticeService.updateNotice(upsertNoticeBody, idxParamReqType);
+    const data = await noticeService.updateNotice( boardIdxParamReq, upsertNoticeBody);
 
     return sendSuccess(res, data);
 
@@ -80,11 +80,11 @@ export const updateNotice = catchAsync(async(req :AppRequest, res : Response) =>
 
 export const deleteNotice = async(req :AppRequest, res : Response) =>{
     
-    const idxParamReqType : IdxParamReqType = req.paramsData;
+    const boardIdxParamReq : BoardIdxParamReqType = req.paramsData;
 
     const noticeService = Container.get(NoticeService);
 
-    const data = await noticeService.deleteNotice(idxParamReqType);
+    const data = await noticeService.deleteNotice(boardIdxParamReq);
 
     return sendSuccess(res,data);
     

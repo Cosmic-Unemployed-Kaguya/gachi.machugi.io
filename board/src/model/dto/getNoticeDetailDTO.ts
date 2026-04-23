@@ -20,18 +20,4 @@ export interface NoticeDetailRes{
     updatedAt : Timestamp,
     content: string, 
 
-    // --------------
-    /** @TODO 이후 댓글 추가 */ 
-}
-
-export const toNoticeDetail = (boardEntity : BoardEntity , boardCommentEntityList? : BoardCommentEntity[] ) : NoticeDetailRes=>{
-    return {
-        idx: boardEntity.idx,
-        title: boardEntity.title,
-        content :boardEntity.content,
-        isPinned : boardEntity.isPinned,
-        state : boardEntity.state,
-        updatedAt : boardEntity.updatedAt,
-        viewCount : boardEntity.viewCount,
-    }
 }

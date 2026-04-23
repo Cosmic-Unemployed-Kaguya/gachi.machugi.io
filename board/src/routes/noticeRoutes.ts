@@ -1,12 +1,13 @@
 import { Router } from 'express';
-import { userCheck, userRoleCheck } from './../middlewares/userCheck';
+import { getUserAndRoleCheck, getUserInfo, getUserIdx } from './../middlewares/userCheck';
 import { validate } from '../middlewares/validate';
 import {addNotice, deleteNotice, getNoticeDetail, getNoticeList, updateNotice} from '../controller/noticeController'
 import { PagingReq } from '../model/dto/paging';
 import { UpsertNoticeReq } from '../model/dto/upsertNoticeReq';
+import { BoardIdxParamReq, CommentIdxParamReq } from '../model/dto/IdxParamReq';
+import { addComment, deleteComment, getComment, updateComment } from '../controller/commentController';
 import { UserRole } from '../model/enum/userRole';
-import { IdxParamReq } from '../model/dto/IdxParamReq';
-import { getComment } from '../controller/commentController';
+import { UpsertCommentReq } from '../model/dto/upsertCommentReq';
 const route = Router();
 
 /** 
@@ -15,36 +16,37 @@ const route = Router();
 route
     .route('/')
     .get(validate({query : PagingReq}), getNoticeList)
-    .post(validate({body: UpsertNoticeReq}), userRoleCheck([UserRole.ADMIN]), addNotice)
+    .post(validate({body: UpsertNoticeReq}), getUserAndRoleCheck([UserRole.ADMIN]), addNotice)
 
 /**
  * 공지 상세 조회, 수정, 삭제 
  */
 route
-    .route('/:idx')
+    .route('/:boardIdx')
     // 상세 조회의 경우 로그인 확인 x 
-    .get(validate({params : IdxParamReq}), getNoticeDetail)
+    .get(validate({params : BoardIdxParamReq}), getNoticeDetail)
 
-    .put(validate({body: UpsertNoticeReq, params: IdxParamReq}), 
-        userRoleCheck([UserRole.ADMIN]), updateNotice)
+    .put(validate({body: UpsertNoticeReq, params: BoardIdxParamReq}), 
+        getUserAndRoleCheck([UserRole.ADMIN]), updateNotice)
 
-    .delete(validate({params : IdxParamReq}), userRoleCheck, deleteNotice)
+    .delete(validate({params : BoardIdxParamReq}), getUserAndRoleCheck([UserRole.ADMIN]), deleteNotice)
 
 /**
  *  댓글 조회, 추가
   */
-// route
-//     .route('/:noticeIdx/comment')
-//     // 로그인 확인 x
-//     .get(validate({params : IdxParamReq}), getComment)
-//     .post()
+route
+    .route('/:boardIdx/comment')
+    // 로그인 확인 x
+    .get(validate({params : BoardIdxParamReq, query : PagingReq}),getComment)
+    .post(validate({params : BoardIdxParamReq, body : UpsertCommentReq}), getUserInfo, addComment)
 
-// /** 
-//  * 댓글 수정, 삭제 
-//  */
-// route
-//     .route('/comment/:commentIdx')
-//     .put(userCheck)
-//     .delete(userCheck)
+/** 
+ * 댓글 수정, 삭제 
+ */
+route
+    .route('/comment/:commentIdx')
+    // 본인 확인은 db 조회가 필요하기에 서비스 내에서
+    .put(validate({params : CommentIdxParamReq , body : UpsertCommentReq}), getUserInfo, updateComment )
+    .delete(validate({params : CommentIdxParamReq }), getUserIdx , deleteComment )
 
 export default route;

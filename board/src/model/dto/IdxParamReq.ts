@@ -1,8 +1,14 @@
 import z from "zod";
 
 // Req.Param
-export const IdxParamReq = z.object({
-    idx: z.coerce.number().int().positive(), 
+export const BoardIdxParamReq = z.object({
+    boardIdx: z.coerce.number().int().positive(), 
 })
 
-export type IdxParamReqType = z.infer<typeof IdxParamReq>;
+export type BoardIdxParamReqType = z.infer<typeof BoardIdxParamReq>;
+
+export const CommentIdxParamReq = z.object({
+    commentIdx: z.coerce.number().int().positive(), 
+})
+
+export type CommentIdxParamReqType = z.infer<typeof CommentIdxParamReq>;

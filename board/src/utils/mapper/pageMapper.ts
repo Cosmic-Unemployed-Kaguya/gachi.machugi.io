@@ -1,5 +1,5 @@
 
-import { Page } from "../model/dto/paging";
+import { Page } from "../../model/dto/paging";
 
 
 /**
@@ -13,7 +13,6 @@ export const toPageDTO = <T extends object, R >(
     mapper : (item : T) => R, // T를 받아 R 타입의 반환값을 뱉는 함수
 ) : Page<R> => {
 
-    // == 위 코드와 동일한 역할. map을 사용함
     const dtoItems :R[] = entityPage.items.map((item) => mapper(item));
 
     const dtoPage :Page<R> = {
@@ -27,7 +26,9 @@ export const toPageDTO = <T extends object, R >(
     return dtoPage;
 }
 
-
+// ================================================================
+// 아래로는 사용 안하는 함수
+//=================================================================
 
 /**
  * Entity를 DTO로 바꿔주는 mapper, dto에 들어갈 속성을 배열로 입력해줘야함.
@@ -93,11 +94,5 @@ export const createDTO = <T extends object  ,K extends keyof T>(
     return dtoPage;
 }
 
-
-// 과거의 잔재
-// export const toPageDTO = <T extends object, D extends (...args: any[]) => any  >(
-//     entityPage : Page<T>,
-//     mapper : D,
-// ) : Page<ReturnType<D>> => {
 
 

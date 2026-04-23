@@ -1,6 +1,6 @@
 
 
-import { TypeOrmRepository } from './TypeOrmBaseRepository';
+import { TypeOrmRepository } from './typeOrmBaseRepository';
 import { Repository } from '../decorator/repository';
 import { BoardEntity } from '../model/entity/boardEntity';
 import { BoardType } from '../model/enum/boardType';
