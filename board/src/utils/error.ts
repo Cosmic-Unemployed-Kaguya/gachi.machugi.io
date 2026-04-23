@@ -42,3 +42,12 @@ export class ForbiddenError extends ApiError {
         this.name = 'ForbiddenError';
     }
 }
+
+
+export class UnauthorizedError extends ApiError {
+    constructor( message:string = '로그인이 필요합니다'){
+        super(401, message, true);
+        this.name = 'UnauthorizedError';
+    }
+}
+
