@@ -20,14 +20,3 @@ export interface Page<T> {
     hasNext: boolean;    // 다음 페이지 여부
 }
 
-
-// export const createPagingRes = <T extends z.ZodTypeAny>(itemSchema: T) => {
-//     return z.object({
-//         item : z.array(itemSchema),                             // 데이터 
-//         totalCount : z.coerce.number().int().positive(),        // 양수, 데이터 총 개수
-//         currentPage : z.coerce.number().int().positive(),       // 양수, 현재 페이지
-//         totalPage : z.coerce.number().int().positive(),         // 양수, 최대 페이지
-//         hasNext : z.boolean,                                    // boolean, 다음 페이지의 존재 여부
-    
-//     })
-// }

@@ -17,10 +17,6 @@ interface ValidationSchemas {
  * > '이런 DTO 형식을 가진 데이터가 body,query,param 중 하나의 방법으로 들어올 것이다 !!'
  * > 라는것을 정의하고 해당 데이터에 문제가 없는지 까지 검사
  * 
- *  각 req.body... 등에 덮어씌우는것
- *  > req.커스텀변수명 < 이 방법으로 새로운 객체를 만들어 넣을 수도 있지만 body, query 등 어디로 들어왔냐에 의미를 주고싶었음
- *  > 이후 controller 등에서 사용할 때 마찬가지로 req.body, query 등에서 꺼내 사용하지만, 무슨 DTO 형식인지 데이터의 형식은 정해져있음
- * 
  * @param schemas 
  * @returns 
  */
