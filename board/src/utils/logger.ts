@@ -13,9 +13,16 @@ if (config.profile !== "dev"){
     transports.push(
         new winston.transports.Console({
             format: winston.format.combine(
-                // 색 입히기
-                winston.format.cli(),
-            )
+                winston.format.colorize(), // 레벨에 색상 입히기
+                // 출력 방식
+                winston.format.printf(({ timestamp, level, message, stack }) => {
+                    // stack 존재 시 출력
+                    if (stack) {
+                        return `[${timestamp}] ${level}: ${message}\n${stack}`;
+                    }
+                    return `[${timestamp}] ${level}: ${message}`;
+                })
+            ),
         })
   )
 }
