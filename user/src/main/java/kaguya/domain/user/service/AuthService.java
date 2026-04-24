@@ -83,7 +83,7 @@ public class AuthService {
         // 갱신 토큰 Redis 저장 (14일)
         redisRepository.save("RT:" + entity.getUsername(), refreshToken, 14, TimeUnit.DAYS);
 
-        return userMapper.toLoginResponse(accessToken, refreshToken, entity);
+        return userMapper.toLoginRes(accessToken, refreshToken, entity);
     }
 
     /**
