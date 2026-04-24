@@ -16,7 +16,7 @@ import { CommentDeleteRes } from "../model/dto/commentDeleteRes";
 
 
 @Service()
-export default class CommentService{
+export default class BoardCommentService{
     constructor(
         @Inject() private boardCommentRepository : BoardCommentRepository,
         @Inject() private userClient : UserClient,

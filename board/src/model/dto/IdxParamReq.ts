@@ -12,3 +12,9 @@ export const CommentIdxParamReq = z.object({
 })
 
 export type CommentIdxParamReqType = z.infer<typeof CommentIdxParamReq>;
+
+export const QuizIdxParamReq = z.object({
+    quizIdx: z.coerce.number().int().positive(), 
+})
+
+export type QuizIdxParamReqType = z.infer<typeof QuizIdxParamReq>;

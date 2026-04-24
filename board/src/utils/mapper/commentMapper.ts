@@ -1,9 +1,10 @@
 import { CommentListRes } from "../../model/dto/commentListRes";
 import { CommentRes } from "../../model/dto/commentRes";
 import { BoardCommentEntity } from "../../model/entity/boardComment";
+import { QuizCommentEntity } from "../../model/entity/quizComment";
 
 
-export const toCommentListRes = (entity : BoardCommentEntity, userNicknameMap : Record<number, string>) : CommentListRes =>{
+export const toCommentListRes = (entity : BoardCommentEntity | QuizCommentEntity, userNicknameMap : Record<number, string>) : CommentListRes =>{
     return {
         idx: entity.idx,
         parent : entity.parent? entity.parent.idx : null,
@@ -14,7 +15,7 @@ export const toCommentListRes = (entity : BoardCommentEntity, userNicknameMap : 
     }
 }
 
-export const toCommentRes = (entity : BoardCommentEntity, userNickName : string  ) : CommentRes =>{
+export const toCommentRes = (entity : BoardCommentEntity | QuizCommentEntity , userNickName : string  ) : CommentRes =>{
     return {
         idx: entity.idx,
         parent : entity.parent? entity.parent.idx : null,

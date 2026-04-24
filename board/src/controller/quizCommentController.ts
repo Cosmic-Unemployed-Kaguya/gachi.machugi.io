@@ -1,61 +1,61 @@
 import Container from "typedi";
 import { AppRequest, UserData } from "../middlewares/appRequest";
-import { BoardIdxParamReqType, CommentIdxParamReqType } from "../model/dto/IdxParamReq";
+import { CommentIdxParamReqType, QuizIdxParamReqType } from "../model/dto/IdxParamReq";
+import { PagingReqType } from "../model/dto/paging";
 import { catchAsync } from "../utils/catchAsync";
-import CommentService from "../service/BoardCommentService";
-import {PagingReqType } from "../model/dto/paging";
-import { sendSuccess } from "../model/dto/baseRes";
 import { Response } from "express";
+import QuizCommentService from "../service/quizCommentService"
+import { sendSuccess } from "../model/dto/baseRes";
 import { UpsertCommentReqType } from "../model/dto/upsertCommentReq";
-import logger from "../utils/logger";
 
 
-export const getComment =  catchAsync(async(req :AppRequest, res : Response) =>{
+export const getQuizComment =  catchAsync(async(req :AppRequest, res : Response) =>{
     
-    const boardIdxReq : BoardIdxParamReqType = req.paramsData;
+    const quizIdxReq : QuizIdxParamReqType = req.paramsData;
 
     const pageReq : PagingReqType = req.queryData;
 
-    const commentService = Container.get(CommentService);
+    const commentService = Container.get(QuizCommentService);
 
-    const data = await commentService.getCommentPage(boardIdxReq,pageReq);
+    const data = await commentService.getCommentPage(quizIdxReq,pageReq);
 
     return sendSuccess(res,data);
 
 });
 
-export const getCommentReplies =  catchAsync(async(req :AppRequest, res : Response) =>{
+export const getQuizCommentReplies =  catchAsync(async(req :AppRequest, res : Response) =>{
 
     const commentIdxReq : CommentIdxParamReqType = req.paramsData;
 
     const pageReq : PagingReqType = req.queryData;
 
-    const commentService = Container.get(CommentService);
+    const commentService = Container.get(QuizCommentService);
 
     const data = await commentService.getCommentRepliesPage(commentIdxReq,pageReq);
 
     return sendSuccess(res,data);
 
+
 });
 
 
-export const addComment =  catchAsync(async(req :AppRequest, res : Response) =>{
+export const addQuizComment =  catchAsync(async(req :AppRequest, res : Response) =>{
 
-    const boardIdxReq : BoardIdxParamReqType = req.paramsData;
+
+    const quizIdxReq : QuizIdxParamReqType = req.paramsData;
 
     const userData : UserData  = req.userData!;
 
     const upsertCommentReq : UpsertCommentReqType = req.bodyData;
 
-    const commentService = Container.get(CommentService);
+    const commentService = Container.get(QuizCommentService);
 
-    const data = await commentService.addComment(userData, boardIdxReq, upsertCommentReq);
+    const data = await commentService.addComment(userData, quizIdxReq, upsertCommentReq);
 
     return sendSuccess(res,data);
-
 });
 
-export const updateComment =  catchAsync(async(req :AppRequest, res : Response) =>{
+export const updateQuizComment =  catchAsync(async(req :AppRequest, res : Response) =>{
 
     const commentIdxReq : CommentIdxParamReqType = req.paramsData;
 
@@ -63,25 +63,27 @@ export const updateComment =  catchAsync(async(req :AppRequest, res : Response) 
 
     const upsertCommentReq : UpsertCommentReqType = req.bodyData;
 
-    const commentService = Container.get(CommentService);
+    const commentService = Container.get(QuizCommentService);
 
     const data = await commentService.updateComment(userData, commentIdxReq, upsertCommentReq);
 
     return sendSuccess(res,data);
 
 
+
 });
 
-export const deleteComment =  catchAsync(async(req :AppRequest, res : Response) =>{
+export const deleteQuizComment =  catchAsync(async(req :AppRequest, res : Response) =>{
 
     const commentIdxReq : CommentIdxParamReqType = req.paramsData;
 
     const userData : UserData  = req.userData!;
 
-    const commentService = Container.get(CommentService);
+    const commentService = Container.get(QuizCommentService);
 
     const data = await commentService.deleteComment(userData,commentIdxReq);
 
     return sendSuccess(res,data);
+
 });
 
