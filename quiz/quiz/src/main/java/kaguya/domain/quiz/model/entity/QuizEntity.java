@@ -13,6 +13,7 @@ public class QuizEntity {
     // idx ( PK )
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "idx")
     private Long idx;
 
     // 제목 ( title )
