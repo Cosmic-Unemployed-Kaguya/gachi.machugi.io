@@ -8,52 +8,20 @@ option java_multiple_files = true;
 option java_package = "kaguya.grpc.user";
 
 service UserService {
-  rpc Register (RegisterRequest) returns (RegisterResponse);
-  rpc CheckToken (CheckTokenRequest) returns (CheckTokenResponse);
+  rpc restTest (TestRequest) returns (TestResponse) {
+    option (google.api.http) = {
+      post: "/user/test"
+      body: "*"
+    };
+  }
 }
 
-// ===================
-// 회원가입 (Register)
-// ===================
-
-message AccountData {
+message TestRequest {
   string username = 1;
-  string password = 2;
-  string nickname = 3;
-  string email = 4;
+  string name = 2;
 }
 
-message UserData {
-  string name = 1;
-  string birth = 2;
-  string phone = 3;
-  string gender = 4;
-}
-
-message RegisterRequest {
-  AccountData account = 1;
-  UserData user = 2;
-}
-
-// BaseRes<Void>
-message RegisterResponse {
+message TestResponse {
   string status = 1;
   string message = 2;
-  // data 없음
-}
-
-
-// ======================
-// 토큰 검증 (CheckToken)
-// ======================
-
-message CheckTokenRequest {
-  string access_token = 1;
-}
-
-// BaseRes<String>
-message CheckTokenResponse {
-  string status = 1;
-  string message = 2;
-  string id = 3;
 }
