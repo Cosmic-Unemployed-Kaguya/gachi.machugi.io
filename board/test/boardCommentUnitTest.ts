@@ -7,7 +7,7 @@ import { BoardState } from "../src/model/enum/boardState";
 import { PagingReqType } from "../src/model/dto/paging";
 import { UserInfoReply } from "../src/generated/user";
 import assert from "node:assert";
-import { UpsertCommentReqType } from "../src/model/dto/upsertCommentReq";
+import { UpsertCommentReqType } from "../src/model/dto/commentUpsertReq";
 import { UserRole } from "../src/model/enum/userRole";
 import { UserData } from "../src/middlewares/appRequest";
 

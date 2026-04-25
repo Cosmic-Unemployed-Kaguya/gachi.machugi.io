@@ -3,11 +3,11 @@ import { getUserAndRoleCheck, getUserInfo, getUserIdx } from './../middlewares/u
 import { validate } from '../middlewares/validate';
 import {addNotice, deleteNotice, getNoticeDetail, getNoticeList, updateNotice} from '../controller/noticeController'
 import { PagingReq } from '../model/dto/paging';
-import { UpsertNoticeReq } from '../model/dto/upsertNoticeReq';
+import { UpsertNoticeReq } from '../model/dto/noticeUpsertReq';
 import { BoardIdxParamReq, CommentIdxParamReq } from '../model/dto/idxParamReq';
 import { addComment, deleteComment, getComment, getCommentReplies, updateComment } from '../controller/boardCommentController';
 import { UserRole } from '../model/enum/userRole';
-import { UpsertCommentReq } from '../model/dto/upsertCommentReq';
+import { UpsertCommentReq } from '../model/dto/commentUpsertReq';
 
 const route = Router();
 

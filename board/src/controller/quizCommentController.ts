@@ -6,7 +6,7 @@ import { catchAsync } from "../utils/catchAsync";
 import { Response } from "express";
 import QuizCommentService from "../service/quizCommentService"
 import { sendSuccess } from "../model/dto/baseRes";
-import { UpsertCommentReqType } from "../model/dto/upsertCommentReq";
+import { UpsertCommentReqType } from "../model/dto/commentUpsertReq";
 
 
 export const getQuizComment =  catchAsync(async(req :AppRequest, res : Response) =>{

@@ -6,7 +6,7 @@ import CommentService from "../service/boardCommentService";
 import {PagingReqType } from "../model/dto/paging";
 import { sendSuccess } from "../model/dto/baseRes";
 import { Response } from "express";
-import { UpsertCommentReqType } from "../model/dto/upsertCommentReq";
+import { UpsertCommentReqType } from "../model/dto/commentUpsertReq";
 import logger from "../utils/logger";
 
 

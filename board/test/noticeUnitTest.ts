@@ -9,8 +9,8 @@ import Container from 'typedi';
 import NoticeService from '../src/service/noticeService';
 import { BoardRepository } from '../src/repository/boardRepository';
 import { BoardCommentRepository } from '../src/repository/boardCommentRepository';
-import { UpsertCommentReq } from '../src/model/dto/upsertCommentReq';
-import { UpsertNoticeType } from '../src/model/dto/upsertNoticeReq';
+import { UpsertCommentReq } from '../src/model/dto/commentUpsertReq';
+import { UpsertNoticeType } from '../src/model/dto/noticeUpsertReq';
 
 // suite = describe  : 여러 test를 묶는 뭐시기
 // test = it   : 테스트

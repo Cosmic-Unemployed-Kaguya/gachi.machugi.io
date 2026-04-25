@@ -2,7 +2,7 @@ import { Timestamp } from "typeorm";
 import { BoardState } from "../enum/boardState";
 import { BoardEntity } from "../entity/boardEntity";
 import z from "zod";
-import { BoardCommentEntity } from './../entity/boardComment';
+import { BoardCommentEntity } from '../entity/boardComment';
 
 
 // 공지 상세 조회

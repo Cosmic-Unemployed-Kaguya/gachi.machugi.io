@@ -4,7 +4,7 @@ import { Page, PagingReqType } from "../model/dto/paging";
 import NoticeService from "../service/noticeService";
 import { NoticeListRes } from "../model/dto/noticeListDTO";
 import { sendSuccess } from "../model/dto/baseRes";
-import { UpsertNoticeType } from '../model/dto/upsertNoticeReq';
+import { UpsertNoticeType } from '../model/dto/noticeUpsertReq';
 import { AppRequest } from "../middlewares/appRequest";
 import { catchAsync } from "../utils/catchAsync";
 import { BoardIdxParamReqType } from "../model/dto/idxParamReq";

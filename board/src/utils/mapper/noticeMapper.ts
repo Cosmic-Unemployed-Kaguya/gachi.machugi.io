@@ -1,4 +1,4 @@
-import { NoticeDetailRes } from "../../model/dto/getNoticeDetailDTO"
+import { NoticeDetailRes } from "../../model/dto/noticeDetailDTO"
 import { NoticeListRes } from "../../model/dto/noticeListDTO"
 import { BoardCommentEntity } from "../../model/entity/boardComment"
 import { BoardEntity } from "../../model/entity/boardEntity"

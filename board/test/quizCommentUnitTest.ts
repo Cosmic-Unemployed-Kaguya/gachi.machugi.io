@@ -4,7 +4,7 @@ import { QuizCommentRepository } from "../src/repository/quizCommentRepository";
 import UserClient from "../src/client/userClient";
 import { BoardState } from "../src/model/enum/boardState";
 import { QuizCommentEntity } from "../src/model/entity/quizComment";
-import { UpsertCommentReqType } from "../src/model/dto/upsertCommentReq";
+import { UpsertCommentReqType } from "../src/model/dto/commentUpsertReq";
 import { UserInfoReply } from "../src/generated/user";
 import { PagingReqType } from "../src/model/dto/paging";
 import assert from "assert";

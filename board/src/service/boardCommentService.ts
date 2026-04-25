@@ -6,7 +6,7 @@ import { BoardCommentEntity } from "../model/entity/boardComment";
 import { CommentListRes } from "../model/dto/commentListRes";
 import UserClient from "../client/userClient";
 import { UserInfoListReply, UserInfoListRequset } from "../generated/user";
-import { UpsertCommentReqType } from "../model/dto/upsertCommentReq";
+import { UpsertCommentReqType } from "../model/dto/commentUpsertReq";
 import { toPageDTO } from "../utils/mapper/pageMapper";
 import { toCommentListRes, toCommentRes } from "../utils/mapper/commentMapper";
 import { ForbiddenError } from "../utils/error";
