@@ -21,7 +21,7 @@ public class QuizResponse {
     private OffsetDateTime updatedDate;
     private String category;
 
-    public static QuizResponse from(QuizEntity quizEntity) {
+    public static QuizResponse fromEntity(QuizEntity quizEntity) {
         return QuizResponse.builder()
                 .idx(quizEntity.getIdx())
                 .title(quizEntity.getTitle())

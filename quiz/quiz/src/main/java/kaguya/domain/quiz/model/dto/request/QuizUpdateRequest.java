@@ -1,14 +1,9 @@
 package kaguya.domain.quiz.model.dto.request;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+public record QuizUpdateRequest (
 
-@Getter
-@NoArgsConstructor
-public class QuizUpdateRequest {
-
-    private String title;
-    private String description;
-    private String thumbnail;
-    private String category;
-}
+    String title,
+    String description,
+    String thumbnail,
+    String category
+){}

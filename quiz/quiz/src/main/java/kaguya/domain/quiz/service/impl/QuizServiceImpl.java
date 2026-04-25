@@ -5,13 +5,13 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
-import kaguya.domain.quiz.mapper.QuizMapper;
 import kaguya.domain.quiz.model.dto.request.QuizCreateRequest;
 import kaguya.domain.quiz.model.dto.request.QuizUpdateRequest;
 import kaguya.domain.quiz.model.dto.response.QuizResponse;
 import kaguya.domain.quiz.model.entity.QuizEntity;
 import kaguya.domain.quiz.repository.QuizRepository;
 import kaguya.domain.quiz.service.QuizService;
+import kaguya.domain.quiz.util.mapper.QuizMapper;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -29,7 +29,7 @@ public class QuizServiceImpl implements QuizService {
         QuizEntity quiz = quizMapper.requestToEntity(request);
         QuizEntity savedQuiz = quizRepository.save(quiz);
 
-        return QuizResponse.from(savedQuiz);
+        return QuizResponse.fromEntity(savedQuiz);
     }
 
     // 퀴즈 조회
@@ -39,7 +39,7 @@ public class QuizServiceImpl implements QuizService {
         QuizEntity quiz = quizRepository.findById(quizIdx)
                 .orElseThrow(() -> new RuntimeException("퀴즈가 존재하지 않습니다."));
 
-        return QuizResponse.from(quiz);
+        return QuizResponse.fromEntity(quiz);
     }
 
     // 퀴즈 전체 조회
@@ -49,19 +49,25 @@ public class QuizServiceImpl implements QuizService {
         List<QuizEntity> quizzes = quizRepository.findAll();
 
         return quizzes.stream()
-                .map(QuizResponse::from)
+                .map(QuizResponse::fromEntity)
                 .toList();
     }
 
     // 퀴즈 수정
     @Override
     public QuizResponse updateQuiz(Long quizIdx, QuizUpdateRequest request) {
+
         QuizEntity quiz = quizRepository.findById(quizIdx)
                 .orElseThrow(() -> new RuntimeException("퀴즈가 존재하지 않습니다."));
 
-        quizMapper.updateEntity(quiz, request);
+        quiz.updateQuiz(
+                request.title(),
+                request.description(),
+                request.thumbnail(),
+                request.category()
+        );
 
-        return QuizResponse.from(quiz);
+        return QuizResponse.fromEntity(quiz);
     }
 
     // 퀴즈 삭제

@@ -36,7 +36,7 @@ public class QuizController {
 
     // 퀴즈 조회 API
     @GetMapping("/{quizIdx}")
-    public ResponseEntity<QuizResponse> getQuiz(@PathVariable Long quizIdx) {
+    public ResponseEntity<QuizResponse> getQuiz(@PathVariable("quizIdx") Long quizIdx) {
         QuizResponse response = quizService.getQuiz(quizIdx);
         return ResponseEntity.ok(response);
     }
@@ -51,7 +51,7 @@ public class QuizController {
     // 퀴즈 수정 API
     @PatchMapping("/{quizIdx}")
     public ResponseEntity<QuizResponse> updateQuiz(
-            @PathVariable Long quizIdx,
+            @PathVariable("quizIdx") Long quizIdx,
             @RequestBody QuizUpdateRequest request
     ) {
         QuizResponse response = quizService.updateQuiz(quizIdx, request);
@@ -60,7 +60,7 @@ public class QuizController {
 
     // 퀴즈 삭제 API
     @DeleteMapping("/{quizIdx}")
-    public ResponseEntity<Void> deleteQuiz(@PathVariable Long quizIdx) {
+    public ResponseEntity<Void> deleteQuiz(@PathVariable("quizIdx") Long quizIdx) {
         quizService.deleteQuiz(quizIdx);
         return ResponseEntity.noContent().build();
     }
