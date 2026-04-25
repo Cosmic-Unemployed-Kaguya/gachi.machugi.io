@@ -1,10 +1,11 @@
 
 
-import { TypeOrmRepository } from './typeOrmBaseRepository';
+
 import { Repository } from '../decorator/repository';
 import { BoardEntity } from '../model/entity/boardEntity';
 import { BoardType } from '../model/enum/boardType';
 import { Page, PagingReqType } from '../model/dto/paging';
+import { TypeOrmRepository } from './typeOrmBaseRepository';
 
 @Repository(BoardEntity)
 export class BoardRepository extends TypeOrmRepository<BoardEntity>{
