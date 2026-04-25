@@ -1,0 +1,37 @@
+name: nodejs CI 스크립트
+
+on:
+  workflow_call:
+    inputs:
+      service-name:
+        required: true
+        type: string
+
+jobs:
+  code-test:
+    name: 코드 테스트
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+
+    defaults:
+      run:
+        working-directory: ./${{ inputs.service-name }}
+
+    steps:
+      - name: 브랜치로 체크아웃
+        uses: actions/checkout@v5
+
+      - name: npm 세팅
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x' 
+          cache: 'npm'
+
+      - name: 필요 패키지 설치
+        run: npm ci
+
+      - name: 테스트 실행
+        run: npm test
