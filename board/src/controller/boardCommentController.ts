@@ -1,6 +1,6 @@
 import Container from "typedi";
 import { AppRequest, UserData } from "../middlewares/appRequest";
-import { BoardIdxParamReqType, CommentIdxParamReqType } from "../model/dto/IdxParamReq";
+import { BoardIdxParamReqType, CommentIdxParamReqType } from "../model/dto/idxParamReq";
 import { catchAsync } from "../utils/catchAsync";
 import CommentService from "../service/boardCommentService";
 import {PagingReqType } from "../model/dto/paging";

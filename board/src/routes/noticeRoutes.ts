@@ -4,7 +4,7 @@ import { validate } from '../middlewares/validate';
 import {addNotice, deleteNotice, getNoticeDetail, getNoticeList, updateNotice} from '../controller/noticeController'
 import { PagingReq } from '../model/dto/paging';
 import { UpsertNoticeReq } from '../model/dto/upsertNoticeReq';
-import { BoardIdxParamReq, CommentIdxParamReq } from '../model/dto/IdxParamReq';
+import { BoardIdxParamReq, CommentIdxParamReq } from '../model/dto/idxParamReq';
 import { addComment, deleteComment, getComment, getCommentReplies, updateComment } from '../controller/boardCommentController';
 import { UserRole } from '../model/enum/userRole';
 import { UpsertCommentReq } from '../model/dto/upsertCommentReq';

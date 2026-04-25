@@ -1,7 +1,7 @@
 import { Inject, Service } from "typedi";
 import { BoardCommentRepository } from "../repository/boardCommentRepository";
 import { Page, PagingReqType } from "../model/dto/paging";
-import { BoardIdxParamReqType, CommentIdxParamReqType } from "../model/dto/IdxParamReq";
+import { BoardIdxParamReqType, CommentIdxParamReqType } from "../model/dto/idxParamReq";
 import { BoardCommentEntity } from "../model/entity/boardComment";
 import { CommentListRes } from "../model/dto/commentListRes";
 import UserClient from "../client/userClient";

@@ -8,7 +8,7 @@ import { BoardCommentEntity } from "../model/entity/boardComment";
 import { BoardCommentRepository } from '../repository/boardCommentRepository';
 import { UpsertNoticeType } from "../model/dto/upsertNoticeReq";
 import { NoticeDetailRes } from "../model/dto/getNoticeDetailDTO";
-import { BoardIdxParamReqType } from './../model/dto/IdxParamReq';
+import { BoardIdxParamReqType } from '../model/dto/idxParamReq';
 import { BoardType } from "../model/enum/boardType";
 import { toNoticeDetail, toNoticeListRes } from "../utils/mapper/noticeMapper";
 

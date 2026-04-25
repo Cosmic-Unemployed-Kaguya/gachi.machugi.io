@@ -1,6 +1,6 @@
 import Container from "typedi";
 import { AppRequest, UserData } from "../middlewares/appRequest";
-import { CommentIdxParamReqType, QuizIdxParamReqType } from "../model/dto/IdxParamReq";
+import { CommentIdxParamReqType, QuizIdxParamReqType } from "../model/dto/idxParamReq";
 import { PagingReqType } from "../model/dto/paging";
 import { catchAsync } from "../utils/catchAsync";
 import { Response } from "express";

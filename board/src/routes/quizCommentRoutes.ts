@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { validate } from '../middlewares/validate';
 import { addQuizComment, deleteQuizComment, getQuizComment, getQuizCommentReplies, updateQuizComment } from '../controller/quizCommentController';
-import { CommentIdxParamReq, QuizIdxParamReq } from '../model/dto/IdxParamReq';
+import { CommentIdxParamReq, QuizIdxParamReq } from '../model/dto/idxParamReq';
 import { PagingReq } from '../model/dto/paging';
 import { UpsertCommentReq } from '../model/dto/upsertCommentReq';
 import { getUserIdx, getUserInfo } from '../middlewares/userCheck';

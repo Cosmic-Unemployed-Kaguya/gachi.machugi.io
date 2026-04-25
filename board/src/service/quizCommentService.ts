@@ -1,6 +1,6 @@
 import { Inject, Service } from "typedi";
 import { Page, PagingReqType } from "../model/dto/paging";
-import {  CommentIdxParamReqType, QuizIdxParamReqType } from "../model/dto/IdxParamReq";
+import {  CommentIdxParamReqType, QuizIdxParamReqType } from "../model/dto/idxParamReq";
 import { CommentListRes } from "../model/dto/commentListRes";
 import UserClient from "../client/userClient";
 import { UserInfoListReply, UserInfoListRequset } from "../generated/user";

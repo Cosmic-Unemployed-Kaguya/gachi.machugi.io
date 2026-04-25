@@ -7,7 +7,7 @@ import { sendSuccess } from "../model/dto/baseRes";
 import { UpsertNoticeType } from '../model/dto/upsertNoticeReq';
 import { AppRequest } from "../middlewares/appRequest";
 import { catchAsync } from "../utils/catchAsync";
-import { BoardIdxParamReqType } from "../model/dto/IdxParamReq";
+import { BoardIdxParamReqType } from "../model/dto/idxParamReq";
 
 export const getNoticeList = catchAsync(async(req :AppRequest, res : Response) =>{
 
