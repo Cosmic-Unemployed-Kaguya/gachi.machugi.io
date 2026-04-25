@@ -14,14 +14,6 @@ import { UpsertNoticeType } from '../src/model/dto/upsertNoticeReq';
 
 // suite = describe  : 여러 test를 묶는 뭐시기
 // test = it   : 테스트
-const getTest = () :string => {return "test"}
-
-describe('테스트의 테스트! 테스트를 위한 테스트!',() => {
-    it("테스트의 영어 스펠링을 반환", () =>{
-        const result = getTest()
-        assert.equal(result, "test")
-    });
-});
 
 describe('NoticeService 단위 테스트, 성공 케이스', () => {
 
@@ -68,13 +60,15 @@ describe('NoticeService 단위 테스트, 성공 케이스', () => {
             createdAt : new Date('2026-04-19T04:02:03.000Z'),
             updatedAt: new Date('2026-04-19T04:02:03.000Z'),
             deletedAt : null,
+
+            update : (title: string, state: string, isPinned: boolean, content: string) => {}
         } as unknown as BoardEntity 
+
 
         mockBoardRepo = {
             findNoticeByPaging : async () => mockEntityPage,
             save : async () => mockEntityDetail,
             findOneByOrFail : async () =>  mockEntityDetail,
-            update : async () => mockEntityDetail,
             softRemove : async () => {},
             create: () => mockEntityDetail,
         } as unknown as BoardRepository;        
@@ -125,7 +119,16 @@ describe('NoticeService 단위 테스트, 성공 케이스', () => {
         assert.ok(result.updatedAt);
         assert.ok(result.idx);
         assert.strictEqual(result.title, '테스트 공지사항입니다');
-    })
+    });
+    it('공지 수정 시 Entity를 DTO로 변환 후 반환 ', async () =>{
+        const boardIdx = {boardIdx : 1}
+        const result = await noticeService.updateNotice(boardIdx,upsertNoticeReq);
+
+        assert.ok(result.updatedAt);
+        assert.ok(result.idx);
+        assert.strictEqual(result.idx, boardIdx.boardIdx);
+        assert.strictEqual(result.title, '테스트 공지사항입니다');
+    });
 
     it('공지 조회 시  DTO로 잘 변환 후 반환', async () => {
 
