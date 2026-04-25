@@ -2,7 +2,7 @@ import Container from "typedi";
 import { AppRequest, UserData } from "../middlewares/appRequest";
 import { BoardIdxParamReqType, CommentIdxParamReqType } from "../model/dto/IdxParamReq";
 import { catchAsync } from "../utils/catchAsync";
-import CommentService from "../service/BoardCommentService";
+import CommentService from "../service/boardCommentService";
 import {PagingReqType } from "../model/dto/paging";
 import { sendSuccess } from "../model/dto/baseRes";
 import { Response } from "express";
