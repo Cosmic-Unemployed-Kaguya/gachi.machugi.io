@@ -1,9 +1,9 @@
-package kaguya.domain.quiz.question.util.mapper;
+package kaguya.domain.question.util.mapper;
 
 import org.springframework.stereotype.Component;
 
-import kaguya.domain.quiz.question.model.dto.request.QuestionRequest;
-import kaguya.domain.quiz.question.model.entity.QuestionEntity;
+import kaguya.domain.question.model.dto.request.QuestionRequest;
+import kaguya.domain.question.model.entity.QuestionEntity;
 
 @Component
 public class QuestionMapper {

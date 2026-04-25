@@ -1,9 +1,9 @@
-package kaguya.domain.quiz.question.service;
+package kaguya.domain.question.service;
 
 import java.util.List;
 
-import kaguya.domain.quiz.question.model.dto.request.QuestionRequest;
-import kaguya.domain.quiz.question.model.dto.response.QuestionResponse;
+import kaguya.domain.question.model.dto.request.QuestionRequest;
+import kaguya.domain.question.model.dto.response.QuestionResponse;
 
 public interface QuestionService {
 

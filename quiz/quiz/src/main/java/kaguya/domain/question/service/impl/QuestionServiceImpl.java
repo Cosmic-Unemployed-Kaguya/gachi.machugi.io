@@ -1,16 +1,16 @@
-package kaguya.domain.quiz.question.service.impl;
+package kaguya.domain.question.service.impl;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
-import kaguya.domain.quiz.question.model.dto.request.QuestionRequest;
-import kaguya.domain.quiz.question.model.dto.response.QuestionResponse;
-import kaguya.domain.quiz.question.model.entity.QuestionEntity;
-import kaguya.domain.quiz.question.repository.QuestionRepository;
-import kaguya.domain.quiz.question.service.QuestionService;
-import kaguya.domain.quiz.question.util.mapper.QuestionMapper;
+import kaguya.domain.question.model.dto.request.QuestionRequest;
+import kaguya.domain.question.model.dto.response.QuestionResponse;
+import kaguya.domain.question.model.entity.QuestionEntity;
+import kaguya.domain.question.repository.QuestionRepository;
+import kaguya.domain.question.service.QuestionService;
+import kaguya.domain.question.util.mapper.QuestionMapper;
 import lombok.RequiredArgsConstructor;
 
 @Service
