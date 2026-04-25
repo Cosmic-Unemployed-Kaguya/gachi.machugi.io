@@ -13,7 +13,7 @@ export class QuizCommentRepository extends TypeOrmRepository<QuizCommentEntity>{
 
         // 0. 해당 개시글에 대한 댓글 조회
         const qb = this.createQueryBuilder("comment")
-            .where("comment.board = :quizIdx", {quizIdx})
+            .where("comment.quizIdx = :quizIdx", {quizIdx})
 
         // 1. 최상위 댓글만 조회
         qb.andWhere("comment.parent IS NULL");
