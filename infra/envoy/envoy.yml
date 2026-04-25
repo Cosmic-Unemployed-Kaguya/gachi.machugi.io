@@ -3,7 +3,7 @@ admin:
   address:
     socket_address:
       address: 0.0.0.0
-      port_value: 9090
+      port_value: 9901
 
 static_resources:
   listeners:
@@ -17,7 +17,13 @@ static_resources:
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
           stat_prefix: ingress_http
-          
+
+          # 로그
+          access_log:
+            - name: envoy.access_loggers.stdout
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+
           route_config:
             name: local_route
             virtual_hosts:
@@ -40,9 +46,24 @@ static_resources:
                   expose_headers: "grpc-status,grpc-message"
 
               routes:
-              - match: { prefix: "/user" }
-                route: { cluster: user_cluster }
+
+              # REST API
               - match: { prefix: "/auth" }
+                route: { cluster: auth_cluster }
+                typed_per_filter_config:
+                  envoy.filters.http.ext_authz:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                    disabled: true
+
+              - match: { prefix: "/gachi.machugi.grpc.user.UserService" }
+                route: { cluster: user_cluster }
+                typed_per_filter_config:
+                  envoy.filters.http.ext_authz:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                    disabled: true
+
+           # gRPC
+              - match: { prefix: "/user" }
                 route: { cluster: user_cluster }
               - match: { prefix: "/quiz" }
                 route: { cluster: quiz_cluster }
@@ -87,7 +108,15 @@ static_resources:
                 timeout: 0.5s
               transport_api_version: V3
               failure_mode_allow: false
-          
+
+              authorization_response:
+                allowed_upstreams_headers:
+                  match_rules:
+                  - exact: "set-cookie"
+                allowed_client_headers:
+                  match_rules:
+                  - exact: "set-cookie"
+
           # 라우팅 필터
           - name: envoy.filters.http.router
             typed_config:
@@ -95,6 +124,18 @@ static_resources:
 
 
   clusters:
+
+  # 인증(Auth 클러스터
+  - name: auth_cluster
+    connect_timeout: 0.25s
+    type: LOGICAL_DNS
+    load_assignment:
+      cluster_name: auth_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address: { address: host.docker.internal, port_value: 8081 }
 
   # 유저(User) 클러스터
   - name: user_cluster
