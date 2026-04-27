@@ -22,16 +22,16 @@ public class JwtProvider {
      * AccessToken 생성 (접근)
      * @param username: 토큰 식별자
      */
-    public String createAccessToken(String username) {
-        return issueToken(username, EXP_ACCESS_TOKEN);
+    public String createAccessToken(String username, String role) {
+        return issueAccessToken(username, role, EXP_ACCESS_TOKEN);
     }
 
     /**
      * RefreshToken 생성 (갱신)
-     * @param id: 토큰 식별자
+     * @param username: 토큰 식별자
      */
-    public String createRefreshToken(String id) {
-        return issueToken(id, EXP_REFRESH_TOKEN);
+    public String createRefreshToken(String username) {
+        return issueRefreshToke(username, EXP_REFRESH_TOKEN);
     }
 
     /**
@@ -52,7 +52,7 @@ public class JwtProvider {
 
     /**
      * 토큰으로 아이디 조회
-     * @param token: RefreshToken
+     * @param token: AccessToken/RefreshToken
      */
     public String getUsername(String token) {
         return Jwts.parser()
@@ -60,24 +60,51 @@ public class JwtProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
-                .getSubject(); // 생성할 때 Subject()로 넣었던 값 (username)
+                .getSubject();  // 생성할 때 Subject()로 넣었던 값 (username)
+    }
+
+    /**
+     * 토큰으로 권한 조회
+     * @param token: AccessToken
+     */
+    public String getRole(String token) {
+        return Jwts.parser()
+                .verifyWith(getSecretKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("role", String.class);  // 생성할 때 claim()로 넣었던 값(role)
     }
 
     /**
      * 토큰 생성 로직
      * @param username: 토큰 식별자 (id)
+     * @param role: 페이로드 (role)
      * @param expTime: 토큰 만료일
      */
-    private String issueToken(String username, long expTime) {
+    private String issueAccessToken(String username, String role, long expTime) {
         long now = System.currentTimeMillis();
 
         return Jwts.builder()
-                .subject(username)  // 식별자
+                .subject(username)  // 식별자(아이디)
+                .claim("role", role)  // 페이로드(권한)
                 .issuedAt(new Date(now))  // 발급일
                 .expiration(new Date(now + expTime))  // 만료일
                 .signWith(getSecretKey())  // 서명
                 .compact();
     }
+
+    private String issueRefreshToke(String username, long expTime) {
+        long now = System.currentTimeMillis();
+
+        return Jwts.builder()
+                .subject(username)  // 식별자(아이디)
+                .issuedAt(new Date(now))  // 발급일
+                .expiration(new Date(now + expTime))  // 만료일
+                .signWith(getSecretKey())  // 서명
+                .compact();
+    }
+
 /*
     // compact() 의미
     for (Map.Entry<String, Object> claimEntry : claims.entrySet()) {

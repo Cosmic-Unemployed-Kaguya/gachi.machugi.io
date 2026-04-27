@@ -3,6 +3,7 @@ package kaguya.domain.user.controller;
 import kaguya.domain.user.model.dto.request.LoginReq;
 import kaguya.domain.user.model.dto.request.RegisterReq;
 import kaguya.domain.user.model.dto.response.BaseRes;
+import kaguya.domain.user.model.dto.response.CheckTokenRes;
 import kaguya.domain.user.model.dto.response.LoginRes;
 import kaguya.domain.user.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * 회원가입 (gRPC)
+     * 회원가입
      * @param request: 회원가입 요청 DTO (계정 정보, 사용자 정보)
      * @return BaseRes<void>: HTTP 201 생성
      */
@@ -80,7 +81,13 @@ public class AuthController {
             @CookieValue(name = "refreshToken", required = false) String refreshToken
     ) {
 
-         authService.logout(accessToken, refreshToken);
+        // accessToken이 비어있으면 로그인 상태가 아님
+        if (accessToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new BaseRes<>("401", "로그인 상태가 아닙니다.", null));
+        }
+
+        authService.logout(accessToken, refreshToken);
 
         // Access Token 쿠키 삭제
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
@@ -104,22 +111,6 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(new BaseRes<>("200", "로그아웃 성공", null));
-    }
-
-    /**
-     * 토큰 검증 (gRPC)
-     * @param accessToken: 접근 토큰
-     * @return <BaseRes<void>: HTTP 200 성공
-     */
-    @PostMapping("/checkToken")
-    public ResponseEntity<BaseRes<String>> checkToken (
-            @CookieValue("accessToken") String accessToken
-    ) {
-
-        String id = authService.checkToken(accessToken);
-
-        return ResponseEntity.ok()
-                .body(new BaseRes<>("200", "인증 성공", id));
     }
 
     /**

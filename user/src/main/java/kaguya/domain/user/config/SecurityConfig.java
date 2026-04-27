@@ -1,19 +1,23 @@
 package kaguya.domain.user.config;
 
+import kaguya.domain.user.config.filter.ExtAuthzFilter;
+import kaguya.domain.user.service.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final AuthService authService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -26,22 +30,14 @@ public class SecurityConfig {
 
                 // 페이지 접근 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/auth/register", "/auth/reissue").permitAll()  // 로그인/회원가입은 누구나
-                        .requestMatchers("/admin/**").hasRole("ADMIN")  // 관리자 전용
+                        .requestMatchers("/auth/**").permitAll()  // 인증 관련은 전부 통과
                         .anyRequest().authenticated()  // 나머지는 Envoy가 인증해준 유저만
                 )
 
-                // Envoy 필터
-                .addFilterBefore(new HeaderAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                // ExtAuthzFilter(): Envoy의 ext_authz 필터 설정
+                // UsernamePasswordAuthenticationFilter: 실행 위치(순서)를 잡기 위한 앵커 용도 (실제 필터가 적용되진 않음)
+                .addFilterBefore(new ExtAuthzFilter(authService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    /**
-     * 비밀번호 암호화 (BCrypt - 단방향)
-     */
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }

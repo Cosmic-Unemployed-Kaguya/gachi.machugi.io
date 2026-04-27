@@ -2,6 +2,7 @@ package kaguya.domain.user.service;
 
 import kaguya.domain.user.model.dto.request.LoginReq;
 import kaguya.domain.user.model.dto.request.RegisterReq;
+import kaguya.domain.user.model.dto.response.CheckTokenRes;
 import kaguya.domain.user.model.dto.response.LoginRes;
 import kaguya.domain.user.model.entity.UserEntity;
 import kaguya.domain.user.repository.RedisRepository;
@@ -77,7 +78,7 @@ public class AuthService {
         }
 
         // Access/Refresh 토큰
-        String accessToken = jwtProvider.createAccessToken(entity.getUsername());
+        String accessToken = jwtProvider.createAccessToken(entity.getUsername(), entity.getRole().toString());
         String refreshToken = jwtProvider.createRefreshToken(entity.getUsername());
 
         // 갱신 토큰 Redis 저장 (14일)
@@ -109,42 +110,53 @@ public class AuthService {
     }
 
     /**
-     * 토큰 확인
-     * @param accessToken: 접근 토큰
-     */
-    @Transactional
-    public String checkToken(String accessToken) {
-
-        if(!jwtProvider.validationToken(accessToken)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않는 접근 토큰");
-        }
-
-        if(redisRepository.exist("BL:" + accessToken)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않는 접근 토큰 (해킹 의심)");
-        }
-
-        return jwtProvider.getUsername(accessToken);
-    }
-
-    /**
      * 토큰 갱신
      * @param refreshToken: 갱신 토큰
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public String renewToken(String refreshToken) {
 
+        // 유효한 토큰인지 검증
         if(!jwtProvider.validationToken(refreshToken)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않는 갱신 토큰");
         }
 
+        // 아이디 조회 (jwt)
         String username = jwtProvider.getUsername(refreshToken);
 
-        // 갱신토큰 조회
+        // redis에 갱신 토큰이 있는지 확인
         String savedRefreshToken = redisRepository.get("RT:" + username);
         if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "이미 로그아웃되었거나 유효하지 않은 갱신 토큰");
         }
 
-        return jwtProvider.createAccessToken(username);
+        UserEntity entity = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유저를 찾을 수 없습니다."));
+
+        return jwtProvider.createAccessToken(username, entity.getRole().toString());
+    }
+
+    /**
+     * 토큰 확인
+     * @param accessToken: 접근 토큰
+     */
+    @Transactional(readOnly = true)
+    public CheckTokenRes checkToken(String accessToken) {
+
+        // 유요한 토큰인지 검증
+        if(!jwtProvider.validationToken(accessToken)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않는 접근 토큰");
+        }
+
+        // 블랙 리스트 검사
+        if(redisRepository.exist("BL:" + accessToken)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않는 접근 토큰 (해킹 의심)");
+        }
+
+        // 아이디 및 권한 조회 (jwt)
+        String username = jwtProvider.getUsername(accessToken);
+        String role = jwtProvider.getRole(accessToken);
+
+        return new CheckTokenRes(username, role);
     }
 }
