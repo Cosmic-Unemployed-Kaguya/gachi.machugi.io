@@ -16,35 +16,25 @@ jobs:
       contents: read
       packages: read
 
-    # GITHUB_ACTOR는 만약 추가적인 커스텀 라이브러리를 불러올 때 보통 쓰는 거. 필요없으면 안쓰면 됨.
     env:
-      # GITHUB_ACTOR: ${{ github.actor }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: 브랜치로 체크아웃
         uses: actions/checkout@v5
 
-      #이 부분은 spring 쓰는 사람이 바꾸셈
       - name: JDK 세팅
         uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'temurin'
 
-      # - name: account test yml pem 세팅
-      #   if: ${{ inputs.service-name == 'account-service' }}
-      #   run: |
-      #     mkdir -p ./FLOWIN/account-service/src/main/resources
-      #     echo '${{ secrets.ACCOUNT_TEST_YML }}' > ./FLOWIN/account-service/src/main/resources/application.yml
-      #     echo '${{ secrets.PRIVATE_KEY_TEST_PEM }}' > ./FLOWIN/account-service/src/main/resources/private-key-test.pem
-      #     mkdir -p ./FLOWIN/account-service/src/test/resources
-      #     echo '${{ secrets.ACCOUNT_TEST_YML }}' > ./FLOWIN/account-service/src/test/resources/application-test.yml
-      #     echo '${{ secrets.PRIVATE_KEY_TEST_PEM }}' > ./FLOWIN/account-service/src/test/resources/private-key-test.pem
-      # 이런 느낌으로 spring은 yml파일을 실행되는 가상머신에 넣어줘야함.
-      # github에 secrets에 알맞는 이름으로 yml파일의 텍스트를 복사해서 넣어주고, 그 변수의 이름을 위의 예시처럼
-      # secrets.ACCOUNT_TEST_YML 처럼 넣어주는 거임. 추가적인 비번파일이 있다면 secrets.PRIVATE_KEY_TEST_PEM처럼 똑같이 넣어주면
-      #참고로 우리 주소는 ./{서비스 이름}/
+      - name: user test yml 세팅
+        if: ${{ inputs.service-name == 'user' }}
+        run: |
+          mkdir -p ./${{ inputs.service-name }}/src/test/resources
+          echo '${{ secrets.USER_TEST_YML }}' > ./${{ inputs.service-name }}/src/test/resources/application-test.yml
+
 #      - 최상위 폴더에 스프링 구축 시 해결 됨. 현재는 없음.
 #      - name: gradlew 권한 세팅
 #        run: chmod +x ./gradlew
