@@ -1,0 +1,150 @@
+admin:
+  access_log_path: /dev/null
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9901
+
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 8080 }
+    
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+
+          # 로그
+          access_log:
+            - name: envoy.access_loggers.stdout
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+
+          route_config:
+            name: local_route
+            virtual_hosts:
+
+            # 어떤 도메인/IP로 들어오든 다 받음
+            - name: all_services_host
+              domains: ["*"]  
+              typed_per_filter_config:
+
+                # CORS 정책 (Front 연동)
+                envoy.filters.http.cors:
+                  "@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.CorsPolicy
+                  allow_origin_string_match:
+                    - safe_regex:
+                        google_re2: {}
+                        regex: ".*"  # 로컬 테스트용 (모든 도메인 허용)
+                  allow_methods: "GET, PUT, DELETE, POST, OPTIONS"
+                  allow_headers: "keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout,authorization"
+                  max_age: "1728000"
+                  expose_headers: "grpc-status,grpc-message"
+
+
+              routes:
+
+              # 인증(Auth) 서버 - REST API
+              - match: { prefix: "/auth" }
+                route: { cluster: auth_cluster }
+                typed_per_filter_config:
+                  envoy.filters.http.ext_authz:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                    disabled: true
+
+              # gRPC 내부 패키지명 라우팅
+              - match: { prefix: "/gachi.machugi.grpc.user.UserService" }
+                route: { cluster: user_cluster }
+
+              # 목표 서버 - gRPC
+              - match: { prefix: "/user" }
+                route: { cluster: user_cluster }
+
+          http_filters:
+          # gRPC-Web 필터
+          - name: envoy.filters.http.grpc_web
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb
+          
+          # CORS 필터
+          - name: envoy.filters.http.cors
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
+
+          # 인증(Auth) 필터
+          - name: envoy.filters.http.ext_authz
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+              failure_mode_allow: false
+              
+              http_service:
+                server_uri:
+                  uri: http://auth_cluster
+                  cluster: auth_cluster
+                  timeout: 0.5s
+
+                # 프론트엔드 -> Envoy -> 인증 서버
+                authorization_request:
+                  allowed_headers:
+                    patterns:
+                    - exact: "cookie"
+                    - exact: "authorization"
+
+                # 인증 서버 -> Envoy -> 프론트엔드
+                authorization_response:
+                  allowed_upstream_headers:
+                    patterns:
+                    - exact: "set-cookie"
+                    - exact: "x-user-id"
+                    - exact: "x-user-role"
+                  allowed_client_headers:
+                    patterns:
+                    - exact: "set-cookie"
+
+          # REST -> gRPC 변환 필터
+          - name: envoy.filters.http.grpc_json_transcoder
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder
+              proto_descriptor: "/tmp/descriptor.pb"
+              services: 
+                - "gachi.machugi.grpc.user.UserService"
+              print_options:
+                add_whitespace: true
+                always_print_primitive_fields: true
+
+          # 라우팅 필터
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+
+
+  clusters:
+
+  # 인증(Auth) 클러스터
+  - name: auth_cluster
+    connect_timeout: 0.25s
+    type: LOGICAL_DNS
+    load_assignment:
+      cluster_name: auth_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address: { address: host.docker.internal, port_value: 8081 }
+
+  # 유저(User) 클러스터
+  - name: user_cluster
+    connect_timeout: 0.25s 
+    type: LOGICAL_DNS
+    http2_protocol_options: {} 
+    load_assignment:
+      cluster_name: user_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address: { address: host.docker.internal, port_value: 9091 }
