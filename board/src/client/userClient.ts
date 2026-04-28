@@ -2,7 +2,7 @@ import { CallOptions, Client, ClientUnaryCall, credentials, Metadata, ServiceErr
 import { UserInfoListReply, UserInfoReply, UserInfoRequest, UserServiceClient } from "../generated/user";
 import { Service } from "typedi";
 import { UserInfoListRequset } from './../generated/user';
-
+import config from '../config'
 
 /**
  * UserClient 클래스 내부에서 UserServiceClient 객체를 생성 후 사용
@@ -17,10 +17,10 @@ import { UserInfoListRequset } from './../generated/user';
 export default class UserClient {
     
     private readonly grpcClient: UserServiceClient;
-    /** @TODO 하드코딩 XXXXXXXXXXXXXXXXX */
+
     constructor(){
         this.grpcClient = new UserServiceClient(
-            'localhost:3001', 
+            config.userService, 
             credentials.createInsecure())
     }
 

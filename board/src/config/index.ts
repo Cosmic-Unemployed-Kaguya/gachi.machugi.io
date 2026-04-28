@@ -33,6 +33,9 @@ export default{
 
     profile : getEnv("PROFILE"),
 
-    logLevel : getEnv("LOG_LEVEL", "info")
+    logLevel : getEnv("LOG_LEVEL", "info"),
+
+
+    userService : getEnv("USER_SERVICE", 'localhost:3001'),
 
 }
