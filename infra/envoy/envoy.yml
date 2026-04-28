@@ -47,7 +47,7 @@ static_resources:
 
               routes:
 
-              # REST API
+              # 인증(Auth) 서버 - REST API
               - match: { prefix: "/auth" }
                 route: { cluster: auth_cluster }
                 typed_per_filter_config:
@@ -55,14 +55,17 @@ static_resources:
                     "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
                     disabled: true
 
+              # gRPC 내부 패키지명 라우팅
               - match: { prefix: "/gachi.machugi.grpc.user.UserService" }
                 route: { cluster: user_cluster }
-                typed_per_filter_config:
-                  envoy.filters.http.ext_authz:
-                    "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
-                    disabled: true
+              - match: { prefix: "/gachi.machugi.grpc.quiz.QuizService" }
+                route: { cluster: quiz_cluster }
+              - match: { prefix: "/gachi.machugi.grpc.room.RoomService" }
+                route: { cluster: room_cluster }
+              - match: { prefix: "/gachi.machugi.grpc.board.BoardService" }
+                route: { cluster: board_cluster }
 
-           # gRPC
+              # 목표 서버 - gRPC
               - match: { prefix: "/user" }
                 route: { cluster: user_cluster }
               - match: { prefix: "/quiz" }
@@ -72,17 +75,46 @@ static_resources:
               - match: { prefix: "/board" }
                 route: { cluster: board_cluster }
 
-
           http_filters:
-          # gRPC-Web 필터 추가 (브라우저용 gRPC 통신 지원)
+          # gRPC-Web 필터
           - name: envoy.filters.http.grpc_web
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb
           
-          # CORS 필터 추가 (실제 CORS 헤더를 응답에 삽입)
+          # CORS 필터
           - name: envoy.filters.http.cors
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors
+
+          # 인증(Auth) 필터
+          - name: envoy.filters.http.ext_authz
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
+              failure_mode_allow: false
+              
+              http_service:
+                server_uri:
+                  uri: http://auth_cluster
+                  cluster: auth_cluster
+                  timeout: 0.5s
+
+                # 프론트엔드 -> Envoy -> 인증 서버
+                authorization_request:
+                  allowed_headers:
+                    patterns:
+                    - exact: "cookie"
+                    - exact: "authorization"
+
+                # 인증 서버 -> Envoy -> 프론트엔드
+                authorization_response:
+                  allowed_upstream_headers:
+                    patterns:
+                    - exact: "set-cookie"
+                    - exact: "x-user-id"
+                    - exact: "x-user-role"
+                  allowed_client_headers:
+                    patterns:
+                    - exact: "set-cookie"
 
           # REST -> gRPC 변환 필터
           - name: envoy.filters.http.grpc_json_transcoder
@@ -98,25 +130,6 @@ static_resources:
                 add_whitespace: true
                 always_print_primitive_fields: true
 
-          # 인증(Auth) 필터
-          - name: envoy.filters.http.ext_authz
-            typed_config:
-              "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz
-              grpc_service:
-                envoy_grpc:
-                  cluster_name: user_cluster
-                timeout: 0.5s
-              transport_api_version: V3
-              failure_mode_allow: false
-
-              authorization_response:
-                allowed_upstreams_headers:
-                  match_rules:
-                  - exact: "set-cookie"
-                allowed_client_headers:
-                  match_rules:
-                  - exact: "set-cookie"
-
           # 라우팅 필터
           - name: envoy.filters.http.router
             typed_config:
@@ -125,7 +138,7 @@ static_resources:
 
   clusters:
 
-  # 인증(Auth 클러스터
+  # 인증(Auth) 클러스터
   - name: auth_cluster
     connect_timeout: 0.25s
     type: LOGICAL_DNS
