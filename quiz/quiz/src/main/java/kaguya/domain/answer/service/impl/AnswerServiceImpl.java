@@ -3,8 +3,8 @@ package kaguya.domain.answer.service.impl;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.transaction.Transactional;
 import kaguya.domain.answer.model.dto.request.AnswerRequest;
 import kaguya.domain.answer.model.dto.response.AnswerResponse;
 import kaguya.domain.answer.model.entity.AnswerEntity;
@@ -27,15 +27,16 @@ public class AnswerServiceImpl implements AnswerService {
         AnswerEntity answer = answerMapper.requestToEntity(questionIdx, request);
         AnswerEntity savedAnswer = answerRepository.save(answer);
 
-        return AnswerResponse.fromEntity(savedAnswer);
+        return answerMapper.entityToResponse(savedAnswer);
     }
 
     // 정답 조회
     @Override
+    @Transactional(readOnly = true)
     public List<AnswerResponse> getAnswerList(Long questionIdx) {
         return answerRepository.findByQuestionIdx(questionIdx)
                 .stream()
-                .map(AnswerResponse::fromEntity)
+                .map(answerMapper::entityToResponse)
                 .toList();
     }
 
@@ -47,7 +48,7 @@ public class AnswerServiceImpl implements AnswerService {
 
         answer.patchAnswer(request.answer());
 
-        return AnswerResponse.fromEntity(answer);
+        return answerMapper.entityToResponse(answer);
     }
 
     // 정답 삭제

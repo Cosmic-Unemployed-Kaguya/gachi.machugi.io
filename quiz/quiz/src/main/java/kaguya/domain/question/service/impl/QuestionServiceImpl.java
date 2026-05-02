@@ -3,8 +3,8 @@ package kaguya.domain.question.service.impl;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.transaction.Transactional;
 import kaguya.domain.question.model.dto.request.QuestionRequest;
 import kaguya.domain.question.model.dto.response.QuestionResponse;
 import kaguya.domain.question.model.entity.QuestionEntity;
@@ -27,25 +27,27 @@ public class QuestionServiceImpl implements QuestionService {
         QuestionEntity question = questionMapper.requestToEntity(quizIdx, request);
         QuestionEntity savedQuestion = questionRepository.save(question);
 
-        return QuestionResponse.fromEntity(savedQuestion);
+        return questionMapper.entityToResponse(savedQuestion);
     }
 
     // 문제 전체 조회
     @Override
+    @Transactional(readOnly = true)
     public List<QuestionResponse> getQuestionList(Long quizIdx) {
         return questionRepository.findByQuizIdxOrderBySortOrderAsc(quizIdx)
                 .stream()
-                .map(QuestionResponse::fromEntity)
+                .map(questionMapper::entityToResponse)
                 .toList();
     }
 
     // 문제 단일 조회 
     @Override
+    @Transactional(readOnly = true)
     public QuestionResponse getQuestion(Long questionIdx) {
         QuestionEntity question = questionRepository.findById(questionIdx)
                 .orElseThrow(() -> new RuntimeException("문제가 존재하지 않습니다."));
 
-        return QuestionResponse.fromEntity(question);
+        return questionMapper.entityToResponse(question);
     }
 
     // 문제 수정
@@ -61,7 +63,7 @@ public class QuestionServiceImpl implements QuestionService {
                 request.sortOrder()
         );
 
-        return QuestionResponse.fromEntity(question);
+        return questionMapper.entityToResponse(question);
     }
 
     // 문제 삭제
