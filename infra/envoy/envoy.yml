@@ -46,6 +46,14 @@ static_resources:
                   expose_headers: "grpc-status,grpc-message"
 
               routes:
+              # CORS Preflight (OPTIONS) 요청 가로채기
+              - match: 
+                  prefix: "/"
+                  headers:
+                    - name: ":method"
+                      exact_match: "OPTIONS"
+                direct_response:
+                  status: 200
 
               # 인증(Auth) 서버 - REST API
               - match: { prefix: "/auth" }
@@ -65,22 +73,8 @@ static_resources:
               - match: { prefix: "/gachi.machugi.grpc.board.BoardService" }
                 route: { cluster: board_cluster }
 
-              # 목표 서버 - gRPC
-              - match: { prefix: "/user" }
-                route: { cluster: user_cluster }
-              - match: { prefix: "/quiz" }
-                route: { cluster: quiz_cluster }
-              - match: { prefix: "/room" }
-                route: { cluster: room_cluster }
-              - match: { prefix: "/board" }
-                route: { cluster: board_cluster }
 
           http_filters:
-          # gRPC-Web 필터
-          - name: envoy.filters.http.grpc_web
-            typed_config:
-              "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_web.v3.GrpcWeb
-          
           # CORS 필터
           - name: envoy.filters.http.cors
             typed_config:
