@@ -52,8 +52,13 @@ static_resources:
                   headers:
                     - name: ":method"
                       exact_match: "OPTIONS"
-                direct_response:
-                  status: 200
+                route: 
+                  cluster: user_cluster  # 아무 클러스터나 지정 (실제 요청으로 안 넘어감)
+
+                typed_per_filter_config:
+                  envoy.filters.http.ext_authz:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                    disabled: true
 
               # 인증(Auth) 서버 - REST API
               - match: { prefix: "/auth" }
@@ -131,7 +136,6 @@ static_resources:
 
 
   clusters:
-
   # 인증(Auth) 클러스터
   - name: auth_cluster
     connect_timeout: 0.25s
