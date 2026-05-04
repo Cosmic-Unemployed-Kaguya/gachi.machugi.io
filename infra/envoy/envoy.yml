@@ -42,23 +42,11 @@ static_resources:
                         regex: ".*"  # 로컬 테스트용 (모든 도메인 허용)
                   allow_methods: "GET, PUT, DELETE, POST, OPTIONS"
                   allow_headers: "content-type,authorization"
+                  allow_credentials: true
                   max_age: "1728000"
 
+
               routes:
-              # CORS Preflight (OPTIONS) 요청 가로채기
-              - match: 
-                  prefix: "/"
-                  headers:
-                    - name: ":method"
-                      exact_match: "OPTIONS"
-                route: 
-                  cluster: user_cluster  # 아무 클러스터나 지정 (실제 요청으로 안 넘어감)
-
-                typed_per_filter_config:
-                  envoy.filters.http.ext_authz:
-                    "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
-                    disabled: true
-
               # 인증(Auth) 서버 - REST API
               - match: { prefix: "/auth" }
                 route: { cluster: auth_cluster }
@@ -76,6 +64,12 @@ static_resources:
                 route: { cluster: room_cluster }
               - match: { prefix: "/gachi.machugi.grpc.board.BoardService" }
                 route: { cluster: board_cluster }
+
+              # 그 외 경로 매칭
+              - match: { prefix: "/" }
+                direct_response:
+                  status: 404
+                  body: { inline_string: "{\"status\": 404, \"message\": \"존재하지 않는 API 입니다.\"}" }
 
 
           http_filters:
