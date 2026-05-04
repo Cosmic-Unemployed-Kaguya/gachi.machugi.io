@@ -13,7 +13,7 @@ import net.devh.boot.grpc.server.service.GrpcService;
 @Slf4j
 @GrpcService
 @RequiredArgsConstructor
-public class UserGrpcSever extends UserServiceGrpc.UserServiceImplBase {
+public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
 
     /**
      * REST API 동작 테스트 용 (서비스 로직 X)

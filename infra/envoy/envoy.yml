@@ -41,9 +41,8 @@ static_resources:
                         google_re2: {}
                         regex: ".*"  # 로컬 테스트용 (모든 도메인 허용)
                   allow_methods: "GET, PUT, DELETE, POST, OPTIONS"
-                  allow_headers: "keep-alive,user-agent,cache-control,content-type,content-transfer-encoding,x-accept-content-transfer-encoding,x-accept-response-streaming,x-user-agent,x-grpc-web,grpc-timeout,authorization"
+                  allow_headers: "content-type,authorization"
                   max_age: "1728000"
-                  expose_headers: "grpc-status,grpc-message"
 
 
               routes:
@@ -72,6 +71,12 @@ static_resources:
               # gRPC 내부 패키지명 라우팅
               - match: { prefix: "/gachi.machugi.grpc.user.UserService" }
                 route: { cluster: user_cluster }
+
+              # 경로 매칭
+              - match: { prefix: "/" }
+                direct_response:
+                  status: 404
+                  body: { inline_string: "{\"status\": 404, \"message\": \"존재하지 않는 API 입니다.\"}" }
 
 
           http_filters:       
