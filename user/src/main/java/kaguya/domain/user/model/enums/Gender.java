@@ -15,4 +15,14 @@ public enum Gender {
         this.code = code;
         this.label = label;
     }
+
+    public static Gender fromString(String value) {
+        if (value == null) return NONE;
+
+        try {
+            return Gender.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return NONE;
+        }
+    }
 }

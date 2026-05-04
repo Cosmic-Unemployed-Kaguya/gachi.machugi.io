@@ -18,7 +18,7 @@ public class RedisConfig {
     @Value("${spring.data.redis.port}")
     private int port;
 
-    /*
+    /**
      * Redis 연결 팩토리 생성 (Lettuce 사용)
      * Jedis 대신 비동기 요청 처리에 강한 Lettuce 클라이언트를 사용하여 연결
      */
@@ -27,7 +27,7 @@ public class RedisConfig {
         return new LettuceConnectionFactory(host, port);
     }
 
-    /*
+    /**
      * RedisTemplate 설정
      * 기본 RedisTemplate은 JdkSerializationRedisSerializer를 사용하기 때문에,
      * redis-cli 등에서 데이터를 확인할 때 바이너리 값으로 보여 식별이 어려움
@@ -40,7 +40,7 @@ public class RedisConfig {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory());
 
-        /*
+        /**
          * Key-Value, List, Set 직렬화 설정
          * Key 직렬화: StringRedisSerializer (String)
          * Value 직렬화: GenericJackson2JsonRedisSerializer (Json/Object)
@@ -48,7 +48,7 @@ public class RedisConfig {
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
 
-        /*
+        /**
          * Hash 자료구조 직렬화 설정
          * Key 직렬화: StringRedisSerializer (String)
          * Value 직렬화: GenericJackson2JsonRedisSerializer (Json/Object)

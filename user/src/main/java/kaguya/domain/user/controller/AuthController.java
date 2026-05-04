@@ -3,6 +3,7 @@ package kaguya.domain.user.controller;
 import kaguya.domain.user.model.dto.request.LoginReq;
 import kaguya.domain.user.model.dto.request.RegisterReq;
 import kaguya.domain.user.model.dto.response.BaseRes;
+import kaguya.domain.user.model.dto.response.CheckTokenRes;
 import kaguya.domain.user.model.dto.response.LoginRes;
 import kaguya.domain.user.service.AuthService;
 import lombok.RequiredArgsConstructor;
@@ -80,7 +81,13 @@ public class AuthController {
             @CookieValue(name = "refreshToken", required = false) String refreshToken
     ) {
 
-         authService.logout(accessToken, refreshToken);
+        // accessToken이 비어있으면 로그인 상태가 아님
+        if (accessToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new BaseRes<>("401", "로그인 상태가 아닙니다.", null));
+        }
+
+        authService.logout(accessToken, refreshToken);
 
         // Access Token 쿠키 삭제
         ResponseCookie accessCookie = ResponseCookie.from("accessToken", "")
@@ -104,5 +111,30 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(new BaseRes<>("200", "로그아웃 성공", null));
+    }
+
+    /**
+     * 토큰 갱신
+     * @param refreshToken: 갱신 토큰
+     * @return <BaseRes<void>: HTTP 200 성공
+     */
+    @PostMapping("/reissue")
+    public ResponseEntity<BaseRes<Void>> renewToken (
+            @CookieValue(name = "refreshToken") String refreshToken
+    ) {
+
+        String access = authService.renewToken(refreshToken);
+
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", access)
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(10 * 60)
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .body(new BaseRes<>("200", "토큰 갱신", null));
     }
 }
