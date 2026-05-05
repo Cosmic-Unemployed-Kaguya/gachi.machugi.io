@@ -38,6 +38,10 @@ class AuthControllerTest {
     @MockitoBean
     private AuthService authService;
 
+
+    /**
+     * 정상 테스트 (Happy Path)
+     */
     @Test
     @DisplayName("회원가입 성공")
     void 회원가입_테스트_성공() throws Exception {
@@ -131,4 +135,10 @@ class AuthControllerTest {
                 .andExpect(cookie().exists("accessToken"))
                 .andExpect(cookie().value("accessToken", "accessToken-AAABBBCCC"));
     }
+
+
+    /**
+     * 비정상 테스트 (Negative Test)
+     */
+    // todo. 비정상 테스트
 }

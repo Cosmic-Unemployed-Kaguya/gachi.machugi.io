@@ -96,7 +96,7 @@ public class AuthService {
     public void logout(String accessToken, String refreshToken) {
 
         // 유효한 토큰인지 검증
-        if(!jwtProvider.validationToken(refreshToken) && refreshToken != null) {
+        if(jwtProvider.validationToken(refreshToken) && refreshToken != null) {
 
             // Refresh Token으로 id 조회
             String username = jwtProvider.getUsername(refreshToken);
