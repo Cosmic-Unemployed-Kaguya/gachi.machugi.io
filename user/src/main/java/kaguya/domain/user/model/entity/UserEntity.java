@@ -74,11 +74,11 @@ public class UserEntity {
         this.gender = gender;
     }
 
-    public void changeRole(Role role) {
-        this.role = role;
-    }
+    // User
+    public void changePassword(String password) {this.password = password;}
+    public void changeNickname(String nickname) {this.nickname = nickname;}
 
-    public void changeStatus(Status status) {
-        this.status = status;
-    }
+    // Admin
+    public void changeRole(Role role) {this.role = role;}
+    public void changeStatus(Status status) {this.status = status;}
 }

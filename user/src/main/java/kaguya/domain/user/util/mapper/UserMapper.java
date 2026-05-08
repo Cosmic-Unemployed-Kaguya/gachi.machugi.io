@@ -1,5 +1,7 @@
 package kaguya.domain.user.util.mapper;
 
+import kaguya.domain.user.model.dto.AccountDTO;
+import kaguya.domain.user.model.dto.UserDTO;
 import kaguya.domain.user.model.dto.request.RegisterReq;
 import kaguya.domain.user.model.dto.response.LoginRes;
 import kaguya.domain.user.model.entity.UserEntity;
@@ -25,6 +27,30 @@ public class UserMapper {
 
     // Entity -> LoginRes
     public LoginRes toLoginRes(String accessToken, String refreshToken, UserEntity entity) {
-        return new LoginRes(accessToken, refreshToken, entity.getNickname());
+        return new LoginRes(
+                accessToken,
+                refreshToken,
+                entity.getNickname()
+        );
+    }
+
+    // Entity -> AccountDTO
+    public AccountDTO toAccountDto(UserEntity entity) {
+        return new AccountDTO(
+                entity.getUsername(),
+                entity.getPassword(),
+                entity.getNickname(),
+                entity.getEmail()
+        );
+    }
+
+    // Entity -> userDTO
+    public UserDTO toUserDto(UserEntity entity) {
+        return new UserDTO(
+                entity.getName(),
+                entity.getBirth(),
+                entity.getPhone(),
+                entity.getGender().toString()
+        );
     }
 }
