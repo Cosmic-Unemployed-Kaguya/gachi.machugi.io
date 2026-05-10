@@ -1,6 +1,6 @@
 package kaguya.domain.user.model.dto;
 
-public record AccountDTO (
+public record AccountInfo(
         String username,
         String password,
         String nickname,

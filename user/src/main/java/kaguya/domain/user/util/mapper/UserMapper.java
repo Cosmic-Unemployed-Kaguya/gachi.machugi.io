@@ -1,7 +1,7 @@
 package kaguya.domain.user.util.mapper;
 
-import kaguya.domain.user.model.dto.AccountDTO;
-import kaguya.domain.user.model.dto.UserDTO;
+import kaguya.domain.user.model.dto.request.MyPageReq;
+import kaguya.domain.user.model.dto.request.ProfileReq;
 import kaguya.domain.user.model.dto.request.RegisterReq;
 import kaguya.domain.user.model.dto.response.LoginRes;
 import kaguya.domain.user.model.entity.UserEntity;
@@ -34,19 +34,18 @@ public class UserMapper {
         );
     }
 
-    // Entity -> AccountDTO
-    public AccountDTO toAccountDto(UserEntity entity) {
-        return new AccountDTO(
+    // Entity -> MyPageReq
+    public MyPageReq toMyPageReq(UserEntity entity) {
+        return new MyPageReq(
                 entity.getUsername(),
-                entity.getPassword(),
                 entity.getNickname(),
                 entity.getEmail()
         );
     }
 
-    // Entity -> userDTO
-    public UserDTO toUserDto(UserEntity entity) {
-        return new UserDTO(
+    // Entity -> ProfileReq
+    public ProfileReq toProfileReq(UserEntity entity) {
+        return new ProfileReq(
                 entity.getName(),
                 entity.getBirth(),
                 entity.getPhone(),

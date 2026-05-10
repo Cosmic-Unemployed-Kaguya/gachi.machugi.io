@@ -1,9 +1,9 @@
 package kaguya.domain.user.model.dto.request;
 
-import kaguya.domain.user.model.dto.AccountDTO;
-import kaguya.domain.user.model.dto.UserDTO;
+import kaguya.domain.user.model.dto.AccountInfo;
+import kaguya.domain.user.model.dto.UserInfo;
 
 public record RegisterReq(
-        AccountDTO account,
-        UserDTO user
+        AccountInfo account,
+        UserInfo user
 ) {}
