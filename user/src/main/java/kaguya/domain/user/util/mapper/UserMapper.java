@@ -1,7 +1,7 @@
 package kaguya.domain.user.util.mapper;
 
-import kaguya.domain.user.model.dto.request.MyPageReq;
-import kaguya.domain.user.model.dto.request.ProfileReq;
+import kaguya.domain.user.model.dto.response.MyPageRes;
+import kaguya.domain.user.model.dto.response.ProfileRes;
 import kaguya.domain.user.model.dto.request.RegisterReq;
 import kaguya.domain.user.model.dto.response.LoginRes;
 import kaguya.domain.user.model.entity.UserEntity;
@@ -16,8 +16,8 @@ public class UserMapper {
         return UserEntity.builder()
                 .username(request.account().username())
                 .password(encodedPassword)
-                .nickname(request.account().nickname())
                 .email(request.account().email())
+                .nickname(request.account().nickname())
                 .name(request.user().name())
                 .birth(request.user().birth())
                 .phone(request.user().phone())
@@ -35,8 +35,8 @@ public class UserMapper {
     }
 
     // Entity -> MyPageReq
-    public MyPageReq toMyPageReq(UserEntity entity) {
-        return new MyPageReq(
+    public MyPageRes toMyPageReq(UserEntity entity) {
+        return new MyPageRes(
                 entity.getUsername(),
                 entity.getNickname(),
                 entity.getEmail()
@@ -44,8 +44,8 @@ public class UserMapper {
     }
 
     // Entity -> ProfileReq
-    public ProfileReq toProfileReq(UserEntity entity) {
-        return new ProfileReq(
+    public ProfileRes toProfileReq(UserEntity entity) {
+        return new ProfileRes(
                 entity.getName(),
                 entity.getBirth(),
                 entity.getPhone(),

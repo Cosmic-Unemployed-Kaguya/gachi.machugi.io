@@ -1,7 +1,7 @@
 package kaguya.domain.user.controller;
 
-import kaguya.domain.user.model.dto.request.MyPageReq;
-import kaguya.domain.user.model.dto.request.ProfileReq;
+import kaguya.domain.user.model.dto.response.MyPageRes;
+import kaguya.domain.user.model.dto.response.ProfileRes;
 import kaguya.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.domain.user.model.dto.response.BaseRes;
@@ -17,25 +17,25 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping("/my")
-    public ResponseEntity<BaseRes<MyPageReq>> getMyPage(
+    @GetMapping("/my")
+    public ResponseEntity<BaseRes<MyPageRes>> getMyPage(
             @RequestHeader(value = "x-user-id") String username
     ) {
 
-        MyPageReq data = userService.getMyPage(username);
+        MyPageRes data = userService.getMyPage(username);
 
-        BaseRes<MyPageReq> response = new BaseRes<>("200", "마이페이지 조회", data);
+        BaseRes<MyPageRes> response = new BaseRes<>("200", "마이페이지 조회", data);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/my/profile")
-    public ResponseEntity<BaseRes<ProfileReq>> getProfile(
+    @GetMapping("/my/profile")
+    public ResponseEntity<BaseRes<ProfileRes>> getProfile(
             @RequestHeader("x-user-id") String username
     ) {
 
-        ProfileReq data = userService.getProfile(username);
+        ProfileRes data = userService.getProfile(username);
 
-        BaseRes<ProfileReq> response = new BaseRes<>("200", "프로필 조회", data);
+        BaseRes<ProfileRes> response = new BaseRes<>("200", "프로필 조회", data);
         return ResponseEntity.ok(response);
     }
 
