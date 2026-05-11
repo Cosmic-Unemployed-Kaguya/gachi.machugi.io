@@ -2,8 +2,8 @@ package kaguya.domain.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
-import kaguya.domain.user.model.dto.AccountDTO;
-import kaguya.domain.user.model.dto.UserDTO;
+import kaguya.domain.user.model.dto.AccountInfo;
+import kaguya.domain.user.model.dto.UserInfo;
 import kaguya.domain.user.model.dto.request.LoginReq;
 import kaguya.domain.user.model.dto.request.RegisterReq;
 import kaguya.domain.user.model.dto.response.LoginRes;
@@ -29,15 +29,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)  // spring security 필터 무시
 class AuthControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Autowired MockMvc mockMvc;
+    @Autowired ObjectMapper objectMapper;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockitoBean
-    private AuthService authService;
-
+    @MockitoBean AuthService authService;
 
     /**
      * 정상 테스트 (Happy Path)
@@ -45,8 +40,8 @@ class AuthControllerTest {
     @Test
     @DisplayName("회원가입 성공")
     void 회원가입_테스트_성공() throws Exception {
-        AccountDTO account = new AccountDTO("testID", "testPassword", "user1", "aaaa@bbbb.com");
-        UserDTO user = new UserDTO("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
+        AccountInfo account = new AccountInfo("testID", "testPassword", "user1", "aaaa@bbbb.com");
+        UserInfo user = new UserInfo("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
         RegisterReq register = new RegisterReq(account, user);
 
         // 회원가입 서비스 return이 null이어서 given 의미 없음

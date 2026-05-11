@@ -38,8 +38,8 @@ public class UserMapper {
     public MyPageRes toMyPageReq(UserEntity entity) {
         return new MyPageRes(
                 entity.getUsername(),
-                entity.getNickname(),
-                entity.getEmail()
+                entity.getEmail(),
+                entity.getNickname()
         );
     }
 
