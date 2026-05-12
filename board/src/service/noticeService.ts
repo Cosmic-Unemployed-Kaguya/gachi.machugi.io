@@ -11,6 +11,7 @@ import { NoticeDetailRes } from "../model/dto/noticeDetailDTO";
 import { BoardIdxParamReqType } from '../model/dto/idxParamReq';
 import { BoardType } from "../model/enum/boardType";
 import { toNoticeDetail, toNoticeListRes } from "../utils/mapper/noticeMapper";
+import { Transactional } from "typeorm-transactional";
 
 
 
@@ -93,6 +94,7 @@ export default class NoticeService{
 
     }
 
+    @Transactional()
     public async deleteNotice(noticeIdxParam : BoardIdxParamReqType) :  Promise<Page<NoticeListRes>>{
 
         // 1. board 조회, 없을 시 에러
