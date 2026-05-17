@@ -1,0 +1,20 @@
+#이거 복사해서 써먹어야 함, {} 지우고 쓰셈
+#파일이름은 아래처럼
+#{사용하는 프레임워크}-{서비스이름}-ci-trigger.yml
+#예)spring-user-ci-trigger.yml
+name: {서비스 이름} CI 스크립트
+
+on:
+  pull_request:
+    branches:
+      - dev
+    paths: #얘 수정 밑에 이거
+      - './{서비스 파일 이름}/**'
+
+#각 서비스에 맞게 ci-script 선택, dotnet이랑 node.js는 알아서 만들어야 할 듯
+jobs:
+   execute-test:
+    uses: ./.github/workflows/{ci-script로 된 파일 중에서 사용하는 프레임워크에 맞는 거}.yml
+    secrets: inherit
+    with:
+      service-name: {서비스 이름}
