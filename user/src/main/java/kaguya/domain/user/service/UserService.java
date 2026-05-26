@@ -1,7 +1,7 @@
 package kaguya.domain.user.service;
 
 import kaguya.domain.user.model.dto.response.MyPageRes;
-import kaguya.domain.user.model.dto.response.ProfileRes;
+import kaguya.domain.user.model.dto.UserDto;
 import kaguya.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.domain.user.model.entity.UserEntity;
@@ -28,17 +28,17 @@ public class UserService {
         UserEntity userEntity = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다."));
 
-        return userMapper.toMyPageReq(userEntity);
+        return userMapper.entityToMyPageReq(userEntity);
     }
 
     // 사용자 정보 조회
     @Transactional(readOnly = true)
-    public ProfileRes getProfile(String username) {
+    public UserDto getProfile(String username) {
 
         UserEntity userEntity = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저를 찾을 수 없습니다."));
 
-        return userMapper.toProfileReq(userEntity);
+        return userMapper.entityToUserDto(userEntity);
     }
 
     // 닉네임 변경

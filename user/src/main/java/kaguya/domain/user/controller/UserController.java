@@ -1,7 +1,7 @@
 package kaguya.domain.user.controller;
 
 import kaguya.domain.user.model.dto.response.MyPageRes;
-import kaguya.domain.user.model.dto.response.ProfileRes;
+import kaguya.domain.user.model.dto.UserDto;
 import kaguya.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.domain.user.model.dto.response.BaseRes;
@@ -29,13 +29,13 @@ public class UserController {
     }
 
     @GetMapping("/my/profile")
-    public ResponseEntity<BaseRes<ProfileRes>> getProfile(
+    public ResponseEntity<BaseRes<UserDto>> getProfile(
             @RequestHeader("x-user-id") String username
     ) {
 
-        ProfileRes data = userService.getProfile(username);
+        UserDto data = userService.getProfile(username);
 
-        BaseRes<ProfileRes> response = new BaseRes<>("200", "프로필 조회", data);
+        BaseRes<UserDto> response = new BaseRes<>("200", "프로필 조회", data);
         return ResponseEntity.ok(response);
     }
 
