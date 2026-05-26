@@ -1,0 +1,223 @@
+<!-- 제미나이로 딸깍한 페이지 (작동 테스트용 페이지) -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>웹 소켓 테스트 (Room, Broadcast, DM)</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+    .panel { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px; background-color: #fcfcfc; }
+    .panel h3 { margin-top: 0; color: #333; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+    .input-group { margin-bottom: 10px; }
+    .input-group label { display: inline-block; width: 90px; font-weight: bold; font-size: 14px;}
+    input[type="text"] { padding: 5px; width: 180px; }
+    input.msg-input { width: 400px; }
+    button { padding: 5px 15px; cursor: pointer; }
+    #chatBox { border: 1px solid #999; height: 350px; overflow-y: scroll; padding: 10px; background: #fff; margin-bottom: 15px; }
+    .msg { margin-bottom: 5px; font-size: 14px; line-height: 1.4; }
+    .sys-msg { color: #888; font-style: italic; }
+    .dm-msg { color: #d9534f; font-weight: bold; }
+    .br-msg { color: #0275d8; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<h2>정통 웹 소켓 테스트</h2>
+
+<div class="panel">
+  <h3>1. 서버 연결</h3>
+  <div class="input-group">
+    <label>서버 URL:</label>
+    <input type="text" id="serverUrl" value="ws://localhost:8080/ws/raw">
+  </div>
+  <div class="input-group">
+    <label>내 닉네임:</label>
+    <input type="text" id="myId" value="user1" placeholder="내 닉네임 입력">
+    <button onclick="connect()">연결하기</button>
+    <button onclick="disconnect()">종료하기</button>
+    <span id="connectionStatus" style="color: red; font-weight: bold; margin-left: 10px;">연결 끊김</span>
+  </div>
+</div>
+
+<div id="chatBox"></div>
+
+<div class="panel">
+  <h3>2. 방(Room) 채팅</h3>
+  <div class="input-group">
+    <label>방 번호:</label>
+    <input type="text" id="roomId" value="room1">
+    <button onclick="enterRoom()">방 입장 (ENTER)</button>
+  </div>
+  <div class="input-group">
+    <label>방 메시지:</label>
+    <input type="text" id="roomMsg" class="msg-input" placeholder="현재 방에 보낼 메시지">
+    <button onclick="sendRoomTalk()">방 전송 (TALK)</button>
+  </div>
+</div>
+
+<div class="panel" style="background-color: #eef7fe;">
+  <h3>3. 전체 공지 (Broadcast)</h3>
+  <div class="input-group">
+    <label>공지 내용:</label>
+    <input type="text" id="broadcastMsg" class="msg-input" placeholder="접속 중인 모든 사람에게 보낼 메시지">
+    <button onclick="sendBroadcast()">전체 전송 (BROADCAST)</button>
+  </div>
+</div>
+
+<div class="panel" style="background-color: #fef0f0;">
+  <h3>4. 귓속말 (DM)</h3>
+  <div class="input-group">
+    <label>받는 사람:</label>
+    <input type="text" id="receiverId" placeholder="상대방 닉네임">
+  </div>
+  <div class="input-group">
+    <label>DM 내용:</label>
+    <input type="text" id="dmMsg" class="msg-input" placeholder="상대방에게만 보낼 메시지">
+    <button onclick="sendDM()">귓속말 전송 (DM)</button>
+  </div>
+</div>
+
+<script>
+  let websocket = null;
+
+  function logMessage(text, typeClass = "") {
+    const chatBox = document.getElementById("chatBox");
+    const div = document.createElement("div");
+    div.className = "msg " + typeClass;
+    div.textContent = text;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  // --- 웹 소켓 기본 제어 ---
+
+  function connect() {
+    if (websocket !== null) {
+      alert("이미 연결되어 있습니다.");
+      return;
+    }
+    const url = document.getElementById("serverUrl").value;
+    const myId = document.getElementById("myId").value;
+
+    if(!myId) {
+      alert("닉네임을 입력해주세요.");
+      return;
+    }
+
+    websocket = new WebSocket(url);
+
+    websocket.onopen = function() {
+      document.getElementById("connectionStatus").textContent = "연결됨 (" + myId + ")";
+      document.getElementById("connectionStatus").style.color = "green";
+      logMessage("서버와 연결되었습니다.", "sys-msg");
+
+      // 연결 직후 닉네임을 서버에 알리기 위해 더미 메시지 발송 (session 매핑용)
+      websocket.send(JSON.stringify({ type: "ENTER", roomId: "lobby", sender: myId }));
+    };
+
+    websocket.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+
+      if (data.type === "BROADCAST") {
+        logMessage(`[📢전체공지] ${data.sender}: ${data.message}`, "br-msg");
+      } else if (data.type === "DM") {
+        logMessage(`[💌귓속말 from ${data.sender}] ${data.message}`, "dm-msg");
+      } else {
+        // ENTER, TALK
+        logMessage(`[${data.roomId}] ${data.sender}: ${data.message}`);
+      }
+    };
+
+    websocket.onclose = function() {
+      document.getElementById("connectionStatus").textContent = "연결 끊김";
+      document.getElementById("connectionStatus").style.color = "red";
+      logMessage("서버와 연결이 종료되었습니다.", "sys-msg");
+      websocket = null;
+    };
+  }
+
+  function disconnect() {
+    if (websocket !== null) {
+      websocket.close();
+    }
+  }
+
+  // --- 메시지 전송 로직 ---
+
+  function getSender() {
+    return document.getElementById("myId").value;
+  }
+
+  function checkConnection() {
+    if (websocket === null || websocket.readyState !== WebSocket.OPEN) {
+      alert("먼저 서버에 연결해주세요.");
+      return false;
+    }
+    return true;
+  }
+
+  // 1. 방 입장 (ENTER)
+  function enterRoom() {
+    if (!checkConnection()) return;
+    const payload = {
+      type: "ENTER",
+      roomId: document.getElementById("roomId").value,
+      sender: getSender()
+    };
+    websocket.send(JSON.stringify(payload));
+  }
+
+  // 2. 방 대화 (TALK)
+  function sendRoomTalk() {
+    if (!checkConnection()) return;
+    const input = document.getElementById("roomMsg");
+    const payload = {
+      type: "TALK",
+      roomId: document.getElementById("roomId").value,
+      sender: getSender(),
+      message: input.value
+    };
+    websocket.send(JSON.stringify(payload));
+    input.value = "";
+  }
+
+  // 3. 전체 공지 (BROADCAST)
+  function sendBroadcast() {
+    if (!checkConnection()) return;
+    const input = document.getElementById("broadcastMsg");
+    const payload = {
+      type: "BROADCAST",
+      sender: getSender(),
+      message: input.value
+    };
+    websocket.send(JSON.stringify(payload));
+    input.value = "";
+  }
+
+  // 4. 귓속말 (DM)
+  function sendDM() {
+    if (!checkConnection()) return;
+    const receiver = document.getElementById("receiverId").value;
+    const input = document.getElementById("dmMsg");
+
+    if (!receiver) {
+      alert("받는 사람 닉네임을 입력하세요.");
+      return;
+    }
+
+    const payload = {
+      type: "DM",
+      sender: getSender(),
+      receiver: receiver,
+      message: input.value
+    };
+    websocket.send(JSON.stringify(payload));
+
+    // 내가 보낸 DM은 내 화면에도 출력 (서버가 나에게 다시 안 보내주므로 직접 화면에 그림)
+    logMessage(`[💌귓속말 to ${receiver}] ${input.value}`, "dm-msg");
+    input.value = "";
+  }
+</script>
+
+</body>
+</html>
