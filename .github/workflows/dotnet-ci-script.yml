@@ -40,6 +40,12 @@ jobs:
       #secrets.ACCOUNT_TEST_JSON 처럼 넣어주는 거임. 추가적인 비번파일이 있다면 secrets.PRIVATE_KEY_TEST_PEM처럼 똑같이 넣어주면
       #참고로 우리 주소는 ./{서비스 이름}/
 
+
+      - name: room test 의존성 세팅
+        if: ${{ inputs.service-name == 'room' }}
+        run: |
+          echo '${{ secrets.ROOM_TEST_APPSETTING }}' > ./room/appsettings.Test.json
+
       # NuGet 패키지 복원 (Gradle의 의존성 다운로드와 유사)
       - name: 의존성 복원 (Restore)
         working-directory: ./${{ inputs.service-name }}
@@ -53,6 +59,8 @@ jobs:
       # 테스트 실행 (gradlew test 역할)
       - name: 테스트 실행
         working-directory: ./${{ inputs.service-name }}
+        env:
+          ASPNETCORE_ENVIRONMENT: Test
         run: dotnet test --configuration Release --no-build --verbosity normal
         # --logger "trx"를 추가하면 나중에 테스트 결과를 리포트로 보기 편하다고 함, 일단 몰?루
         # run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx"
