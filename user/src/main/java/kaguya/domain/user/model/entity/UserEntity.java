@@ -31,10 +31,10 @@ public class UserEntity {
     private String password;
 
     @Column(nullable = false)
-    private String nickname;
+    private String email;
 
     @Column(nullable = false)
-    private String email;
+    private String nickname;
 
     private String name;
     private LocalDate birth;
@@ -63,22 +63,22 @@ public class UserEntity {
     private LocalDateTime updateDate;
 
     @Builder
-    public UserEntity(String username, String password, String nickname, String email, String name, LocalDate birth, String phone, Gender gender) {
+    public UserEntity(String username, String password, String email, String nickname, String name, LocalDate birth, String phone, Gender gender) {
         this.username = username;
         this.password = password;
-        this.nickname = nickname;
         this.email = email;
+        this.nickname = nickname;
         this.name = name;
         this.birth = birth;
         this.phone = phone;
         this.gender = gender;
     }
 
-    public void changeRole(Role role) {
-        this.role = role;
-    }
+    // User
+    public void changePassword(String password) {this.password = password;}
+    public void changeNickname(String nickname) {this.nickname = nickname;}
 
-    public void changeStatus(Status status) {
-        this.status = status;
-    }
+    // Admin
+    public void changeRole(Role role) {this.role = role;}
+    public void changeStatus(Status status) {this.status = status;}
 }
