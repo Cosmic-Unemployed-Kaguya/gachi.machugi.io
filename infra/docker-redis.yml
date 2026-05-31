@@ -1,0 +1,12 @@
+name: redis
+services:
+  redis:
+    image: redis:8.2-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--requirepass", "_password_"]
+    restart: always
+#_password_"는 비밀번호 바꿔서 쓸 것
+#레디스 접속 docker exec -it redis redis-cli
+#비밀번호 확인 auth _password_

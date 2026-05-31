@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package gachi.machugi.grpc.user;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+option java_multiple_files = true;
+option java_package = "kaguya.grpc.user";
+
+service UserService {
+  rpc GetMyPage (google.protobuf.Empty) returns (MyPageResponse) {
+    option (google.api.http) = {
+      get: "/users/my"
+    };
+  }
+
+  rpc GetProfile (google.protobuf.Empty) returns (ProfileResponse) {
+    option (google.api.http) = {
+      get: "/users/my/profile"
+    };
+  }
+
+  rpc UpdatePasswords (UpdatePasswordRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      patch: "/users/my/password"
+      body: "*"
+    };
+  }
+
+  rpc UpdateNickname (UpdateNicknameRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      patch: "/users/my/nickname"
+      body: "*"
+    };
+  }
+
+  rpc Withdraw (google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/users/my/withdraw"
+    };
+  }
+}
+
+// --- Request Messages ---
+message UpdatePasswordRequest {
+  string current_password = 1;
+  string new_password = 2;
+}
+
+message UpdateNicknameRequest {
+  string nickname = 1;
+}
+
+// --- Response Messages ---
+message MyPageResponse {
+  string username = 1;
+  string email = 2;
+  string nickname = 3;
+}
+
+message ProfileResponse {
+  string name = 1;
+  string birth = 2;
+  string phone = 3;
+  string gender = 4;
+}
