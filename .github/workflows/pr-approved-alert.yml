@@ -1,0 +1,45 @@
+name: PR Approved 알림
+
+# 리뷰를 남길때마다
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  notify-discord:
+    # 리뷰가 'Approve'일 때만 실행. (피드백은 별도로 알림)
+    if: github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Check if PR meets all approval requirements
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          # GitHub CLI를 이용하여 PR의 승인 상태를 가져옴
+          STATUS=$(gh pr view ${{ github.event.pull_request.html_url }} --json reviewDecision -q .reviewDecision)
+          echo "현재 PR 승인 상태: $STATUS"
+          
+          # 정해진 인원 이상의 동의를 받을 시 STATUS가 APPROVED가 됨.
+          if [ "$STATUS" == "APPROVED" ]; then
+            
+            PAYLOAD=$(jq -n\
+            --arg content "**[PR 승인 알림]**
+            **[$PR_TITLE #$PR_NUMBER]($PR_URL)** 이(가) 필요한 모든 승인을 받았습니다!"\
+             '{content: $content}')
+
+            curl -H "Content-Type: application/json" \
+                 -X POST \
+                 -d "$PAYLOAD"\
+                 $DISCORD_WEBHOOK
+          else
+            echo "추가 승인 필요"
+          fi
