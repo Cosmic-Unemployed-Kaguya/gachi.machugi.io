@@ -32,6 +32,12 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: user test yml 세팅
+        if: ${{ inputs.service-name == 'user' }}
+        run: |
+          mkdir -p ./${{ inputs.service-name }}/src/test/resources
+          echo '${{ secrets.USER_TEST_YML }}' > ./${{ inputs.service-name }}/src/test/resources/application-test.yml
+
       # - name: account test yml pem 세팅
       #   if: ${{ inputs.service-name == 'account-service' }}
       #   run: |
@@ -45,6 +51,7 @@ jobs:
       # github에 secrets에 알맞는 이름으로 yml파일의 텍스트를 복사해서 넣어주고, 그 변수의 이름을 위의 예시처럼
       # secrets.ACCOUNT_TEST_YML 처럼 넣어주는 거임. 추가적인 비번파일이 있다면 secrets.PRIVATE_KEY_TEST_PEM처럼 똑같이 넣어주면
       #참고로 우리 주소는 ./{서비스 이름}/
+
 #      - 최상위 폴더에 스프링 구축 시 해결 됨. 현재는 없음.
 #      - name: gradlew 권한 세팅
 #        run: chmod +x ./gradlew
