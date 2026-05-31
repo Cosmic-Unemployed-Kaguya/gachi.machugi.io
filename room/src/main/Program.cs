@@ -1,3 +1,5 @@
+using Room.Repository;
+using Room.Service;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +14,10 @@ if (string.IsNullOrEmpty(redisSection))
 var redis = ConnectionMultiplexer.Connect($"{redisSection},abortConnect=false");
 //레디스는 연결비용이 좀 있어서 싱글톤으로 연결
 builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
+//커스텀 리포지토리
+builder.Services.AddScoped<RoomRedis>();
+//커스텀 서비스
+builder.Services.AddScoped<RoomService, RoomServiceImpl>();
 
 builder.Services.AddControllers();
 
@@ -23,3 +29,5 @@ app.UseHttpsRedirection();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
