@@ -1,0 +1,83 @@
+name: dotnet CI 스크립트
+
+on:
+  workflow_call:
+    inputs:
+      service-name:
+        required: true
+        type: string
+
+jobs:
+  code-test:
+    name: 코드 테스트
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+
+    #추가적인 커스텀 라이브러리를 불러올 때 보통 쓰는 거. 필요없으면 안쓰면 됨.
+    # env:
+    #   GITHUB_ACTOR: ${{ github.actor }}
+    #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: 브랜치로 체크아웃
+        uses: actions/checkout@v5
+
+      #나는 지금 dotnet 9.0.3쓰는중
+      - name: dotnet SDK 세팅
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '9.0.x'
+          cache: true
+      #.csproj이 있는 위치와 동일해야 함
+      # - name: account test 세팅
+      #   if: ${{ inputs.service-name == 'account-service' }}
+      #   run: |
+      #     echo '${{ secrets.ACCOUNT_TEST_JSON }}' > ./account-service/appsettings.json
+      #     echo '${{ secrets.PRIVATE_KEY_TEST_PEM }}' > ./account-service/private-key-test.pem
+      #github에 secrets에 알맞는 이름으로 json파일의 텍스트를 복사해서 넣어주고, 그 변수의 이름을 위의 예시처럼
+      #secrets.ACCOUNT_TEST_JSON 처럼 넣어주는 거임. 추가적인 비번파일이 있다면 secrets.PRIVATE_KEY_TEST_PEM처럼 똑같이 넣어주면
+      #참고로 우리 주소는 ./{서비스 이름}/
+
+      #room 서비스일 때, 기존 docker-compose 파일로 레디스 가동
+      - name: 테스트용 인프라 기동 (Docker Compose)
+        if: ${{ inputs.service-name == 'room' }}
+        # docker-compose.yml 파일이 있는 위치를 working-directory로 지정하세요.
+        # 예: 루트에 있다면 지우거나 생략, room 폴더 안에 있다면 아래처럼 지정
+        working-directory: ./infra
+        run: |
+          docker compose -f docker-redis.yml up -d
+          # 레디스가 완전히 켜질 때까지 안전하게 3초만 대기
+          sleep 10
+
+      - name: room test 의존성 세팅
+        if: ${{ inputs.service-name == 'room' }}
+        run: |
+          echo '${{ secrets.ROOM_TEST_APPSETTING }}' > ./room/appsettings.Test.json
+
+      # NuGet 패키지 복원 (Gradle의 의존성 다운로드와 유사)
+      - name: 의존성 복원 (Restore)
+        working-directory: ./${{ inputs.service-name }}
+        run: dotnet restore
+
+      # 빌드 실행 (테스트 전 빌드 확인)
+      - name: 프로젝트 빌드
+        working-directory: ./${{ inputs.service-name }}
+        run: dotnet build --configuration Release --no-restore
+
+      # 테스트 실행 (gradlew test 역할)
+      - name: 테스트 실행
+        working-directory: ./${{ inputs.service-name }}
+        env:
+          #appsettings.Test.json 쓸거고 레디스 관련 설정임
+          ASPNETCORE_ENVIRONMENT: Test
+        run: dotnet test --configuration Release --no-build --verbosity normal
+        #--logger "trx"를 추가하면 나중에 테스트 결과를 리포트로 보기 편하다고 함, 일단 몰?루
+        # run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx"
+
+      - name: 테스트용 인프라 종료
+        if: ${{ inputs.service-name == 'room' && always() }}
+        working-directory: ./infra
+        run: docker compose -f docker-redis.yml down

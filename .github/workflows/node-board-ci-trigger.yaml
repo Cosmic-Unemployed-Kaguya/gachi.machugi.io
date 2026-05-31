@@ -1,0 +1,15 @@
+name: Board 서비스 CI 스크립트
+
+on:
+  pull_request:
+    branches:
+      - board
+    paths:
+      - "board/**"
+
+jobs:
+  execute-test:
+    uses: ./.github/workflows/node-ci-script.yml
+    secrets: inherit
+    with:
+      service-name: board
