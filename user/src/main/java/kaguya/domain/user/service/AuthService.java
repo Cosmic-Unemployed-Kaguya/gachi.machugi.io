@@ -57,7 +57,7 @@ public class AuthService {
         String rawPassword = registerData.account().password();  // 암호화 전
         String encodedPassword = passwordEncoder.encode(rawPassword);  // 암호화
 
-        UserEntity entity = userMapper.toEntity(registerData, encodedPassword);
+        UserEntity entity = userMapper.userDtoToEntity(registerData, encodedPassword);
         userRepository.save(entity);
     }
 
@@ -84,7 +84,7 @@ public class AuthService {
         // 갱신 토큰 Redis 저장 (14일)
         redisRepository.save("RT:" + entity.getUsername(), refreshToken, 14, TimeUnit.DAYS);
 
-        return userMapper.toLoginRes(accessToken, refreshToken, entity);
+        return userMapper.entityToLoginRes(accessToken, refreshToken, entity);
     }
 
     /**

@@ -6,7 +6,7 @@ import kaguya.domain.user.grpc.interceptor.GrpcContextKeys;
 import kaguya.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.domain.user.model.dto.response.MyPageRes;
-import kaguya.domain.user.model.dto.response.ProfileRes;
+import kaguya.domain.user.model.dto.UserDto;
 import kaguya.domain.user.service.UserService;
 import kaguya.grpc.user.*;
 import lombok.RequiredArgsConstructor;
@@ -63,7 +63,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             return;
         }
 
-        ProfileRes data = userService.getProfile(username);
+        UserDto data = userService.getProfile(username);
 
         ProfileResponse response = ProfileResponse.newBuilder()
                 .setName(data.name())
