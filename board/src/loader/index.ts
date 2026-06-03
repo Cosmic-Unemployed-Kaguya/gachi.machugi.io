@@ -32,7 +32,7 @@ export default async ({ expressApp }: { expressApp: express.Application } ) => {
 
     // 2. DI 컨테이너 설정
     //  - 웹 실행 단계에서 이후 필요한 의존성을 미리 DI컨테이너에 넣어두는 과정
-    //  - 현재는 DB 연결 풀 밖에 없는듯?
+    //  - 현재는 TypeORM 연결 풀 밖에 없는듯?
     logger.info("DI 컨테이너 로드 시작")
     await dependencyInjector(appDataSource);
     logger.info("DI 컨테이너 로드 완료")

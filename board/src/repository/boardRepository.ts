@@ -10,6 +10,7 @@ import { TypeOrmRepository } from './typeOrmBaseRepository';
 @Repository(BoardEntity)
 export class BoardRepository extends TypeOrmRepository<BoardEntity>{
 
+    // 공지 목록 조회
     async findNoticeByPaging( pagingDTO :PagingReqType) : Promise<Page<BoardEntity>>{
         // 1. type이 notice인거
         const qb = this.createQueryBuilder("board")
