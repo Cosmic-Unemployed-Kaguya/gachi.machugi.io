@@ -1,0 +1,122 @@
+name: Jira Issue Workflow
+
+on:
+  issues:
+    types:
+      - opened
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  create-jira-issue:
+    name: Create Jira Issue
+    runs-on: ubuntu-latest
+
+    steps:
+      # GitHub Issue 정보에서 Jira 프로젝트 키를 찾는 단계
+      - name: Get issue data
+        id: issue-data
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const title = context.payload.issue.title;
+            const body = context.payload.issue.body || "";
+            const issueNumber = context.payload.issue.number;
+            const issueUrl = context.payload.issue.html_url;
+
+            let projectKey = "";
+
+            const titleMatch = title.match(/\[(USER|BOARD|QUIZ|ROOM)\]/i);
+            const bodyMatch = body.match(/\b(USER|BOARD|QUIZ|ROOM)-\d+\b/i);
+
+            if (titleMatch) {
+              projectKey = titleMatch[1].toUpperCase();
+            } else if (bodyMatch) {
+              projectKey = bodyMatch[1].toUpperCase();
+            }
+
+            if (!projectKey) {
+              core.setFailed("Jira project key를 찾을 수 없습니다. 제목에 [USER], [BOARD], [QUIZ], [ROOM] 중 하나를 포함해주세요.");
+              return;
+            }
+
+            core.setOutput("project_key", projectKey);
+            core.setOutput("title", title);
+            core.setOutput("body", body);
+            core.setOutput("issue_number", issueNumber);
+            core.setOutput("issue_url", issueUrl);
+
+      # Jira API를 호출해서 Jira Issue를 생성하는 단계
+      - name: Create Jira issue
+        id: create-jira
+        run: |
+          response=$(curl -s -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -X POST \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue" \
+            --data '{
+              "fields": {
+                "project": {
+                  "key": "${{ steps.issue-data.outputs.project_key }}"
+                },
+                "summary": "${{ steps.issue-data.outputs.title }}",
+                "description": {
+                  "type": "doc",
+                  "version": 1,
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "Github Issue: ${{ steps.issue-data.outputs.issue_url }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "${{ steps.issue-data.outputs.body }}"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "issuetype": {
+                  "name": "Task"
+                }
+              }
+            }')
+
+          echo "$response"
+
+          jira_key=$(echo "$response" | jq -r '.key')
+          jira_url="${{ secrets.JIRA_BASE_URL }}/browse/$jira_key"
+
+          if [ "$jira_key" = "null" ] || [ -z "$jira_key" ]; then
+            echo "Jira Issue 생성 실패"
+            exit 1
+          fi
+
+          echo "jira_key=$jira_key" >> $GITHUB_OUTPUT
+          echo "jira_url=$jira_url" >> $GITHUB_OUTPUT
+
+      # 생성된 Jira Issue 링크를 GitHub Issue 댓글로 남기는 단계
+      - name: Comment Jira issue link
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const jiraKey = "${{ steps.create-jira.outputs.jira_key }}";
+            const jiraUrl = "${{ steps.create-jira.outputs.jira_url }}";
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: `Jira Issue가 생성되었습니다.\n\n- ${jiraKey}: ${jiraUrl}`
+            });
