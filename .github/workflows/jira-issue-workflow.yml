@@ -4,6 +4,10 @@ on:
   issues:
     types:
       - opened
+  ## !!!!임시임 안지웠으면 안됨!!!!
+  pull_request:
+    branches:
+      - dev-IS007
 
 permissions:
   issues: write
@@ -21,10 +25,23 @@ jobs:
         uses: actions/github-script@v8
         with:
           script: |
-            const title = context.payload.issue.title;
-            const body = context.payload.issue.body || "";
-            const issueNumber = context.payload.issue.number;
-            const issueUrl = context.payload.issue.html_url;
+            const isIssueEvent = context.eventName === "issues";
+
+            const title = isIssueEvent
+              ? context.payload.issue.title
+              : "[USER] Jira workflow test";
+            
+            const body = isIssueEvent
+              ? context.payload.issue.body || ""
+              : "PR 브랜치에서 Jira workflow 테스트";
+            
+            const issueNumber = isIssueEvent
+              ? context.payload.issue.number
+              : context.payload.pull_request.number;
+            
+            const issueUrl = isIssueEvent  
+              ? context.payload.issue.html_url
+              : context.payload.pull_request.html_url;
 
             let projectKey = "";
 
@@ -117,6 +134,8 @@ jobs:
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.payload.issue.number,
+              issue_number: context.eventName === "issues"
+              ? context.payload.issue.number
+              : context.payload.pull_request.number,
               body: `Jira Issue가 생성되었습니다.\n\n- ${jiraKey}: ${jiraUrl}`
             });
