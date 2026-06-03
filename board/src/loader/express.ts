@@ -1,6 +1,6 @@
 import express from 'express';
 import routes from '../routes';
-import { errorConverter, errorHandler } from '../middlewares/errorHandler';
+import { restErrorConverter, errorHandler } from '../middlewares/restErrorHandler';
 
 /** ({app} : {app: express.Application})
  * 특정 개체 app: express.Application 에서 app만 가져다 쓰겠다
@@ -24,7 +24,7 @@ export default ({app} : {app: express.Application}) => {
 
 
     // error 핸들러
-    app.use(errorConverter);
+    app.use(restErrorConverter);
 
     app.use(errorHandler);
 

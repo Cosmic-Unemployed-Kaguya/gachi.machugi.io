@@ -36,6 +36,39 @@ export class ApiError extends Error{
     }
 }
 
+/**
+ * ApiError 와 구조는 같지만, status, 즉 에러 코드에 대해 차별을 두기 위한 분리
+ */
+export class GrpcError extends Error {
+    public status: number;
+    public isOperational :boolean;
+    public level : ErrorLevel;
+
+    // message : 외부 출력용 메시지
+
+    // 내부 로깅용 메시지
+    public internalMessage? : string;
+
+    constructor(status: number, message: string, isOperational :boolean= true, level : ErrorLevel = ErrorLevel.WARN ,stack?:string , internalMessage? :string) {
+        super(message);
+        this.status = status;
+        this.isOperational = isOperational;
+        this.level = level; 
+        this.name = 'GrpcError';
+        
+
+        if (stack) {
+            this.stack = stack;
+        } else {
+            Error.captureStackTrace(this, this.constructor);
+        }
+
+        if (internalMessage){
+            this.internalMessage = internalMessage
+        }
+    }
+}
+
 export class ForbiddenError extends ApiError {
     constructor( message:string = '권한이 없습니다'){
         super(403, message, true);
