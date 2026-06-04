@@ -5,9 +5,12 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import kaguya.domain.question.model.dto.response.QuestionResponse;
+import kaguya.domain.question.service.QuestionService;
 import kaguya.domain.quiz.model.dto.request.QuizCreateRequest;
 import kaguya.domain.quiz.model.dto.request.QuizUpdateRequest;
 import kaguya.domain.quiz.model.dto.response.QuizResponse;
+import kaguya.domain.quiz.model.dto.response.QuizStartResponse;
 import kaguya.domain.quiz.model.entity.QuizEntity;
 import kaguya.domain.quiz.repository.QuizRepository;
 import kaguya.domain.quiz.service.QuizService;
@@ -21,6 +24,7 @@ public class QuizServiceImpl implements QuizService {
 
     private final QuizRepository quizRepository;
     private final QuizMapper quizMapper;
+    private final QuestionService questionService;
 
     // 퀴즈 생성
     @Override
@@ -79,5 +83,16 @@ public class QuizServiceImpl implements QuizService {
                 .orElseThrow(() -> new RuntimeException("퀴즈가 존재하지 않습니다."));
 
         quizRepository.delete(quiz);
+    }
+
+    // 퀴즈 시작 ( 해당 퀴즈에 대한 문제들 랜덤으로 불러오기 )
+    @Override
+    public QuizStartResponse startQuiz(Long quizIdx) {
+        QuizEntity quiz = quizRepository.findById(quizIdx)
+                .orElseThrow(() -> new RuntimeException("퀴즈가 존재하지 않습니다."));
+
+        List<QuestionResponse> questions = questionService.getRandomQuestionList(quizIdx);
+
+        return quizMapper.entityToStartResponse(quiz, questions);
     }
 }
