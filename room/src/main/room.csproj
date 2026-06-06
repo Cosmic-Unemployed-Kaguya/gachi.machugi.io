@@ -7,8 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.80.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
     <PackageReference Include="StackExchange.Redis" Version="2.12.8" />
-  </ItemGroup>
 
+    <Protobuf Include="Proto\room.proto" GrpcServices="Server" />
+  </ItemGroup>
 </Project>

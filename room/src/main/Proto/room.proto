@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package Proto.room;
+
+option csharp_namespace = "Room.Service.Proto";
+
+service RoomGrpcManager {
+  rpc CreateRoom(GrpcCreateRoomRequest) returns (GrpcRoomInfoResponse);
+  rpc FindRoom(GrpcRoomIdxRequest) returns (GrpcRoomResponse);
+  rpc FindRoomInfo(GrpcRoomIdxRequest) returns (GrpcRoomInfoResponse);
+  rpc FindSetInfo(GrpcRoomIdxRequest) returns (GrpcRoomSetInfoResponse);
+  rpc UpdateRoomInfo(GrpcUpdateRoomRequest) returns (GrpcRoomInfoResponse);
+  rpc AddPlayerToRoom(GrpcUpdateSetRequest) returns (GrpcBoolResponse);
+  rpc RemovePlayerFromRoom(GrpcUpdateSetRequest) returns (GrpcBoolResponse);
+  rpc DeleteRoom(GrpcRoomIdxRequest) returns (GrpcBoolResponse);
+}
+
+message GrpcCreateRoomRequest {
+  string name = 1;
+  int32 max_occupancy = 2;
+  int64 time_limit = 3;
+  bool is_public = 4;
+  optional string password = 5;
+  int64 quiz_idx = 6;
+  int64 host_idx = 7;
+}
+
+message GrpcRoomIdxRequest {
+  int64 room_idx = 1;
+}
+
+message GrpcUpdateRoomRequest {
+  int64 room_idx = 1;
+  string name = 2;
+  optional int32 max_occupancy = 3;
+  optional int64 time_limit = 4;
+  optional bool is_public = 5;
+  optional string password = 6;
+  optional int64 quiz_idx = 7;
+  optional int64 host_id = 8;
+}
+
+message GrpcUpdateSetRequest {
+  int64 room_idx = 1;
+  int64 player_idx = 2;
+}
+
+message GrpcRoomInfoResponse {
+  int64 idx = 1;
+  int64 host_idx = 2;
+  string name = 3;
+  int32 max_occupancy = 4;
+  int64 time_limit = 5;
+  bool is_public = 6;
+  int64 quiz_idx = 7;
+}
+
+message GrpcRoomSetInfoResponse {
+  repeated int64 player_set = 1;
+}
+
+message GrpcRoomResponse {
+  GrpcRoomInfoResponse room_info = 1;
+  GrpcRoomSetInfoResponse room_set_info = 2;
+}
+
+message GrpcBoolResponse {
+  bool is_success = 1;
+}
