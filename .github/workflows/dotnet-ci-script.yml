@@ -30,7 +30,6 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '9.0.x'
-          cache: true
       #.csproj이 있는 위치와 동일해야 함
       # - name: account test 세팅
       #   if: ${{ inputs.service-name == 'account-service' }}
