@@ -14,7 +14,7 @@ on:
 #각 서비스에 맞게 ci-script 선택, dotnet이랑 node.js는 알아서 만들어야 할 듯
 jobs:
    execute-test:
-    uses: ./.github/workflows/{ci-script로 된 파일 중에서 사용하는 프레임워크에 맞는 거}.yml
+    uses: ./.github/workflows/dotnet-ci-script.yml
     secrets: inherit
     with:
       service-name: room
