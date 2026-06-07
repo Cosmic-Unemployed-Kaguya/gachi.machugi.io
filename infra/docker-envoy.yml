@@ -8,7 +8,7 @@ services:
       - "8080:8080"  # 게이트웨이
       - "9901:9901"  # 관리자 페이지
     volumes:
-      - ./envoy/envoy.yml:/etc/envoy/envoy.yaml
+      - ./envoy/envoy-user.yml:/etc/envoy/envoy-user.yaml
       - ./envoy/descriptor.pb:/tmp/descriptor.pb
     restart: always
     networks:

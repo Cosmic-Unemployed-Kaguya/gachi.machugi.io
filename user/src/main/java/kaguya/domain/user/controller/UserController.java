@@ -1,10 +1,11 @@
 package kaguya.domain.user.controller;
 
-import kaguya.domain.user.model.dto.response.MyPageRes;
+import jakarta.validation.Valid;
 import kaguya.domain.user.model.dto.UserDto;
 import kaguya.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.domain.user.model.dto.response.BaseRes;
+import kaguya.domain.user.model.dto.response.MyPageRes;
 import kaguya.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +43,7 @@ public class UserController {
     @PatchMapping("/my/nickname")
     public ResponseEntity<BaseRes<Void>> updateNickname(
             @RequestHeader("x-user-id") String username,
-            @RequestBody UpdateNicknameReq request
+            @RequestBody @Valid UpdateNicknameReq request
     ) {
 
         userService.updateNickname(username, request);
@@ -54,7 +55,7 @@ public class UserController {
     @PatchMapping("/my/password")
     public ResponseEntity<BaseRes<Void>> updatePasswords(
             @RequestHeader("x-user-id") String username,
-            @RequestBody UpdatePasswordReq request
+            @RequestBody @Valid UpdatePasswordReq request
     ) {
 
         userService.updatePassword(username, request);
