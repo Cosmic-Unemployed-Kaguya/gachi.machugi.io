@@ -9,7 +9,7 @@ on:
     branches:
       - room
     paths: #얘 수정 밑에 이거
-      - './room/**'
+      - 'room/**'
 
 #각 서비스에 맞게 ci-script 선택, dotnet이랑 node.js는 알아서 만들어야 할 듯
 jobs:
