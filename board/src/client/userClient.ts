@@ -4,15 +4,7 @@ import { Service } from "typedi";
 import { UserInfoListRequset } from './../generated/user';
 import config from '../config'
 
-/**
- * UserClient 클래스 내부에서 UserServiceClient 객체를 생성 후 사용
- *  
- * UserClient 자체가 UserServiceClient를 상속/구현 하면 안되냐?
- *  > 통신 메서드가 Req 말고도 callback 함수를 파라미터로 받아야함.
- *  > 이에 외부 service 등에서 사용 할 때 callback함수를 정의하여 넣어줘야하는데 이게 너무 마음에 안들음
- *  > 따라서 해당 클래스 내에서 callback을 정의하고, callback을 넣어주는 새로운 메서드를 만들어서 외부에서는 Req만 알아도 문제 없도록 해봄
- * 
- */
+
 @Service()
 export default class UserClient {
     
