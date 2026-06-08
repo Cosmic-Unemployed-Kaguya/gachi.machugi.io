@@ -3,6 +3,8 @@ plugins {
     id 'org.springframework.boot' version '3.5.13'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'com.google.protobuf' version '0.9.4'
+    // protobuf 플러그인과 연동되어, Gradle이 추출/생성한 build/ 폴더들을 IntelliJ가 소스 폴더로 자동 인식
+    // third_party 직접 등록 안해줘도 됨
     id 'idea'
 }
 
@@ -58,6 +60,8 @@ dependencies {
     // gRPC Validation (PGV)
     implementation 'build.buf.protoc-gen-validate:pgv-java-stub:1.1.0'
     implementation 'build.buf.protoc-gen-validate:pgv-java-grpc:1.1.0'
+    // 구글 공통 proto 파일들을 자동으로 인식 (annotations.proto, http.proto)
+    implementation 'com.google.api.grpc:proto-google-common-protos:2.28.0'
 }
 
 protobuf {
