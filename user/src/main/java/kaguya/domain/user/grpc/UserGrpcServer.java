@@ -3,20 +3,26 @@ package kaguya.domain.user.grpc;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import kaguya.domain.user.grpc.interceptor.GrpcContextKeys;
+import kaguya.domain.user.model.dto.UserDto;
 import kaguya.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.domain.user.model.dto.response.MyPageRes;
-import kaguya.domain.user.model.dto.UserDto;
 import kaguya.domain.user.service.UserService;
 import kaguya.grpc.user.*;
 import lombok.RequiredArgsConstructor;
 import net.devh.boot.grpc.server.service.GrpcService;
+
+import java.util.regex.Pattern;
 
 @GrpcService
 @RequiredArgsConstructor
 public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
 
     private final UserService userService;
+
+    // 정규식 패턴
+    private static final Pattern PASSWORD_PATTERN =
+            Pattern.compile("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,20}$");
 
     @Override
     public void getMyPage(
@@ -76,7 +82,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
     }
 
     @Override
-    public void updatePasswords(
+    public void updatePassword(
             UpdatePasswordRequest request,
             StreamObserver<Empty> responseObserver
     ) {
@@ -85,6 +91,16 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             responseObserver.onError(
                     io.grpc.Status.UNAUTHENTICATED
                             .withDescription("로그인이 필요한 서비스입니다.")
+                            .asRuntimeException()
+            );
+            return;
+        }
+
+        String newPassword = request.getNewPassword();
+        if (!PASSWORD_PATTERN.matcher(newPassword).matches()) {
+            responseObserver.onError(
+                    io.grpc.Status.INVALID_ARGUMENT  // 400 Bad Request
+                            .withDescription("비밀번호는 8~20자리이며, 영문, 숫자, 특수문자를 포함해야 합니다.")
                             .asRuntimeException()
             );
             return;

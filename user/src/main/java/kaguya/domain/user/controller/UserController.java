@@ -40,18 +40,6 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/my/nickname")
-    public ResponseEntity<BaseRes<Void>> updateNickname(
-            @RequestHeader("x-user-id") String username,
-            @RequestBody @Valid UpdateNicknameReq request
-    ) {
-
-        userService.updateNickname(username, request);
-
-        BaseRes<Void> response = new BaseRes<>("200", "닉네임 수정 완료", null);
-        return ResponseEntity.ok(response);
-    }
-
     @PatchMapping("/my/password")
     public ResponseEntity<BaseRes<Void>> updatePasswords(
             @RequestHeader("x-user-id") String username,
@@ -61,6 +49,18 @@ public class UserController {
         userService.updatePassword(username, request);
 
         BaseRes<Void> response = new BaseRes<>("200", "비밀번호 수정 완료", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/my/nickname")
+    public ResponseEntity<BaseRes<Void>> updateNickname(
+            @RequestHeader("x-user-id") String username,
+            @RequestBody @Valid UpdateNicknameReq request
+    ) {
+
+        userService.updateNickname(username, request);
+
+        BaseRes<Void> response = new BaseRes<>("200", "닉네임 수정 완료", null);
         return ResponseEntity.ok(response);
     }
 

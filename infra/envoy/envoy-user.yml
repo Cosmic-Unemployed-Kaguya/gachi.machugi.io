@@ -112,6 +112,7 @@ static_resources:
               print_options:
                 add_whitespace: true
                 always_print_primitive_fields: true
+              convert_grpc_status: true
 
           # 라우팅 필터
           - name: envoy.filters.http.router
