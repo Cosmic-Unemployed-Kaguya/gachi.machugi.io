@@ -1,10 +1,10 @@
 package kaguya.domain.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kaguya.domain.user.model.dto.UserDto;
 import kaguya.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.domain.user.model.dto.response.MyPageRes;
-import kaguya.domain.user.model.dto.response.ProfileRes;
 import kaguya.domain.user.model.entity.UserEntity;
 import kaguya.domain.user.model.enums.Gender;
 import kaguya.domain.user.service.UserService;
@@ -68,7 +68,7 @@ class UserControllerTest {
     void 프로필_성공() throws Exception {
 
         UserEntity user = createUser();
-        ProfileRes response = new ProfileRes(
+        UserDto response = new UserDto(
                 user.getName(),
                 user.getBirth(),
                 user.getPhone(),

@@ -2,8 +2,8 @@ package kaguya.domain.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
-import kaguya.domain.user.model.dto.AccountInfo;
-import kaguya.domain.user.model.dto.UserInfo;
+import kaguya.domain.user.model.dto.UserDto;
+import kaguya.domain.user.model.dto.request.AccountReq;
 import kaguya.domain.user.model.dto.request.LoginReq;
 import kaguya.domain.user.model.dto.request.RegisterReq;
 import kaguya.domain.user.model.dto.response.LoginRes;
@@ -40,8 +40,8 @@ class AuthControllerTest {
     @Test
     @DisplayName("회원가입 성공")
     void 회원가입_테스트_성공() throws Exception {
-        AccountInfo account = new AccountInfo("testID", "testPassword", "user1", "aaaa@bbbb.com");
-        UserInfo user = new UserInfo("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
+        AccountReq account = new AccountReq("testID", "testPassword", "user1", "aaaa@bbbb.com");
+        UserDto user = new UserDto("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
         RegisterReq register = new RegisterReq(account, user);
 
         // 회원가입 서비스 return이 null이어서 given 의미 없음

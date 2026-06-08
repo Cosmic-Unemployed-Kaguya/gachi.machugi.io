@@ -10,7 +10,6 @@ import kaguya.domain.user.model.dto.UserDto;
 import kaguya.domain.user.service.UserService;
 import kaguya.grpc.user.*;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.server.service.GrpcService;
 
 @GrpcService

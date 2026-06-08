@@ -1,7 +1,7 @@
 package kaguya.domain.user.service;
 
-import kaguya.domain.user.model.dto.AccountInfo;
-import kaguya.domain.user.model.dto.UserInfo;
+import kaguya.domain.user.model.dto.UserDto;
+import kaguya.domain.user.model.dto.request.AccountReq;
 import kaguya.domain.user.model.dto.request.LoginReq;
 import kaguya.domain.user.model.dto.request.RegisterReq;
 import kaguya.domain.user.model.dto.response.CheckTokenRes;
@@ -50,8 +50,8 @@ class AuthServiceTest {
     @DisplayName("회원가입 성공 - 데이터 매핑 및 암호화 검증")
     void 회원가입_테스트_성공() {
         // given
-        AccountInfo account = new AccountInfo("testID", "testPassword", "user1", "aaaa@bbbb.com");
-        UserInfo user = new UserInfo("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
+        AccountReq account = new AccountReq("testID", "testPassword", "user1", "aaaa@bbbb.com");
+        UserDto user = new UserDto("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
         RegisterReq registerData = new RegisterReq(account, user);
 
         given(userRepository.existsByUsername(registerData.account().username())).willReturn(false);

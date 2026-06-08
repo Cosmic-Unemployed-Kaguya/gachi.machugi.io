@@ -1,9 +1,9 @@
 package kaguya.domain.user.service;
 
+import kaguya.domain.user.model.dto.UserDto;
 import kaguya.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.domain.user.model.dto.response.MyPageRes;
-import kaguya.domain.user.model.dto.response.ProfileRes;
 import kaguya.domain.user.model.entity.UserEntity;
 import kaguya.domain.user.model.enums.Gender;
 import kaguya.domain.user.repository.UserRepository;
@@ -65,7 +65,7 @@ class UserServiceTest {
         given(userRepository.findByUsername(username)).willReturn(Optional.of(user));
 
         // when
-        ProfileRes result = userService.getProfile(username);
+        UserDto result = userService.getProfile(username);
 
         // then
         assertThat(result.name()).isEqualTo("홍길동");
