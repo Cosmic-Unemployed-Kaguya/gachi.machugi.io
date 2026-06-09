@@ -14,5 +14,5 @@ export interface CommentListRes{
     userNickName: string,
     content : string,
     state : BoardState,
-    updatedAt : Timestamp,
+    updatedAt : Date,
 };

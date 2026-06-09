@@ -12,5 +12,5 @@ export interface CommentRes{
     userNickName: string,
     content : string,
     state : BoardState,
-    updatedAt : Timestamp,
+    updatedAt : Date,
 };
