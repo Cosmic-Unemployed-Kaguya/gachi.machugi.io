@@ -6,7 +6,7 @@ import Container from 'typedi';
 import UserClient from '../client/userClient';
 import { UserInfoReply, UserRole as GrpcRole } from '../generated/user';
 import { UserRole as AppRole } from '../model/enum/userRole';
-import { toAppRole, toGrpcRole } from '../utils/mapper/userRoleMapper';
+import { toAppRole, toGrpcRole } from '../utils/mapper/userMapper';
 import { catchAsync } from '../utils/catchAsync';
 
 

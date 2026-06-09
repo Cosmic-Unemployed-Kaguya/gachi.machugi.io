@@ -2,7 +2,7 @@ import { Metadata } from "@grpc/grpc-js";
 import { UserRole } from "../generated/user";
 import { AuthRequest } from "../model/dto/grpcBaseReq";
 import { GrpcError } from "../utils/error";
-import { toAppRole } from "../utils/mapper/userRoleMapper";
+import { toAppRole } from "../utils/mapper/userMapper";
 import { UserData } from "../middlewares/appRequest";
 
 
