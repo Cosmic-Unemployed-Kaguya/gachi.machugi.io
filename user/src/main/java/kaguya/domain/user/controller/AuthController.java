@@ -81,12 +81,6 @@ public class AuthController {
             @CookieValue(name = "refreshToken", required = false) String refreshToken
     ) {
 
-        // accessToken이 비어있으면 로그인 상태가 아님
-        if (accessToken == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new BaseRes<>("401", "로그인 상태가 아닙니다.", null));
-        }
-
         authService.logout(accessToken, refreshToken);
 
         // Access Token 쿠키 삭제
@@ -120,7 +114,7 @@ public class AuthController {
      */
     @PostMapping("/reissue")
     public ResponseEntity<BaseRes<Void>> renewToken (
-            @CookieValue(name = "refreshToken") String refreshToken
+            @CookieValue(name = "refreshToken", required = false) String refreshToken
     ) {
 
         String access = authService.renewToken(refreshToken);

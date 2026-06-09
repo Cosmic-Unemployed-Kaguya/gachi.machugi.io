@@ -1,8 +1,11 @@
 package kaguya.domain.user.service;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import kaguya.global.exception.BusinessException;
+import kaguya.global.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -15,8 +18,8 @@ public class JwtProvider {
     @Value("${custom.jwt.secrets}")
     private String secret;
 
-    private final long EXP_ACCESS_TOKEN = 1000L * 60 * 10; // 10분 : 60(1분) * 10
-    private final long EXP_REFRESH_TOKEN = 1000L * 60 * 60 * 24 * 14; // 14일 : 60(1분) * 60(1시간) * 24(1일) * 14(14일)
+    private final long EXP_ACCESS_TOKEN = 1000L * 60 * 10;  // 10분 : 60(1분) * 10
+    private final long EXP_REFRESH_TOKEN = 1000L * 60 * 60 * 24 * 14;  // 14일 : 60(1분) * 60(1시간) * 24(1일) * 14(14일)
 
     /**
      * AccessToken 생성 (접근)
@@ -34,19 +37,38 @@ public class JwtProvider {
         return issueRefreshToke(username, EXP_REFRESH_TOKEN);
     }
 
+
     /**
-     * 토큰이 유효한지 검증
+     * Access Token 검증
+     * @param token: AccessToken
+     */
+    public void validateAccessToken(String token) {
+        validateToken(token, ErrorCode.EXPIRED_ACCESS_TOKEN);
+    }
+
+    /**
+     * Refresh Token 검증
      * @param token: RefreshToken
      */
-    public boolean validationToken(String token) {
+    public void validateRefreshToken(String token) {
+        validateToken(token, ErrorCode.EXPIRED_REFRESH_TOKEN);
+    }
+
+    /**
+     * 토큰이 유효한지 검증
+     * @param token: AccessToken / RefreshToken
+     * @param error: 토큰 만료 시 던질 에러코드
+     */
+    private void validateToken(String token, ErrorCode error) {
         try {
             Jwts.parser()
                     .verifyWith(getSecretKey())
                     .build()
                     .parseSignedClaims(token);
-            return true;
+        } catch (ExpiredJwtException e) {
+            throw new BusinessException(error);
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
     }
 
@@ -104,7 +126,6 @@ public class JwtProvider {
                 .signWith(getSecretKey())  // 서명
                 .compact();
     }
-
 /*
     // compact() 의미
     for (Map.Entry<String, Object> claimEntry : claims.entrySet()) {
