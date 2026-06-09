@@ -4,7 +4,7 @@ import dependencyInjector from './dependencyInjector';
 import { AppDataSource } from './settingTypeORM'; 
 import logger from '../utils/logger';
 import {  addTransactionalDataSource, initializeTransactionalContext  }  from 'typeorm-transactional' ; 
-
+import { loadService, startServer } from './grpcServerLoader';
 
 /**
  * 웹 실행 과정을 여기서 통재.
@@ -37,9 +37,21 @@ export default async ({ expressApp }: { expressApp: express.Application } ) => {
     await dependencyInjector(appDataSource);
     logger.info("DI 컨테이너 로드 완료")
 
-    // 3. router 로드 
+
+    // 3. gRPC service 등록
+    logger.info("grpc 서비스 로드 시작")
+    await loadService()
+    logger.info("grpc 서비스 로드 완료")
+
+    // 4. gRPC 서버 시작
+    logger.info("grpc 서버 로드 시작")
+    await startServer()
+    logger.info("grpc 서버 로드 완료")
+
+    // 5. router 로드 
     logger.info("router 로드 시작")
     await expressLoader({app : expressApp})
     logger.info("router 로드 완료")
 
+    
 }
