@@ -4,6 +4,7 @@ package gachi.machugi.grpc.user;
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
+import "google/rpc/error_details.proto";
 import "validate/validate.proto";
 
 option java_multiple_files = true;

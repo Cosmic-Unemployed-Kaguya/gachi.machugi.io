@@ -8,14 +8,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-// RestController 보고 있다가 예외가 터지면 가로채기
-@RestControllerAdvice
 @Slf4j
+@RestControllerAdvice  // RestController 보고 있다가 예외가 터지면 가로채기
 public class GlobalExceptionHandler {
 
     // 비즈니스 로직에서 던진 BusinessException 처리
     @ExceptionHandler(BusinessException.class)
     protected ResponseEntity<ErrorRes> handleBusinessException(BusinessException e) {
+
         ErrorCode errorCode = e.getErrorCode();
         ErrorRes response = new ErrorRes(errorCode);  // 에러 응답 객체
 
@@ -26,16 +26,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected ResponseEntity<ErrorRes> handleValidationException(MethodArgumentNotValidException e) {
 
-        // 발생한 에러 중 첫 번째 에러의 메시지를 가져옴 (ex. "아이디는 필수입니다.")
+        // 발생한 에러 중 첫 번째 에러의 메시지를 가져옴
         String errorMessage = e.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
 
         ErrorCode errorCode = ErrorCode.INVALID_INPUT_VALUE;  // 400 Bad Request
 
         // record의 생성자를 사용해 커스텀 메시지를 직접 설정
         ErrorRes response = new ErrorRes(
-                errorCode.getStatus().value(),
-                errorCode.getCode(),
-                errorMessage
+                errorCode.getStatus().value(),  // HTTP 상태 코드
+                errorCode.getCode(),  // 에러 코드
+                errorMessage  // 에러 메세지
         );
 
         return new ResponseEntity<>(response, errorCode.getStatus());

@@ -9,6 +9,8 @@ import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
 import kaguya.user.domain.user.model.dto.response.ProfileReq;
 import kaguya.user.domain.user.service.UserService;
+import kaguya.user.global.exception.BusinessException;
+import kaguya.user.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import net.devh.boot.grpc.server.service.GrpcService;
 
@@ -32,12 +34,8 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
 
         String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
         if (username == null) {
-            responseObserver.onError(
-                    io.grpc.Status.UNAUTHENTICATED
-                            .withDescription("로그인이 필요한 서비스입니다.")
-                            .asRuntimeException()
-            );
-            return;
+            // 예외를 던지면 GlobalGrpcExceptionHandler가 가로채어 표준 gRPC 에러 응답으로 변환
+            throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
         MyPageRes data = userService.getMyPage(username);
@@ -60,12 +58,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
 
         String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
         if (username == null) {
-            responseObserver.onError(
-                    io.grpc.Status.UNAUTHENTICATED
-                            .withDescription("로그인이 필요한 서비스입니다.")
-                            .asRuntimeException()
-            );
-            return;
+            throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
         ProfileReq data = userService.getProfile(username);
@@ -86,24 +79,15 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             UpdatePasswordRequest request,
             StreamObserver<Empty> responseObserver
     ) {
+
         String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
         if (username == null) {
-            responseObserver.onError(
-                    io.grpc.Status.UNAUTHENTICATED
-                            .withDescription("로그인이 필요한 서비스입니다.")
-                            .asRuntimeException()
-            );
-            return;
+            throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
         String newPassword = request.getNewPassword();
         if (!PASSWORD_PATTERN.matcher(newPassword).matches()) {
-            responseObserver.onError(
-                    io.grpc.Status.INVALID_ARGUMENT  // 400 Bad Request
-                            .withDescription("비밀번호는 8~20자리이며, 영문, 숫자, 특수문자를 포함해야 합니다.")
-                            .asRuntimeException()
-            );
-            return;
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
         UpdatePasswordReq reqData = new UpdatePasswordReq(
@@ -125,12 +109,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
 
         String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
         if (username == null) {
-            responseObserver.onError(
-                    io.grpc.Status.UNAUTHENTICATED
-                            .withDescription("로그인이 필요한 서비스입니다.")
-                            .asRuntimeException()
-            );
-            return;
+            throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
         UpdateNicknameReq reqData = new UpdateNicknameReq(
@@ -152,12 +131,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
 
         String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
         if (username == null) {
-            responseObserver.onError(
-                    io.grpc.Status.UNAUTHENTICATED
-                            .withDescription("로그인이 필요한 서비스입니다.")
-                            .asRuntimeException()
-            );
-            return;
+            throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
         userService.withdraw(username);

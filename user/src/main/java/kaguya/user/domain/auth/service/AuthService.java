@@ -53,6 +53,10 @@ public class AuthService {
             throw new BusinessException(ErrorCode.EXISTS_EMAIL);
         }
 
+        if(userRepository.existsByNickname(registerData.account().nickname())) {
+            throw new BusinessException(ErrorCode.EXISTS_NICKNAME);
+        }
+
         // 패스워드 설정
         String rawPassword = registerData.account().password();  // 암호화 전
         String encodedPassword = passwordEncoder.encode(rawPassword);  // 암호화

@@ -49,12 +49,17 @@ public class UserService {
         UserEntity userEntity = userRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        if(!userEntity.getNickname().equals(updateNicknameData.nickname())) {
-            if (userRepository.existsByNickname(updateNicknameData.nickname())) {
-                throw new BusinessException(ErrorCode.EXISTS_NICKNAME);
-            }
-            userEntity.changeNickname(updateNicknameData.nickname());
+        // 기존 닉네임과 완전히 동일한 경우 400 에러 처리
+        if (userEntity.getNickname().equals(updateNicknameData.nickname())) {
+            throw new BusinessException(ErrorCode.SAME_AS_OLD_NICKNAME);
         }
+
+        // 닉네임 중복인지 확인
+        if (userRepository.existsByNickname(updateNicknameData.nickname())) {
+            throw new BusinessException(ErrorCode.EXISTS_NICKNAME);
+        }
+
+        userEntity.changeNickname(updateNicknameData.nickname());
     }
 
     // 비밀번호 변경
