@@ -1,7 +1,7 @@
 import { Server, ServerCredentials, status } from "@grpc/grpc-js";
 import logger from "../utils/logger";
 import setting from "../config"
-import grpcServers from "../grpc_server";
+import grpcServers from "../grpc-server";
 import Container from "typedi";
 
 // 서버 객체 생성  

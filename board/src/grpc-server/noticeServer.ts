@@ -3,7 +3,7 @@ import { GrpcServer } from "../decorator/grpcServer";
 import { BoardIdxReq, CommentIdxReq, CommentPageRes, CommentRes, NoticeApiService, NoticeDetailRes, NoticePageRes, PagingReq, UpsertNoticeReq } from "../generated/notice";
 import NoticeService from "../service/noticeService";
 import BoardCommentService from "../service/boardCommentService";
-import UserClient from "../client/userClient";
+import UserClient from "../grpc-client/userClient";
 import { grpcValidate } from "../utils/grpcValidate";
 import {UpsertNoticeReq  as AppUpsertNoticeReq} from "../model/dto/noticeUpsertReq"
 import {UpsertCommentReq as AppUpsertCommentReq} from "../model/dto/commentUpsertReq"
@@ -11,7 +11,7 @@ import { BoardIdxParamReq as AppBoardIdxReq, CommentIdxParamReq as AppCommentIdx
 import { PagingReq as AppPagingReq } from "../model/dto/paging"
 
 
-import { UpsertCommentReq } from './../generated/notice';
+import { UpsertCommentReq } from '../generated/notice';
 import { GrpcAuth } from "../decorator/grpcAuth";
 import { UserRole } from "../generated/user";
 import { AuthRequest } from "../model/dto/grpcBaseReq";

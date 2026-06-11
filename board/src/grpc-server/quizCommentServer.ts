@@ -2,7 +2,7 @@ import { Inject } from "typedi";
 import { GrpcServer } from "../decorator/grpcServer";
 import { PagingQuizCommentReq, QuizCommentApiServer, QuizCommentApiService, QuizCommentIdxReq, UpsertQuizCommentReq } from "../generated/quizComment";
 import QuizCommentService from "../service/quizCommentService";
-import UserClient from "../client/userClient";
+import UserClient from "../grpc-client/userClient";
 import { handleUnaryCall } from "@grpc/grpc-js";
 import { grpcValidate } from "../utils/grpcValidate";
 import { QuizIdxParamReq as AppQuizIdxReq ,CommentIdxParamReq as AppCommentIdxReq } from "../model/dto/idxParamReq"

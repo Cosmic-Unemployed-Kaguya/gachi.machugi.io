@@ -1,7 +1,7 @@
 import { afterEach, before, beforeEach, describe, it, mock } from "node:test";
 import QuizCommentService from "../src/service/quizCommentService";
 import { QuizCommentRepository } from "../src/repository/quizCommentRepository";
-import UserClient from "../src/client/userClient";
+import UserClient from "../src/grpc-client/userClient";
 import { BoardState } from "../src/model/enum/boardState";
 import { QuizCommentEntity } from "../src/model/entity/quizComment";
 import { UpsertCommentReqType } from "../src/model/dto/commentUpsertReq";
