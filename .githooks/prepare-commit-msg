@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+COMMIT_MSG_FILE=$1
+BRANCH_NAME=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+# 브랜치명(dev-IS007-SUB002)을 하이픈(-) 기준으로 분리하여 각각 추출
+ENV_PART=$(echo "$BRANCH_NAME" | cut -d'-' -f1)  # dev
+IS_PART=$(echo "$BRANCH_NAME" | cut -d'-' -f2)   # IS007
+SUB_PART=$(echo "$BRANCH_NAME" | cut -d'-' -f3)  # SUB002
+
+# 필수 값인 IS_PART가 정상적인 형식(IS+숫자)인지 검증 (안전장치)
+if echo "$IS_PART" | grep -qE '^IS[0-9]+$'; then
+  ORIGINAL_MSG=$(cat "$COMMIT_MSG_FILE")
+  
+  # 조합할 최종 태그 형태 구성 -> [dev][IS007][SUB002]
+  # 만약 SUB002 부분이 없으면 [dev][IS007] 까지만 구성되도록 예외 처리
+  if echo "$SUB_PART" | grep -qE '^SUB[0-9]+$'; then
+    PREFIX_TAG="[$ENV_PART][$IS_PART][$SUB_PART]"
+  else
+    PREFIX_TAG="[$ENV_PART][$IS_PART]"
+  fi
+
+  # 커밋 메시지에 이미 해당 태그 조합이 없을 때만 맨 앞에 추가 (중복 방지)
+  if ! grep -Fq "$PREFIX_TAG" "$COMMIT_MSG_FILE"; then
+    echo "$PREFIX_TAG $ORIGINAL_MSG" > "$COMMIT_MSG_FILE"
+  fi
+fi
