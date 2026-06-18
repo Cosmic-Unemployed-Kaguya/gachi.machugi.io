@@ -68,7 +68,8 @@ class AuthControllerTest {
         LoginReq request = new LoginReq("testID", "testPassword");
         LoginRes response = new LoginRes("accessToken-aaabbbccc", "refreshToken-dddeeefff", "user1");
 
-        given(authService.login(any(LoginReq.class))).willReturn(response);
+        given(authService.login(any(LoginReq.class)))
+                .willReturn(response);
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -122,7 +123,8 @@ class AuthControllerTest {
         Cookie refresh = new Cookie("refreshToken", "refreshToken-dddeeefff");
         String accessToken = "accessToken-AAABBBCCC";
 
-        given(authService.renewToken(any(String.class))).willReturn(accessToken);
+        given(authService.renewToken(any(String.class)))
+                .willReturn(accessToken);
 
         mockMvc.perform(post("/auth/reissue")
                         .cookie(refresh))
@@ -193,13 +195,14 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("로그인 실패 - 비밀번호 불일치")
+    @DisplayName("로그인 실패 - 비밀번호 불일치 (service에서 커스텀 예외가 잘 throws 되는지 확인)")
     void 로그인_비밀번호_불일치() throws Exception {
         // 아이디와 비밀번호가 비어있는 요청
         LoginReq request = new LoginReq("testID", "testPassword12!@");
 
         // 커스텀 예외 처리가 정상적으로 동작 되는지
-        given(authService.login(any(LoginReq.class))).willThrow(new BusinessException(ErrorCode.INVALID_CREDENTIALS));
+        given(authService.login(any(LoginReq.class)))
+                .willThrow(new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -217,7 +220,8 @@ class AuthControllerTest {
         String access = null;
         Cookie refresh = new Cookie("refreshToken", "refreshToken-dddeeefff");
 
-        willThrow(new BusinessException(ErrorCode.MISSING_TOKEN)).given(authService).logout(access, refresh.getValue());
+        willThrow(new BusinessException(ErrorCode.MISSING_TOKEN))
+                .given(authService).logout(access, refresh.getValue());
 
         mockMvc.perform(post("/auth/logout")
                 .cookie(refresh))
@@ -233,7 +237,8 @@ class AuthControllerTest {
         // Refresh Token 없음
         String refresh = null;
 
-        willThrow(new BusinessException(ErrorCode.MISSING_TOKEN)).given(authService).renewToken(refresh);
+        willThrow(new BusinessException(ErrorCode.MISSING_TOKEN))
+                .given(authService).renewToken(refresh);
 
         mockMvc.perform(post("/auth/reissue"))
 
