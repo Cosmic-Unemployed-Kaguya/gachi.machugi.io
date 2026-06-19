@@ -96,7 +96,6 @@ public class AuthService {
      * @param accessToken: 접근 토큰
      * @param refreshToken: 갱신 토큰
      */
-    @Transactional
     public void logout(String accessToken, String refreshToken) {
 
         // accessToken이 비어있으면 로그인 상태가 아님
@@ -131,6 +130,11 @@ public class AuthService {
     @Transactional(readOnly = true)
     public String renewToken(String refreshToken) {
 
+        // refreshToken이 비어있으면 에러 반환
+        if (refreshToken == null) {
+            throw new BusinessException(ErrorCode.MISSING_TOKEN);
+        }
+
         // 유효한 토큰인지 검증
         jwtProvider.validateRefreshToken(refreshToken);
 
@@ -155,6 +159,11 @@ public class AuthService {
      */
     @Transactional(readOnly = true)
     public CheckTokenRes checkToken(String accessToken) {
+
+        // accessToken이 비어있으면 에러 반환
+        if (accessToken == null) {
+            throw new BusinessException(ErrorCode.MISSING_TOKEN);
+        }
 
         // 유요한 토큰인지 검증
         jwtProvider.validateAccessToken(accessToken);

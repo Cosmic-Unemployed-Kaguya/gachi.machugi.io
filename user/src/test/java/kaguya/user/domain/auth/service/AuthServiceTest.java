@@ -29,10 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willDoNothing;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -90,7 +87,6 @@ class AuthServiceTest {
     void 로그인_테스트_성공() {
         //given
         LoginReq loginData = new LoginReq("testID", "testPassword12!@");
-
         UserEntity mockEntity = createDefaultUser();
 
         given(userRepository.findByUsername(loginData.username())).willReturn(Optional.of(mockEntity));
@@ -206,7 +202,7 @@ class AuthServiceTest {
                 .isInstanceOf(BusinessException.class)  // BusinessException 인지 체크
                 .extracting("errorCode")  // errorCode 내용 가져와서
                 .isEqualTo(ErrorCode.EXISTS_USERNAME);  // "EXISTS_USERNAME" 인지 확인
-        // userRepository에 저장 되었는지 확인
+        // userRepository에 아무것도 저장되지 않음
         verify(userRepository, never()).save(any());
     }
 
@@ -218,7 +214,7 @@ class AuthServiceTest {
         UserReq user = new UserReq("김철수", LocalDate.now(), "010-1111-2222", Gender.MALE.toString());
         RegisterReq registerData = new RegisterReq(account, user);
 
-        // existsByEmail 검사 했을 때 true 라고 나올 경우 (이메일 중복일 경우)
+        // 이메일 중복일 경우
         given(userRepository.existsByEmail(registerData.account().email())).willReturn(true);
 
         // when & then
@@ -237,7 +233,7 @@ class AuthServiceTest {
         UserReq user = new UserReq("김철수", LocalDate.now(), "010-1111-2222", Gender.MALE.toString());
         RegisterReq registerData = new RegisterReq(account, user);
 
-        // existsByNickname 검사 했을 때 true 라고 나올 경우 (닉네임 중복일 경우)
+        // 닉네임 중복일 경우
         given(userRepository.existsByNickname(registerData.account().nickname())).willReturn(true);
 
         // when & then
@@ -248,19 +244,180 @@ class AuthServiceTest {
         verify(userRepository, never()).save(any());
     }
 
-    // todo. 실패 케이스
-    // 로그인 - 아이디 찾지 못할 때
-    // 로그인 - 아이디 비밀번호 다를때
+    @Test
+    @DisplayName("로그인 - 존재하지 않는 아이디")
+    void 로그인_존재하지_않는_아이디() {
+        // given
+        LoginReq loginData = new LoginReq("test123", "testPassword12!@");
 
-    // 로그아웃 - accessToken 비어있을 때
-    // 로그아웃 - refreshToken 유효하지 않을 때
-    // 로그아웃 - refreshToken 만료되었을 때
+        // 로그인 할 아이디 찾지 못할 경우
+        given(userRepository.findByUsername(loginData.username())).willReturn(Optional.empty());
 
-    // 토큰갱신 - accessToken 유효하지 않을 때
-    // 토큰갱신 - 아이디 찾을 수 없을 때
+        // when & then
+        assertThatThrownBy(() -> authService.login(loginData))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
 
-    // 토큰검사 - 블랙리스트에 등록된 accessToken을 사용했을 때
+        // findByUsername는 실행되었고
+        verify(userRepository).findByUsername(loginData.username());
+        // 그 외(passwordEncoder, jwtProvider, redisRepository)는 실행되지 않음
+        verifyNoInteractions(passwordEncoder, jwtProvider, redisRepository);
+    }
 
+    @Test
+    @DisplayName("로그인 - 비밀번호 불일치")
+    void 로그인_비밀번호_불일치() {
+        // given
+        LoginReq loginData = new LoginReq("testID", "testPassword12!@");
+        UserEntity mockEntity = createDefaultUser();
+
+        given(userRepository.findByUsername(loginData.username())).willReturn(Optional.of(mockEntity));
+        // 비밀번호 대조 결과 불일치
+        given(passwordEncoder.matches(loginData.password(), mockEntity.getPassword())).willReturn(false);
+
+        // when & then
+        assertThatThrownBy(() -> authService.login(loginData))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+        // 그 외(jwtProvider, redisRepository)는 실행되지 않음
+        verifyNoInteractions(jwtProvider, redisRepository);
+    }
+
+    @Test
+    @DisplayName("로그아웃 - AccessToken 누락")
+    void 로그아웃_AccessToken_누락() {
+        // given
+        String accessToken = null;
+        String refreshToken = "refreshToken-dddeeefff";
+
+        // 메서드 호출하기 전에 끝나기 전에 given() 필요없음
+
+        // when & then
+        assertThatThrownBy(() -> authService.logout(accessToken, refreshToken))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.MISSING_TOKEN);
+        // 그 외(jwtProvider, redisRepository)는 실행되지 않음
+        verifyNoInteractions(jwtProvider, redisRepository);
+        // redisRepository에 아무것도 삭제되지 않음
+        verify(redisRepository, never()).delete(anyString());
+        // redisRepository에 아무것도 저장되지 않음
+        verify(redisRepository, never()).save(anyString(), anyString(), anyLong(), any(TimeUnit.class));
+    }
+
+    @Test
+    @DisplayName("로그아웃 - 유효하지 않는 RefreshToken")
+    void 로그아웃_유효하지_않는_RefreshToken() {
+        // given
+        String accessToken = "accessToken-aaabbbccc";
+        String refreshToken = "refreshToken-any";
+
+        // refreshToken 검사했을 때 커스텀 에러 반환
+        willThrow(new BusinessException(ErrorCode.INVALID_TOKEN)).given(jwtProvider).validateRefreshToken(refreshToken);
+
+        // when
+        authService.logout(accessToken, refreshToken);
+
+        // then
+        // redisRepository에 아무것도 삭제되지 않음
+        verify(redisRepository, never()).delete(anyString());
+        // catch 이후 로직은 정상 진행되므로 정상적으로 블랙리스트에 저장 AccessToken 저장
+        verify(redisRepository).save(
+                eq("BL:" + accessToken),
+                eq("logout"),
+                eq(10L),
+                eq(TimeUnit.MINUTES)
+        );
+    }
+
+    @Test
+    @DisplayName("토큰갱신 - 유효하지 않는 RefreshToken")
+    void 토큰갱신_유효하지_않는_RefreshToken() {
+        // given
+        String refreshToken = "refreshToken-any";
+
+        willThrow(new BusinessException(ErrorCode.INVALID_TOKEN)).given(jwtProvider).validateRefreshToken(refreshToken);
+
+        // when & then
+        assertThatThrownBy(() -> authService.renewToken(refreshToken))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_TOKEN);
+        verifyNoInteractions(redisRepository, userRepository);
+        // 그 외 jwtProvider 동작(getUsername, createAccessToken) 안했는지 검증
+        verify(jwtProvider, never()).getUsername(anyString());
+        verify(jwtProvider, never()).createAccessToken(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("토큰갱신 - 아이디 찾을 수 없음")
+    void 토큰갱신_존재하지_않는_아이디() {
+        // given
+        String refreshToken = "refreshToken-dddeeefff";
+        String username = null;
+
+
+        willDoNothing().given(jwtProvider).validateRefreshToken(refreshToken);
+        // null 반환 (아이디 찾을 수 없음)
+        given(jwtProvider.getUsername(refreshToken)).willReturn(username);
+        // "RT:null" 이름으로 검색
+        given(redisRepository.get("RT:" + username)).willReturn(null);
+        // (실제 로직) 실제 저장된 refreshToken이 null 이므로 에러 던짐
+
+        // when & then
+        assertThatThrownBy(() -> authService.renewToken(refreshToken))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_TOKEN);
+        // redisRepository에 "RT:null"로 검색했는지 검증
+        verify(redisRepository).get("RT:null");
+        // userRepository는 사용하지 않음
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    @DisplayName("토큰갱신 - 오래된 RefreshToken 사용")
+    void 토큰갱신_오래된_RefreshToken_사용() {
+        // given
+        String oldRefreshToken = "refreshToken-old";  // 토큰이 만료는 안되었지만, Redis에 등록되지 않은(과거의) Refresh Token
+        String username = "testID";
+        String currentRefreshToken = "refreshToken-dddeeefff";
+
+        // 토큰 유효하고, username 까지는 정상적으로 조회가 됨
+        willDoNothing().given(jwtProvider).validateRefreshToken(oldRefreshToken);
+        given(jwtProvider.getUsername(oldRefreshToken)).willReturn(username);
+        // 가장 최신 Refresh Token 가져옴
+        given(redisRepository.get("RT:" + username)).willReturn(currentRefreshToken);
+        // (실제 로직) oldRefreshToken != currentRefreshToken 이므로 에러 던짐
+
+        // when & then
+        assertThatThrownBy(() -> authService.renewToken(oldRefreshToken))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_TOKEN);
+
+        verify(redisRepository).get("RT:" + username);
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    @DisplayName("토큰검사 - 블랙리스트에 등록된 AccessToken")
+    void 토큰검사_블랙리스트에_등록된_AccessToken() {
+        // given
+        String accessToken = "accessToken-aaabbbccc";
+
+        willDoNothing().given(jwtProvider).validateAccessToken(accessToken);
+        given(redisRepository.exist("BL:" + accessToken)).willReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> authService.checkToken(accessToken))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_TOKEN);
+        verifyNoMoreInteractions(jwtProvider);
+    }
 
 
     /**
