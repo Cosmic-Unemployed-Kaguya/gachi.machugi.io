@@ -146,7 +146,6 @@ class AuthControllerTest {
     @Test
     @DisplayName("존재하지 않는 API 요청")
     void 존재하지_않는_API_요청() throws Exception {
-        // 이메일 형식이 아님
         AccountReq account = new AccountReq("testID", "testPassword12!@", "aaaa@bbbb.com", "user1");
         UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
         RegisterReq register = new RegisterReq(account, user);

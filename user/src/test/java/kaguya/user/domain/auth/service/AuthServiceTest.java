@@ -292,7 +292,7 @@ class AuthServiceTest {
         String accessToken = null;
         String refreshToken = "refreshToken-dddeeefff";
 
-        // 메서드 호출하기 전에 끝나기 전에 given() 필요없음
+        // 메서드 호출하기 전에 끝나기 때문에 given() 필요없음
 
         // when & then
         assertThatThrownBy(() -> authService.logout(accessToken, refreshToken))
@@ -364,7 +364,7 @@ class AuthServiceTest {
         given(jwtProvider.getUsername(refreshToken)).willReturn(username);
         // "RT:null" 이름으로 검색
         given(redisRepository.get("RT:" + username)).willReturn(null);
-        // (실제 로직) 실제 저장된 refreshToken이 null 이므로 에러 던짐
+        // (service 로직) 실제 저장된 refreshToken이 null 이므로 에러 던짐
 
         // when & then
         assertThatThrownBy(() -> authService.renewToken(refreshToken))
@@ -390,7 +390,7 @@ class AuthServiceTest {
         given(jwtProvider.getUsername(oldRefreshToken)).willReturn(username);
         // 가장 최신 Refresh Token 가져옴
         given(redisRepository.get("RT:" + username)).willReturn(currentRefreshToken);
-        // (실제 로직) oldRefreshToken != currentRefreshToken 이므로 에러 던짐
+        // (service 로직) oldRefreshToken != currentRefreshToken 이므로 에러 던짐
 
         // when & then
         assertThatThrownBy(() -> authService.renewToken(oldRefreshToken))
