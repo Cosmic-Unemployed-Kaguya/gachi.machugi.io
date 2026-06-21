@@ -4,6 +4,8 @@ package gachi.machugi.grpc.user;
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
+import "google/rpc/error_details.proto";
+import "validate/validate.proto";
 
 option java_multiple_files = true;
 option java_package = "kaguya.grpc.user";
@@ -21,7 +23,7 @@ service UserService {
     };
   }
 
-  rpc UpdatePasswords (UpdatePasswordRequest) returns (google.protobuf.Empty) {
+  rpc UpdatePassword (UpdatePasswordRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       patch: "/users/my/password"
       body: "*"
@@ -44,12 +46,27 @@ service UserService {
 
 // --- Request Messages ---
 message UpdatePasswordRequest {
-  string current_password = 1;
-  string new_password = 2;
+  // @NotBlank(message = "현재 비밀번호를 입력하세요.")
+  string current_password = 1 [(validate.rules).string = {
+    min_len: 1,  // 문자의 최소 길이는 1 이상이어야 함 (@NotEmpty)
+    pattern: "^.*\\S.*$"  // 문자열 내에 공백이 아닌 문자가 최소 1개 있어야 함 (@NotBlank)
+  }];
+
+  // Java의 정규식 탐색 문법(?=)은 .proto 에서 지원하지 않음
+  // -> 정규식 검사는 GrpcServer(비지니스 로직)에서 해줘야 함
+  // @NotBlank + @Pattern (길이 8~20자리)
+  string new_password = 2 [(validate.rules).string = {
+    min_len: 8,
+    max_len: 20
+  }];
 }
 
 message UpdateNicknameRequest {
-  string nickname = 1;
+  // @NotBlank(message = "닉네임을 입력하세요.")
+  string nickname = 1 [(validate.rules).string = {
+    min_len: 1,
+    pattern: "^.*\\S.*$"
+  }];
 }
 
 // --- Response Messages ---

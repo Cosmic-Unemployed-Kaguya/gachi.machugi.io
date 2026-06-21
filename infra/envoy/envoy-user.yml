@@ -58,12 +58,6 @@ static_resources:
               # gRPC 내부 패키지명 라우팅
               - match: { prefix: "/gachi.machugi.grpc.user.UserService" }
                 route: { cluster: user_cluster }
-              - match: { prefix: "/gachi.machugi.grpc.quiz.QuizService" }
-                route: { cluster: quiz_cluster }
-              - match: { prefix: "/gachi.machugi.grpc.room.RoomService" }
-                route: { cluster: room_cluster }
-              - match: { prefix: "/gachi.machugi.grpc.board.BoardService" }
-                route: { cluster: board_cluster }
 
               # 그 외 경로 매칭
               - match: { prefix: "/" }
@@ -115,9 +109,6 @@ static_resources:
               proto_descriptor: "/tmp/descriptor.pb"
               services: 
                 - "gachi.machugi.grpc.user.UserService"
-                - "gachi.machugi.grpc.quiz.QuizService"
-                - "gachi.machugi.grpc.room.RoomService"
-                - "gachi.machugi.grpc.board.BoardService"
               print_options:
                 add_whitespace: true
                 always_print_primitive_fields: true
@@ -154,42 +145,3 @@ static_resources:
         - endpoint:
             address:
               socket_address: { address: host.docker.internal, port_value: 9091 }
-
-  # 퀴즈(Quiz) 클러스터
-  - name: quiz_cluster
-    connect_timeout: 0.25s
-    type: LOGICAL_DNS
-    http2_protocol_options: {}
-    load_assignment:
-      cluster_name: quiz_cluster
-      endpoints:
-      - lb_endpoints:
-        - endpoint:
-            address:
-              socket_address: { address: host.docker.internal, port_value: 9092 }
-
-  # 방(Room) 클러스터
-  - name: room_cluster
-    connect_timeout: 0.25s
-    type: LOGICAL_DNS
-    http2_protocol_options: {}
-    load_assignment:
-      cluster_name: room_cluster
-      endpoints:
-      - lb_endpoints:
-        - endpoint:
-            address:
-              socket_address: { address: host.docker.internal, port_value: 9093 }
-
-  # 게시판(Board) 클러스터
-  - name: board_cluster
-    connect_timeout: 0.25s
-    type: LOGICAL_DNS
-    http2_protocol_options: {}
-    load_assignment:
-      cluster_name: board_cluster
-      endpoints:
-      - lb_endpoints:
-        - endpoint:
-            address:
-              socket_address: { address: host.docker.internal, port_value: 9094 }

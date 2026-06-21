@@ -36,7 +36,7 @@ jobs:
         if: ${{ inputs.service-name == 'user' }}
         run: |
           mkdir -p ./${{ inputs.service-name }}/src/test/resources
-          echo '${{ secrets.USER_TEST_YML }}' > ./${{ inputs.service-name }}/src/test/resources/application-test.yml
+          echo '${{ secrets.USER_TEST_YML }}' > ./${{ inputs.service-name }}/src/test/resources/application.yml
 
       # - name: account test yml pem 세팅
       #   if: ${{ inputs.service-name == 'account-service' }}
