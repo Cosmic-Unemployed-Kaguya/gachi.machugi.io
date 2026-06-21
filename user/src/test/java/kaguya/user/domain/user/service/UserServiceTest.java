@@ -89,6 +89,7 @@ class UserServiceTest {
         // given
         String username = "testID";
         UserEntity user = createUser();
+        String originalPassword = user.getPassword();
 
         UpdatePasswordReq request = new UpdatePasswordReq(
                 "encodedPassword123",
@@ -97,14 +98,14 @@ class UserServiceTest {
 
         given(userRepository.findByUsername(username)).willReturn(Optional.of(user));
         given(passwordEncoder.matches(request.currentPassword(), user.getPassword())).willReturn(true);
-        given(passwordEncoder.matches(request.newPassword(), user.getPassword())).willReturn(false);
+        given(passwordEncoder.matches(request.newPassword(), originalPassword)).willReturn(false);
         given(passwordEncoder.encode(request.newPassword())).willReturn("encryptedNewPassword");
 
         // when
         userService.updatePassword(username, request);
 
         // then
-        verify(passwordEncoder).matches(request.currentPassword(), user.getPassword());
+        verify(passwordEncoder).matches(request.currentPassword(), "encodedPassword123");
         verify(passwordEncoder).encode(request.newPassword());
         assertThat(user.getPassword()).isEqualTo("encryptedNewPassword");
     }
