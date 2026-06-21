@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 
 import kaguya.domain.answer.model.dto.request.AnswerRequest;
 import kaguya.domain.answer.model.dto.response.AnswerResponse;
+import kaguya.domain.answer.model.dto.request.AnswerCheckRequest;
+import kaguya.domain.answer.model.dto.response.AnswerCheckResponse;
 import kaguya.domain.answer.service.AnswerService;
 import lombok.RequiredArgsConstructor;
 
@@ -53,5 +55,19 @@ public class AnswerController {
     ) {
         answerService.deleteAnswer(answerIdx);
         return ResponseEntity.noContent().build();
+    }
+
+    // 정답 확인
+    @PostMapping("/questions/{questionIdx}/answers/check")
+    public ResponseEntity<AnswerCheckResponse> checkAnswer(
+            @PathVariable("questionIdx") Long questionIdx,
+            @RequestBody AnswerCheckRequest request
+    ) {
+        AnswerCheckResponse response = answerService.checkAnswer(
+                questionIdx, 
+                request
+        );
+        
+        return ResponseEntity.ok(response);
     }
 }
