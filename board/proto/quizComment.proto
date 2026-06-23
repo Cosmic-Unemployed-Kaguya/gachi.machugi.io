@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package gachi.machugi.grpc.board;
+
+import "google/api/annotations.proto";
+import "common.proto";
+import "notice.proto";
+
+service QuizCommentApi {
+
+  rpc getQuizComment(PagingQuizCommentReq) returns (CommentPageRes) {
+    option (google.api.http) = {
+      post: "/api/quiz/:quiz_idx/comment"
+      body: "*"
+    };
+  }
+
+  rpc addQuizComment(UpsertQuizCommentReq) returns (CommentRes) {
+    option (google.api.http) = {
+      post: "/api/quiz/:quiz_idx/comment"
+      body: "*"
+    };
+  }
+
+  rpc getQuizCommentReplies(PagingQuizCommentReq) returns (CommentPageRes) {
+    option (google.api.http) = {
+      post: "/api/quiz/comment/:comment_idx"
+      body: "*"
+    };
+  }
+
+  rpc updateQuizComment(UpsertQuizCommentReq) returns (CommentRes) {
+    option (google.api.http) = {
+      post: "/api/quiz/comment/:comment_idx"
+      body: "*"
+    };
+  }
+
+  rpc deleteQuizComment(QuizCommentIdxReq) returns (CommentIdxReq) {
+    option (google.api.http) = {
+      post: "/api/quiz/comment/:comment_idx"
+      body: "*"
+    };
+  }
+
+
+}
+
+message PagingQuizCommentReq {
+  // js 호환 상 int32 많이 쓴다고 함
+  int32 page = 1;
+
+  int32 size = 2;
+
+  // nullable
+  optional string search = 3;
+  optional string filter = 4;
+  optional string sort = 5;
+
+  oneof idx{
+    uint64 quiz_idx = 6;
+    uint64 comment_idx = 8;
+  }
+
+}
+
+
+message QuizCommentIdxReq{
+  uint64 comment_idx = 1;
+}
+
+/*
+message QuizCommentRes{
+  uint64 idx = 1;
+  // parent만 optional 처리
+  optional uint64 parent = 2;
+  string user_nick_name = 3;
+  string content = 4;
+  common.BoardState state = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message QuizCommentPageRes {
+
+  repeated QuizCommentRes items = 1;
+  
+  int32 total_count = 2;
+  int32 current_page = 3;
+  int32 total_pages = 4; 
+  bool has_next = 5;
+}
+*/
+
+message UpsertQuizCommentReq {
+  string content = 1;
+  common.BoardState state = 2;
+  optional uint64 parent = 3;
+
+  oneof idx{
+    uint64 quiz_idx = 5;
+    uint64 comment_idx = 6;
+  }
+}
+

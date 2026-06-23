@@ -4,7 +4,7 @@ import dependencyInjector from './dependencyInjector';
 import { AppDataSource } from './settingTypeORM'; 
 import logger from '../utils/logger';
 import {  addTransactionalDataSource, initializeTransactionalContext  }  from 'typeorm-transactional' ; 
-
+import { loadService, startServer } from './grpcServerLoader';
 
 /**
  * 웹 실행 과정을 여기서 통재.
@@ -32,14 +32,26 @@ export default async ({ expressApp }: { expressApp: express.Application } ) => {
 
     // 2. DI 컨테이너 설정
     //  - 웹 실행 단계에서 이후 필요한 의존성을 미리 DI컨테이너에 넣어두는 과정
-    //  - 현재는 DB 연결 풀 밖에 없는듯?
+    //  - 현재는 TypeORM 연결 풀 밖에 없는듯?
     logger.info("DI 컨테이너 로드 시작")
     await dependencyInjector(appDataSource);
     logger.info("DI 컨테이너 로드 완료")
 
-    // 3. router 로드 
+
+    // 3. gRPC service 등록
+    logger.info("grpc 서비스 로드 시작")
+    await loadService()
+    logger.info("grpc 서비스 로드 완료")
+
+    // 4. gRPC 서버 시작
+    logger.info("grpc 서버 로드 시작")
+    await startServer()
+    logger.info("grpc 서버 로드 완료")
+
+    // 5. router 로드 
     logger.info("router 로드 시작")
     await expressLoader({app : expressApp})
     logger.info("router 로드 완료")
 
+    
 }

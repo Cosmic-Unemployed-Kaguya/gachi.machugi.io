@@ -17,7 +17,7 @@ export interface NoticeDetailRes{
     state : BoardState,
     viewCount : number,
     isPinned: boolean,
-    updatedAt : Timestamp,
+    updatedAt : Date,
     content: string, 
 
 }

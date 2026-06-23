@@ -13,5 +13,5 @@ export interface NoticeListRes{
     state : BoardState,
     viewCount : number,
     isPinned: boolean,
-    updatedAt : Timestamp,
+    updatedAt : Date,
 };

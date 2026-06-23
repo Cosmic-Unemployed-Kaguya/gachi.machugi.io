@@ -41,7 +41,6 @@ export const getQuizCommentReplies =  catchAsync(async(req :AppRequest, res : Re
 
 export const addQuizComment =  catchAsync(async(req :AppRequest, res : Response) =>{
 
-
     const quizIdxReq : QuizIdxParamReqType = req.paramsData;
 
     const userData : UserData  = req.userData!;

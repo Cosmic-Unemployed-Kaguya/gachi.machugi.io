@@ -37,5 +37,7 @@ export default{
 
 
     userService : getEnv("USER_SERVICE", 'localhost:3001'),
+    quizService : getEnv("QUIZ_SERVICE", 'localhost:3001'),
 
+    grpcServerAddress : getEnv("GRPC_SERVER_ADDRESS", 'localhost:3003')
 }

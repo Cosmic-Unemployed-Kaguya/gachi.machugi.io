@@ -3,9 +3,12 @@ import { DataSource, EntityTarget } from 'typeorm';
 
 
 /**
- * entity를 받아 해당 repository가 컨테이너에 등록되면서 
- * AppDataSource까지 주입되도록 하는 데코레이터
- * JPA랑 비슷한 기능을 원했음
+ * 
+ * 1. DI컨테이너에 등록 될 것 > 기존 Service 데코레이터 활용
+ * 2. 1번 과정 중 객체를 생성 해야하는데, 생성자에 들어가는 필요한 파라미터를 주입
+ *   > entity, AppDataSource(DB)
+ * 
+ * 이로서 @Repository 만 붙이면 DB 연결이 깔끔하게 해결
  * 
  * @param entity 
  */

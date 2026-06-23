@@ -11,16 +11,16 @@ export abstract class DefaultEntity{
         name: "created_at",
         nullable : false
     })
-    createdAt: Timestamp;
+    createdAt: Date;
 
     @UpdateDateColumn({
         name: "updated_at",
         nullable : false
     })
-    updatedAt: Timestamp;
+    updatedAt: Date;
 
     @DeleteDateColumn({
         name: "deleted_at",
     })
-    deletedAt: Timestamp;
+    deletedAt: Date;
 }

@@ -1,7 +1,7 @@
 import { afterEach, before, beforeEach, describe, it, mock } from "node:test";
 import BoardCommentService from "../src/service/boardCommentService";
 import { BoardCommentRepository } from "../src/repository/boardCommentRepository";
-import UserClient from "../src/client/userClient";
+import UserClient from "../src/grpc-client/userClient";
 import { BoardCommentEntity } from "../src/model/entity/boardComment";
 import { BoardState } from "../src/model/enum/boardState";
 import { PagingReqType } from "../src/model/dto/paging";

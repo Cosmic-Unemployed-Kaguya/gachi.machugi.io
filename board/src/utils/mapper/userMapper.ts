@@ -1,5 +1,6 @@
 
-import { UserRole as GrpcRole } from "../../generated/user";
+import { UserRole as GrpcRole, UserInfoReply } from "../../generated/user";
+import { UserData } from "../../middlewares/appRequest";
 import { UserRole as AppRole } from "../../model/enum/userRole";
 
 
@@ -27,5 +28,13 @@ export function toAppRole(grpcRole: GrpcRole): AppRole {
         default:
             // 예외 상황
             return AppRole.USER; 
+    }
+}
+
+export const toUserData = (userRes : UserInfoReply) : UserData =>{
+    return {
+        userIdx : userRes.userIdx,
+        userNickName : userRes.nickName,
+        userRole : toAppRole(userRes.role)
     }
 }

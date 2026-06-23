@@ -1,0 +1,182 @@
+syntax = "proto3";
+
+package gachi.machugi.grpc.board;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+import "common.proto";
+
+
+service NoticeApi {
+
+  rpc getNoticeList(PagingReq) returns (NoticePageRes) {
+    option (google.api.http) = {
+      get: "/api/notice/"
+    };
+  }
+  
+  rpc addNotice(UpsertNoticeReq) returns (NoticeDetailRes) {
+    option (google.api.http) = {
+      post: "/api/notice/"
+      body: "*"
+    };
+  }
+
+  rpc getNoticeDetail(BoardIdxReq) returns (NoticeDetailRes) {
+    option (google.api.http) = {
+      post: "/api/notice/:board_idx"
+      body: "*"
+    };
+  }
+
+  rpc updateNotice(UpsertNoticeReq) returns (NoticeDetailRes) {
+    option (google.api.http) = {
+      post: "/api/notice/:board_idx"
+      body: "*"
+    };
+  }
+
+  rpc deleteNotice(BoardIdxReq) returns (NoticePageRes) {
+    option (google.api.http) = {
+      post: "/api/notice/:board_idx"
+      body: "*"
+    };
+  }
+
+// ---------------------------------------------------------------------
+
+
+  rpc getComment(PagingReq) returns (CommentPageRes) {
+    option (google.api.http) = {
+      post: "/api/notice/:board_idx/comment"
+      body: "*"
+    };
+  }
+
+  rpc addComment(UpsertCommentReq) returns (CommentRes) {
+    option (google.api.http) = {
+      post: "/api/notice/:board_idx/comment"
+      body: "*"
+    };
+  }
+
+  rpc getCommentReplies(PagingReq) returns (CommentPageRes) {
+    option (google.api.http) = {
+      post: "/api/notice/comment/:comment_idx"
+      body: "*"
+    };
+  }
+
+  rpc updateComment(UpsertCommentReq) returns (CommentRes) {
+    option (google.api.http) = {
+      post: "/api/notice/comment/:comment_idx"
+      body: "*"
+    };
+  }
+
+  rpc deleteComment(CommentIdxReq) returns (CommentIdxReq) {
+    option (google.api.http) = {
+      post: "/api/notice/comment/:comment_idx"
+      body: "*"
+    };
+  }
+
+
+}
+
+message PagingReq {
+  // js 호환 상 int32 많이 쓴다고 함
+  int32 page = 1;
+
+  int32 size = 2;
+
+  // nullable
+  optional string search = 3;
+  optional string filter = 4;
+  optional string sort = 5;
+
+  // optional uint64 board_idx = 6;
+
+  oneof idx{
+    uint64 board_idx = 7;
+    uint64 comment_idx = 8;
+  }
+}
+
+message NoticeListRes {
+  uint64 idx = 1;
+  string title = 2;
+  common.BoardState state = 3;
+  int32 viewCount = 4;
+  bool isPinned = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message NoticeDetailRes {
+  uint64 idx = 1;
+  string title = 2;
+  common.BoardState state = 3;
+  int32 viewCount = 4;
+  bool isPinned = 5;
+  google.protobuf.Timestamp updated_at = 6;
+  string content = 7;
+}
+
+message NoticePageRes {
+
+  repeated NoticeListRes items = 1;
+  
+  int32 total_count = 2;
+  int32 current_page = 3;
+  int32 total_pages = 4; 
+  bool has_next = 5;
+}
+
+message UpsertNoticeReq {
+  string title = 1;
+  common.BoardState state = 2;
+  bool is_pinned = 3;
+  string content = 4; 
+
+  optional uint64 board_idx = 5;
+}
+
+message BoardIdxReq{
+  uint64 board_idx = 1;
+}
+
+message CommentIdxReq{
+  uint64 comment_idx = 1;
+}
+
+message CommentRes{
+  uint64 idx = 1;
+  // parent만 optional 처리
+  optional uint64 parent = 2;
+  string user_nick_name = 3;
+  string content = 4;
+  common.BoardState state = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message CommentPageRes {
+
+  repeated CommentRes items = 1;
+  
+  int32 total_count = 2;
+  int32 current_page = 3;
+  int32 total_pages = 4; 
+  bool has_next = 5;
+}
+
+message UpsertCommentReq {
+  string content = 1;
+  common.BoardState state = 2;
+  optional uint64 parent = 3;
+
+  oneof idx{
+    uint64 board_idx = 5;
+    uint64 comment_idx = 6;
+  }
+}
+
