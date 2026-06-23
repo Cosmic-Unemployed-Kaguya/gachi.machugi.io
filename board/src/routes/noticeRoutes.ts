@@ -11,16 +11,6 @@ import { UpsertCommentReq } from '../model/dto/commentUpsertReq';
 
 const route = Router();
 
-/** 기본적인 구조는 요청 내 메서드(middle ware)를 순차적으로 실행 (ex. get( 1 > 2  > 3  >4 ...) )
- * 이 과정에서 req내에 추가적인 데이터를 추가하기도 함
- * 
- * validate : 요청 데이터의 유효성 검사 
- * getUser~~: 필요에 따라 사용. 요청 한 유저에 대한 검사
- * 
- * 이후로는 controller.
- * 
- */
-
 /** 
  * 모든 공지 조회, 추가
  */

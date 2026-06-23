@@ -8,7 +8,12 @@ import { Page, PagingReqType } from '../model/dto/paging';
 @Repository(BoardCommentEntity)
 export class BoardCommentRepository extends TypeOrmRepository<BoardCommentEntity>{
 
-    // 최상위 댓글 조회
+    /**
+     * 최상위 댓글 조회
+     * @param boardIdx 
+     * @param pagingDTO 
+     * @returns Page<BoardCommentEntity>
+     */ 
     async findCommentByPaging( boardIdx : number,pagingDTO :PagingReqType) : Promise<Page<BoardCommentEntity>>{
 
         // 0. 해당 개시글에 대한 댓글 조회
@@ -29,7 +34,12 @@ export class BoardCommentRepository extends TypeOrmRepository<BoardCommentEntity
         return await this.paginate(qb, pagingDTO);
     }
 
-    // 대댓글 조회
+    /**
+     * 대댓글 조회
+     * @param parentIdx 
+     * @param pagingDTO 
+     * @returns Page<BoardCommentEntity>
+     */
     async findCommentRepliesByPaging( parentIdx : number,pagingDTO :PagingReqType) : Promise<Page<BoardCommentEntity>>{
 
         // 0. 해당 댓글에 대한 대댓글 조회

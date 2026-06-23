@@ -8,7 +8,12 @@ import { QuizCommentEntity } from '../model/entity/quizComment';
 @Repository(QuizCommentEntity)
 export class QuizCommentRepository extends TypeOrmRepository<QuizCommentEntity>{
 
-    // 최상위 댓글 조회
+    /**
+     * 최상위 댓글 조회
+     * @param quizIdx 
+     * @param pagingDTO 
+     * @returns Page<QuizCommentEntity>
+     */
     async findCommentByPaging( quizIdx : number,pagingDTO :PagingReqType) : Promise<Page<QuizCommentEntity>>{
 
         // 0. 해당 개시글에 대한 댓글 조회
@@ -29,7 +34,12 @@ export class QuizCommentRepository extends TypeOrmRepository<QuizCommentEntity>{
         return await this.paginate(qb, pagingDTO);
     }
 
-    // 대댓글 조회
+    /**
+     * 대댓글 조회
+     * @param parentIdx 
+     * @param pagingDTO 
+     * @returns Page<QuizCommentEntity>
+     */
     async findCommentRepliesByPaging( parentIdx : number,pagingDTO :PagingReqType) : Promise<Page<QuizCommentEntity>>{
 
         // 0. 해당 댓글에 대한 대댓글 조회

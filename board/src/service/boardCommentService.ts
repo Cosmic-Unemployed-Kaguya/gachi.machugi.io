@@ -84,6 +84,12 @@ export default class BoardCommentService{
     }
 
 
+    /**
+     * 대댓글 조회 
+     * @param commentIdx 
+     * @param pagingReq 
+     * @returns Page<CommentListRes>
+     */
     public async getCommentRepliesPage(commentIdx : CommentIdxParamReqType ,pagingReq : PagingReqType) :  Promise<Page<CommentListRes>>{
 
         // 1. 해당 댓글(commentIdx)의 대댓글 데이터 조회
@@ -113,7 +119,7 @@ export default class BoardCommentService{
      * @param userData 
      * @param commentIdxReq 
      * @param upsertCommnetReq 
-     * @returns 
+     * @returns CommentRes
      */
     public async updateComment(userData : UserData , commentIdxReq : CommentIdxParamReqType ,upsertCommnetReq : UpsertCommentReqType ) : Promise<CommentRes>{
 

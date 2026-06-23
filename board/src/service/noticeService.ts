@@ -42,6 +42,12 @@ export default class NoticeService{
     }
 
 
+    /**
+     * 공지 추가
+     * @param userIdx 
+     * @param upsertNoticeReq 
+     * @returns NoticeDetailRes
+     */
     public async addNotice(userIdx : number , upsertNoticeReq : UpsertNoticeType) : Promise<NoticeDetailRes>{
 
         // 1. Board
@@ -68,6 +74,11 @@ export default class NoticeService{
         
     }
 
+    /**
+     * 공지 상세 조회
+     * @param noticeIdxParam 
+     * @returns NoticeDetailRes
+     */
     public async getNoticeDetail(noticeIdxParam : BoardIdxParamReqType) : Promise<NoticeDetailRes>{
 
         const board :BoardEntity = await this.boardRepository.findOneByOrFail({idx: noticeIdxParam.boardIdx });
@@ -75,7 +86,12 @@ export default class NoticeService{
         return toNoticeDetail(board);
     }
 
-
+    /**
+     * 공지 수정
+     * @param noticeIdxParam 
+     * @param upsertNoticeReq 
+     * @returns NoticeDetailRes
+     */
     public async updateNotice( noticeIdxParam : BoardIdxParamReqType, upsertNoticeReq : UpsertNoticeType) : Promise<NoticeDetailRes>{
 
         // 1. board 조회 , 없을시 에러
@@ -94,6 +110,11 @@ export default class NoticeService{
 
     }
 
+    /**
+     * 공지 삭제
+     * @param noticeIdxParam 
+     * @returns Page<NoticeListRes>
+     */
     @Transactional()
     public async deleteNotice(noticeIdxParam : BoardIdxParamReqType) :  Promise<Page<NoticeListRes>>{
 
