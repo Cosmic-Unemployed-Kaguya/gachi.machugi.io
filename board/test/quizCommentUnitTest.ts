@@ -5,7 +5,7 @@ import UserClient from "../src/grpc-client/userClient";
 import { BoardState } from "../src/model/enum/boardState";
 import { QuizCommentEntity } from "../src/model/entity/quizComment";
 import { UpsertCommentReqType } from "../src/model/dto/commentUpsertReq";
-import { UserInfoReply } from "../src/generated/user";
+import { UserInfoResponse } from "../src/generated/user";
 import { PagingReqType } from "../src/model/dto/paging";
 import assert from "assert";
 import { UserRole } from "../src/model/enum/userRole";
@@ -93,7 +93,7 @@ describe('QuizCommentService 단위 테스트, 성공 케이스', () => {
             userIdx: 1,
             role: UserRole.USER,
             nickName: "테스트 유저 1",
-        } as unknown as UserInfoReply;
+        } as unknown as UserInfoResponse;
 
 
         mockCommentRepo = {
@@ -198,7 +198,7 @@ describe('BoardCommentService 단위 테스트, 실패 케이스', () =>{
             userIdx: 1,
             role: UserRole.USER,
             nickName: "테스트 유저 1",
-        } as unknown as UserInfoReply;
+        } as unknown as UserInfoResponse;
 
 
         mockUserData = 

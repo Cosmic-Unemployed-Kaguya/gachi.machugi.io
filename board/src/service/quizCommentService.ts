@@ -3,7 +3,7 @@ import { Page, PagingReqType } from "../model/dto/paging";
 import {  CommentIdxParamReqType, QuizIdxParamReqType } from "../model/dto/idxParamReq";
 import { CommentListRes } from "../model/dto/commentListRes";
 import UserClient from "../grpc-client/userClient";
-import { UserInfoListReply, UserInfoListRequset } from "../generated/user";
+import { UserInfoListResponse, UserInfoListRequset } from "../generated/user";
 import { UpsertCommentReqType } from "../model/dto/commentUpsertReq";
 import { toPageDTO } from "../utils/mapper/pageMapper";
 import { toCommentListRes, toCommentRes } from "../utils/mapper/commentMapper";
@@ -37,7 +37,7 @@ export default class QuizCommentService{
         // 2. 댓글 작성자들 nickname 조회 
         const commenters : number []  = pagingEntity.items.map((entity) => entity.userIdx);
 
-        const usersRes : UserInfoListReply = await this.userClient.getUserListInfo({userIdxs : commenters});
+        const usersRes : UserInfoListResponse = await this.userClient.getUserListInfo({userIdxs : commenters});
 
 
         // 3. idx와 닉네임을 매핑하여 dto에 추가
@@ -98,7 +98,7 @@ export default class QuizCommentService{
         // 2. 댓글 작성자들 nickname 조회 
         const commenters : number []  = pagingEntity.items.map((entity) => entity.userIdx);
 
-        const usersRes : UserInfoListReply = await this.userClient.getUserListInfo({userIdxs : commenters});
+        const usersRes : UserInfoListResponse = await this.userClient.getUserListInfo({userIdxs : commenters});
 
 
         // 3. idx와 닉네임을 매핑하여 dto에 추가

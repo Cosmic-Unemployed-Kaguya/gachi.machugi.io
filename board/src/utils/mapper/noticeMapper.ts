@@ -1,12 +1,13 @@
-import { NoticeListRes as NoticeListGrpcRes , NoticePageRes , NoticeDetailRes as NoticeDetailGrpcRes } from "../../generated/notice"
-import { NoticeDetailRes as NoticeDetailRestRes } from "../../model/dto/noticeDetailDTO"
-import { NoticeListRes as NoticeListRestRes } from "../../model/dto/noticeListDTO"
+
+import { GrpcNoticeDetailResponse, GrpcNoticeListResponse, GrpcNoticePageResponse } from "../../generated/notice"
+import { NoticeDetailRes } from "../../model/dto/noticeDetailDTO"
+import { NoticeListRes } from "../../model/dto/noticeListDTO"
 import { Page } from "../../model/dto/paging"
 import { BoardCommentEntity } from "../../model/entity/boardComment"
 import { BoardEntity } from "../../model/entity/boardEntity"
 import { toAppState, toGrpcState } from "./boardStateMapper"
 
-export const toNoticeDetail = (boardEntity : BoardEntity) : NoticeDetailRestRes=>{
+export const toNoticeDetail = (boardEntity : BoardEntity) : NoticeDetailRes=>{
     return {
         idx: boardEntity.idx,
         title: boardEntity.title,
@@ -19,7 +20,7 @@ export const toNoticeDetail = (boardEntity : BoardEntity) : NoticeDetailRestRes=
 }
 
 
-export const toNoticeListRes = (entity : BoardEntity) : NoticeListRestRes => {
+export const toNoticeListRes = (entity : BoardEntity) : NoticeListRes => {
 
     return {
         idx : entity.idx,
@@ -31,11 +32,11 @@ export const toNoticeListRes = (entity : BoardEntity) : NoticeListRestRes => {
     }
 }
 
-export const toGrpcNoticePage = (pagingData : Page<NoticeListRestRes>) : NoticePageRes => {
+export const toGrpcNoticePage = (pagingData : Page<NoticeListRes>) : GrpcNoticePageResponse => {
 
     return {
         items : pagingData.items.map(
-            (item) : NoticeListGrpcRes =>({
+            (item) : GrpcNoticeListResponse =>({
                 idx:item.idx,
                 isPinned:item.isPinned,
                 state: toGrpcState[item.state],
@@ -53,7 +54,7 @@ export const toGrpcNoticePage = (pagingData : Page<NoticeListRestRes>) : NoticeP
     }
 } 
 
-export const toGrpcNoticeDetail = (noticeDetail : NoticeDetailRestRes) : NoticeDetailGrpcRes =>{
+export const toGrpcNoticeDetail = (noticeDetail : NoticeDetailRes) : GrpcNoticeDetailResponse =>{
     return {
         idx: noticeDetail.idx,
         content : noticeDetail.content,

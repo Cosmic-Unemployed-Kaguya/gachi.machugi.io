@@ -1,4 +1,4 @@
-import { UserInfoListRequset, UserInfoListReply, UserInfoReply, UserInfoRequest, UserServiceClient } from "../generated/user";
+import { UserInfoListRequset, UserInfoListResponse, UserInfoRequest, UserInfoResponse, UserServiceClient } from "../generated/user";
 import config from '../config'
 import { GrpcClient, GrpcClientProperty } from "../decorator/grpcClient";
 
@@ -7,9 +7,9 @@ import { GrpcClient, GrpcClientProperty } from "../decorator/grpcClient";
 export default class UserClient {
     
     @GrpcClientProperty()
-    public getUserInfo : (userInfoReq : UserInfoRequest) => Promise<UserInfoReply>;
+    public getUserInfo : (userInfoReq : UserInfoRequest) => Promise<UserInfoResponse>;
     
     @GrpcClientProperty()
-    public getUserListInfo : (userInfoListReq :UserInfoListRequset) => Promise<UserInfoListReply>;
+    public getUserListInfo : (userInfoListReq :UserInfoListRequset) => Promise<UserInfoListResponse>;
 
 }

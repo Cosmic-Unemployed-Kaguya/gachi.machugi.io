@@ -1,12 +1,13 @@
-import { CommentPageRes as GrpcCommentPageRes, CommentRes as GrpcCommentRes} from "../../generated/notice";
-import { CommentListRes as AppCommentListRes} from "../../model/dto/commentListRes";
-import { CommentRes as AppCommentRes } from "../../model/dto/commentRes";
+
+import { GrpcCommentPageResponse, GrpcCommentResponse } from "../../generated/common";
+import { CommentListRes } from "../../model/dto/commentListRes";
+import { CommentRes } from "../../model/dto/commentRes";
 import { BoardCommentEntity } from "../../model/entity/boardComment";
 import { QuizCommentEntity } from "../../model/entity/quizComment";
 import { Page } from './../../model/dto/paging';
 
 
-export const toCommentListRes = (entity : BoardCommentEntity | QuizCommentEntity, userNicknameMap : Record<number, string>) : AppCommentListRes =>{
+export const toCommentListRes = (entity : BoardCommentEntity | QuizCommentEntity, userNicknameMap : Record<number, string>) : CommentListRes =>{
     return {
         idx: entity.idx,
         parent : entity.parent? entity.parent.idx : null,
@@ -17,7 +18,7 @@ export const toCommentListRes = (entity : BoardCommentEntity | QuizCommentEntity
     }
 }
 
-export const toCommentRes = (entity : BoardCommentEntity | QuizCommentEntity , userNickName : string  ) : AppCommentRes =>{
+export const toCommentRes = (entity : BoardCommentEntity | QuizCommentEntity , userNickName : string  ) : CommentRes =>{
     return {
         idx: entity.idx,
         parent : entity.parent? entity.parent.idx : null,
@@ -28,7 +29,7 @@ export const toCommentRes = (entity : BoardCommentEntity | QuizCommentEntity , u
     }
 }
 
-export const toGrpcCommentRes = (data : AppCommentRes ) : GrpcCommentRes =>{
+export const toGrpcCommentRes = (data : CommentRes ) : GrpcCommentResponse =>{
     return {
         content:data.content,
         idx:data.idx,
@@ -39,12 +40,12 @@ export const toGrpcCommentRes = (data : AppCommentRes ) : GrpcCommentRes =>{
     }
 }
 
-export const toGrpcCommentPageRes = (pagingData : Page<AppCommentListRes>) : GrpcCommentPageRes=> {
+export const toGrpcCommentPageRes = (pagingData : Page<CommentListRes>) : GrpcCommentPageResponse=> {
 
     
         return {
             items : pagingData.items.map(
-                (item) : GrpcCommentRes =>({
+                (item) : GrpcCommentResponse =>({
                     content:item.content,
                     idx:item.idx,
                     state:item.state,

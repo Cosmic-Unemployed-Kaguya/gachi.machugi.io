@@ -1,5 +1,5 @@
 
-import { UserRole as GrpcRole, UserInfoReply } from "../../generated/user";
+import { UserRole as GrpcRole, UserInfoResponse } from "../../generated/user";
 import { UserData } from "../../middlewares/appRequest";
 import { UserRole as AppRole } from "../../model/enum/userRole";
 
@@ -31,7 +31,7 @@ export function toAppRole(grpcRole: GrpcRole): AppRole {
     }
 }
 
-export const toUserData = (userRes : UserInfoReply) : UserData =>{
+export const toUserData = (userRes : UserInfoResponse) : UserData =>{
     return {
         userIdx : userRes.userIdx,
         userNickName : userRes.nickName,

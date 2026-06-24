@@ -4,7 +4,7 @@ import { AppRequest, UserData } from './appRequest';
 import { ForbiddenError, UnauthorizedError } from '../utils/error';
 import Container from 'typedi';
 import UserClient from '../grpc-client/userClient';
-import { UserInfoReply, UserRole as GrpcRole } from '../generated/user';
+import { UserRole as GrpcRole, UserInfoResponse } from '../generated/user';
 import { UserRole as AppRole } from '../model/enum/userRole';
 import { toAppRole, toGrpcRole } from '../utils/mapper/userMapper';
 import { catchAsync } from '../utils/catchAsync';
@@ -19,7 +19,7 @@ export const getUserAndRoleCheck = (allowedRoles :AppRole[])  => catchAsync( asy
 
     const userIdx :number =  await getUserIdxFromHeader(req);
 
-    const userData :UserInfoReply = await getUserInfoToService(userIdx);
+    const userData :UserInfoResponse = await getUserInfoToService(userIdx);
 
 
     // role이 확인이 안 될 경우(role 데이터가 없으면)
@@ -54,7 +54,7 @@ export const getUserInfo = catchAsync( async (req: AppRequest, res: Response, ne
 
     const userIdx :number = await getUserIdxFromHeader(req);
 
-    const userData :UserInfoReply = await getUserInfoToService(userIdx);
+    const userData :UserInfoResponse = await getUserInfoToService(userIdx);
 
     req.userData = {userIdx : userIdx,
                 userNickName : userData.nickName,
@@ -81,7 +81,7 @@ export const getUserIdx = catchAsync( async (req: AppRequest, res: Response, nex
 // 아래로는 해당 middle ware에서 사용 할 공통 함수
 //--------------------------------------------------
 
-const getUserInfoToService = async (userIdx : number) : Promise<UserInfoReply> =>{
+const getUserInfoToService = async (userIdx : number) : Promise<UserInfoResponse> =>{
     
     const userClient = Container.get(UserClient);
 
