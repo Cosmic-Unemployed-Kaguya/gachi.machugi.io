@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package gachi.machugi.grpc.board;
+package machugi.board;
 
 import "google/protobuf/timestamp.proto";
 

@@ -10,9 +10,6 @@ lint:
     - RPC_REQUEST_RESPONSE_UNIQUE # Req 중복 가능?
     - RPC_REQUEST_STANDARD_NAME   # Request 이름 규칙 무시 (Grpc~ 허용)
     - RPC_RESPONSE_STANDARD_NAME  # Response 이름 규칙 무시 (Grpc~ 허용)
-
-    # @TODO 임시. 나중에 고치고 지울것!!
-    - PACKAGE_DIRECTORY_MATCH # 패키지 경로 == 파일 경로 ??
     
 breaking:
   use:

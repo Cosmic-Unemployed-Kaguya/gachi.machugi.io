@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package gachi.machugi.grpc.board;
+package machugi.board;
 
-import "common.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
+import "machugi/board/common.proto";
 
 service NoticeGrpcService {
   rpc GetNoticeList(GrpcPagingRequest) returns (GrpcNoticePageResponse) {

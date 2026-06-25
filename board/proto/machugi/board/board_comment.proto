@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package gachi.machugi.grpc.board;
+package machugi.board;
 
-import "common.proto";
 import "google/api/annotations.proto";
+import "machugi/board/common.proto";
 
 service BoardCommentGrpcService {
   rpc GetComment(GrpcPagingRequest) returns (GrpcCommentPageResponse) {
