@@ -43,7 +43,3 @@ message GrpcUpsertCommentRequest {
     uint64 comment_idx = 6;
   }
 }
-
-message GrpcCommentIdxRequest {
-  uint64 comment_idx = 1;
-}

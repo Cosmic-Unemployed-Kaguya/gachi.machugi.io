@@ -28,7 +28,7 @@ service QuizCommentGrpcService {
     };
   }
 
-  rpc DeleteQuizComment(GrpcQuizCommentIdxRequest) returns (GrpcQuizCommentIdxRequest) {
+  rpc DeleteQuizComment(GrpcCommentIdxRequest) returns (GrpcCommentIdxRequest) {
     option (google.api.http) = {delete: "/api/quiz/comment/{comment_idx}"};
   }
 }
@@ -48,10 +48,6 @@ message GrpcPagingQuizCommentRequest {
     uint64 quiz_idx = 6;
     uint64 comment_idx = 8;
   }
-}
-
-message GrpcQuizCommentIdxRequest {
-  uint64 comment_idx = 1;
 }
 
 message GrpcUpsertQuizCommentRequest {

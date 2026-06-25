@@ -48,3 +48,7 @@ message GrpcCommentPageResponse {
   int32 total_pages = 4;
   bool has_next = 5;
 }
+
+message GrpcCommentIdxRequest {
+  uint64 comment_idx = 1;
+}
