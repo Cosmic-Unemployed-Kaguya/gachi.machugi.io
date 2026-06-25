@@ -1,5 +1,5 @@
 import { Metadata } from "@grpc/grpc-js";
-import { UserRole } from "../generated/user";
+import { UserRole } from "../generated/machugi/board/user";
 import { AuthRequest } from "../model/dto/grpcBaseReq";
 import { GrpcError } from "../utils/error";
 import { toAppRole } from "../utils/mapper/userMapper";

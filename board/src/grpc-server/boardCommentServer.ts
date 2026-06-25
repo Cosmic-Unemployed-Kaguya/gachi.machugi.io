@@ -1,9 +1,9 @@
 import { Inject } from "typedi";
 import { GrpcServer } from "../decorator/grpcServer";
-import { BoardCommentGrpcServiceService as BoardCommentGrpcService, GrpcCommentIdxRequest, GrpcUpsertCommentRequest} from "../generated/board_comment";
+import { BoardCommentGrpcServiceService as BoardCommentGrpcService, GrpcCommentIdxRequest, GrpcUpsertCommentRequest} from "../generated/machugi/board/board_comment";
 import BoardCommentService from "../service/boardCommentService";
 import UserClient from "../grpc-client/userClient";
-import { GrpcCommentPageResponse, GrpcCommentResponse, GrpcPagingRequest } from "../generated/common";
+import { GrpcCommentPageResponse, GrpcCommentResponse, GrpcPagingRequest } from "../generated/machugi/board/common";
 import { toGrpcCommentPageRes, toGrpcCommentRes } from "../utils/mapper/commentMapper";
 import { grpcValidate } from "../utils/grpcValidate";
 

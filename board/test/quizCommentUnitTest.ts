@@ -5,7 +5,7 @@ import UserClient from "../src/grpc-client/userClient";
 import { BoardState } from "../src/model/enum/boardState";
 import { QuizCommentEntity } from "../src/model/entity/quizComment";
 import { UpsertCommentReqType } from "../src/model/dto/commentUpsertReq";
-import { UserInfoResponse } from "../src/generated/user";
+import { UserInfoResponse } from "../src/generated/machugi/board/user";
 import { PagingReqType } from "../src/model/dto/paging";
 import assert from "assert";
 import { UserRole } from "../src/model/enum/userRole";

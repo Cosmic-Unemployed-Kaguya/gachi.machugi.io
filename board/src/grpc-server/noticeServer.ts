@@ -4,17 +4,15 @@ import NoticeService from "../service/noticeService";
 import UserClient from "../grpc-client/userClient";
 import { grpcValidate } from "../utils/grpcValidate";
 import {UpsertNoticeReq } from "../model/dto/noticeUpsertReq"
-import {UpsertCommentReq } from "../model/dto/commentUpsertReq"
-import { BoardIdxParamReq, CommentIdxParamReq } from "../model/dto/idxParamReq"
+import { BoardIdxParamReq } from "../model/dto/idxParamReq"
 import { PagingReq } from "../model/dto/paging"
 
-
 import { GrpcAuth } from "../decorator/grpcAuth";
-import { UserRole } from "../generated/user";
+import { UserRole } from "../generated/machugi/board/user";
 import { AuthRequest } from "../model/dto/grpcBaseReq";
 import { toGrpcNoticeDetail, toGrpcNoticePage } from "../utils/mapper/noticeMapper";
-import { GrpcBoardIdxRequest, GrpcNoticeDetailResponse, GrpcNoticePageResponse, GrpcUpsertNoticeRequest, NoticeGrpcServiceService as NoticeGrpcService } from "../generated/notice";
-import { GrpcPagingRequest } from "../generated/common";
+import { GrpcBoardIdxRequest, GrpcNoticeDetailResponse, GrpcNoticePageResponse, GrpcUpsertNoticeRequest, NoticeGrpcServiceService as NoticeGrpcService } from "../generated/machugi/board/notice";
+import { GrpcPagingRequest } from "../generated/machugi/board/common";
 
 
 @GrpcServer(NoticeGrpcService)

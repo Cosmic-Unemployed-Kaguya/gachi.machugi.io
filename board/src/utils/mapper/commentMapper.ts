@@ -1,5 +1,5 @@
 
-import { GrpcCommentPageResponse, GrpcCommentResponse } from "../../generated/common";
+import { GrpcCommentPageResponse, GrpcCommentResponse } from "../../generated/machugi/board/common";
 import { CommentListRes } from "../../model/dto/commentListRes";
 import { CommentRes } from "../../model/dto/commentRes";
 import { BoardCommentEntity } from "../../model/entity/boardComment";

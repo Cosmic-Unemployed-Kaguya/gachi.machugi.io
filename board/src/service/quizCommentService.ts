@@ -3,7 +3,7 @@ import { Page, PagingReqType } from "../model/dto/paging";
 import {  CommentIdxParamReqType, QuizIdxParamReqType } from "../model/dto/idxParamReq";
 import { CommentListRes } from "../model/dto/commentListRes";
 import UserClient from "../grpc-client/userClient";
-import { UserInfoListResponse, UserInfoListRequset } from "../generated/user";
+import { UserInfoListResponse, UserInfoListRequset } from "../generated/machugi/board/user";
 import { UpsertCommentReqType } from "../model/dto/commentUpsertReq";
 import { toPageDTO } from "../utils/mapper/pageMapper";
 import { toCommentListRes, toCommentRes } from "../utils/mapper/commentMapper";

@@ -1,6 +1,6 @@
 import config from "../config";
 import { GrpcClient, GrpcClientProperty } from "../decorator/grpcClient";
-import { IsQuizRes, QuizClient, QuizIdxReq } from "../generated/quiz";
+import { IsQuizRes, QuizClient, QuizIdxReq } from "../generated/machugi/board/quiz";
 
 @GrpcClient(QuizClient, config.quizService)
 export default class QuizGrpcClient{

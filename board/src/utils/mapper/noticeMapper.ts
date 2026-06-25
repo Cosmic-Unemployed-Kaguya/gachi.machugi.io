@@ -1,5 +1,5 @@
 
-import { GrpcNoticeDetailResponse, GrpcNoticeListResponse, GrpcNoticePageResponse } from "../../generated/notice"
+import { GrpcNoticeDetailResponse, GrpcNoticeListResponse, GrpcNoticePageResponse } from "../../generated/machugi/board/notice"
 import { NoticeDetailRes } from "../../model/dto/noticeDetailDTO"
 import { NoticeListRes } from "../../model/dto/noticeListDTO"
 import { Page } from "../../model/dto/paging"

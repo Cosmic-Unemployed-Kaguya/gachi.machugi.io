@@ -1,4 +1,4 @@
-import { UserInfoListRequset, UserInfoListResponse, UserInfoRequest, UserInfoResponse, UserServiceClient } from "../generated/user";
+import { UserInfoListRequset, UserInfoListResponse, UserInfoRequest, UserInfoResponse, UserServiceClient } from "../generated/machugi/board/user";
 import config from '../config'
 import { GrpcClient, GrpcClientProperty } from "../decorator/grpcClient";
 

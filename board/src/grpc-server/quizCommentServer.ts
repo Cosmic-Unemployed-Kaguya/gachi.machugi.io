@@ -12,9 +12,9 @@ import { AuthRequest } from "../model/dto/grpcBaseReq";
 import { toUserData } from "../utils/mapper/userMapper";
 import { UserData } from "../middlewares/appRequest";
 
-import { GrpcPagingQuizCommentRequest, GrpcQuizCommentIdxRequest, GrpcUpsertQuizCommentRequest, QuizCommentGrpcServiceService as QuizCommentGrpcService } from "../generated/quiz_comment";
-import { GrpcCommentPageResponse, GrpcCommentResponse } from "../generated/common";
-import { GrpcCommentIdxRequest } from './../generated/board_comment';
+import { GrpcPagingQuizCommentRequest, GrpcQuizCommentIdxRequest, GrpcUpsertQuizCommentRequest, QuizCommentGrpcServiceService as QuizCommentGrpcService } from "../generated/machugi/board/quiz_comment";
+import { GrpcCommentPageResponse, GrpcCommentResponse } from "../generated/machugi/board/common";
+import { GrpcCommentIdxRequest } from './../generated/machugi/board/board_comment';
 
 
 @GrpcServer(QuizCommentGrpcService)

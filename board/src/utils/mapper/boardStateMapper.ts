@@ -1,4 +1,4 @@
-import { BoardState as GrpcState} from "../../generated/common";
+import { BoardState as GrpcState} from "../../generated/machugi/board/common";
 import { BoardState as AppState} from "../../model/enum/boardState";
 
 export const toGrpcState : Record<AppState, GrpcState> = {

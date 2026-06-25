@@ -1,5 +1,5 @@
 
-import { UserRole as GrpcRole, UserInfoResponse } from "../../generated/user";
+import { UserRole as GrpcRole, UserInfoResponse } from "../../generated/machugi/board/user";
 import { UserData } from "../../middlewares/appRequest";
 import { UserRole as AppRole } from "../../model/enum/userRole";
 

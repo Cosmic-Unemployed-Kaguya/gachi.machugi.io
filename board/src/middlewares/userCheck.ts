@@ -4,7 +4,7 @@ import { AppRequest, UserData } from './appRequest';
 import { ForbiddenError, UnauthorizedError } from '../utils/error';
 import Container from 'typedi';
 import UserClient from '../grpc-client/userClient';
-import { UserRole as GrpcRole, UserInfoResponse } from '../generated/user';
+import { UserRole as GrpcRole, UserInfoResponse } from '../generated/machugi/board/user';
 import { UserRole as AppRole } from '../model/enum/userRole';
 import { toAppRole, toGrpcRole } from '../utils/mapper/userMapper';
 import { catchAsync } from '../utils/catchAsync';
