@@ -31,7 +31,7 @@ public class ChatService
     //hub가 호출, ConnectionId까지 나오면 부르는 메서드
     public async Task<bool> EnterRoom(string connectionId, string userIdx)
     {
-        // 예약맵에서 이 유저의 방 정보가 있는지 확인
+        //예약맵에서 이 유저의 방 정보가 있는지 확인
         if (_userRoomReserveMap.TryGetValue(userIdx, out string? roomId))
         {
             //실시간맵에 등록
