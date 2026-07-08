@@ -1,4 +1,4 @@
-package kaguya.chat_spring.WebSoket.config;
+package kaguya.chat_spring.websocket.chat.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
