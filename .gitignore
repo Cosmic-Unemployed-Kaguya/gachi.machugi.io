@@ -1,2 +1,5 @@
 Test/test_yh/TestGRPC/secret
 Test/test_yh/TestNodeJS/tsconfig_copy.json
+/board/node_modules
+board/.env
+/board/src/generated
