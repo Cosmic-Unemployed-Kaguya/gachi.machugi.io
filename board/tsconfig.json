@@ -12,6 +12,16 @@
     "useDefineForClassFields": false,
     
     "types": ["node"],
+
+    "paths": {
+      "@dto/*" : ["./src/common/model/dto/*"],
+      "@enum/*" : ["./src/common/model/enum/*"],
+      "@decorator/*" : ["./src/common/decorator/*"], 
+      "@domain/*" : ["./src/domain/*"],
+      "@common/*" : ["./src/common/*"],
+      "@generated/*" : ["./src/generated/*"]
+    },
+
   },
   "include": [
     "src/**/*",
