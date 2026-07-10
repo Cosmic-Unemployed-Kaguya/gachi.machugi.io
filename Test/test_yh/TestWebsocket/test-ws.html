@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>순수 WebSocket 테스트 패널</title>
+</head>
+<body>
+    <h2>순수 웹소켓(WS) 테스트 패널</h2>
+    
+    <div>
+        <label>서버 주소: </label>
+        <input type="text" id="serverUrl" value="ws://localhost:8080/chat" style="width: 250px;">
+        <button onclick="connectSocket()">1. 연결하기</button>
+    </div>
+    
+    <div style="margin-top: 10px;">
+        <label>방 번호: </label>
+        <input type="text" id="roomId" value="room_1">
+        <button onclick="joinRoom()">2. 방 입장</button>
+        <button onclick="exitRoom()">방 퇴장</button>
+    </div>
+
+    <div style="margin-top: 10px;">
+        <label>메시지: </label>
+        <input type="text" id="messageInput" value="테스트 메시지입니다">
+        <button onclick="sendMessage()">3. 메시지 전송 (시간 측정)</button>
+    </div>
+
+    <hr>
+    <h3>로그 및 응답 속도</h3>
+    <div id="logArea" style="background: #f4f4f4; padding: 10px; height: 350px; overflow-y: auto; font-family: monospace;"></div>
+
+    <script>
+        let ws;
+        let sendTimestamp = 0; 
+
+        function printLog(text) {
+            const logArea = document.getElementById('logArea');
+            logArea.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${text}</div>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // 1. 소켓 연결
+        function connectSocket() {
+            const url = document.getElementById('serverUrl').value;
+            
+            // 순수 WebSocket 객체 생성
+            ws = new WebSocket(url);
+
+            ws.onopen = () => {
+                printLog(`🟢 서버 연결 성공!`);
+            };
+
+            ws.onclose = () => {
+                printLog('🔴 서버와 연결이 끊어졌습니다.');
+            };
+
+            ws.onerror = (err) => {
+                printLog(`❌ 연결 에러 발생 (콘솔 확인)`);
+                console.error('WebSocket Error:', err);
+            };
+
+            // 💡 서버로부터 메시지 수신 (모든 이벤트가 여기로 들어옴)
+            ws.onmessage = (event) => {
+                try {
+                    // 서버가 보낸 순수 문자열을 JSON 객체로 변환
+                    const res = JSON.parse(event.data);
+
+                    switch(res.event) {
+                        case "on_connect":
+                            printLog(`🏢 연결된 서버(Pod): <b>${res.data}</b>`);
+                            break;
+                            
+                        case "join_room":
+                            printLog(`✅ 방 입장 성공: ${res.data.userNickname}`);
+                            break;
+
+                        case "chat":
+                            if (sendTimestamp !== 0) {
+                                const rtt = (performance.now() - sendTimestamp).toFixed(2);
+                                
+                                printLog(`📩 [수신] ${res.data.userNickname}: ${res.data.msg}`);
+                                printLog(`⏱️ [속도 측정] 요청부터 응답까지 <b>${rtt}ms</b> 걸렸습니다.`);
+                                sendTimestamp = 0; 
+                            } else {
+                                printLog(`📩 [수신] ${res.data.userNickname}: ${res.data.msg}`);
+                            }
+                            break;
+
+                        case "exit_room":
+                            printLog(`🚪 방 퇴장: ${res.data.userNickname}`);
+                            break;
+
+                        default:
+                            printLog(`알 수 없는 이벤트 수신: ${res.event}`);
+                    }
+                } catch (e) {
+                    printLog(`⚠️ 메시지 파싱 에러: ${event.data}`);
+                }
+            };
+        }
+
+        // 2. 방 입장 요청
+        function joinRoom() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('먼저 서버에 연결하세요!');
+            
+            const roomId = document.getElementById('roomId').value;
+            
+            // 백엔드의 BaseReq 구조에 맞춰 JSON 직렬화 후 전송
+            const payload = {
+                event: "join_room",
+                data: { roomId: roomId }
+            };
+            ws.send(JSON.stringify(payload));
+            printLog(`🏃 방 입장 요청 중... (Room: ${roomId})`);
+        }
+
+        // 3. 메시지 전송
+        function sendMessage() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('먼저 서버에 연결하세요!');
+            
+            const msg = document.getElementById('messageInput').value;
+            
+            sendTimestamp = performance.now();
+            
+            const payload = {
+                event: "chat",
+                data: { msg: msg }
+            };
+            ws.send(JSON.stringify(payload));
+            printLog(`📤 [전송] ${msg}`);
+        }
+
+        // 4. 방 나가기
+        function exitRoom() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('먼저 서버에 연결하세요!');
+            
+            const payload = {
+                event: "exit_room",
+                data: {}
+            };
+            ws.send(JSON.stringify(payload));
+        }
+    </script>
+</body>
+</html>
