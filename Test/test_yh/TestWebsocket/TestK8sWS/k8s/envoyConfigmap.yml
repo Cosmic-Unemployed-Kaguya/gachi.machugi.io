@@ -85,6 +85,36 @@ data:
                       timeout: 0s 
                       idle_timeout: 0s
 
+                  - match: { prefix: "/dotnet/" }
+                    route: 
+                      cluster: dotnet_cluster
+                      prefix_rewrite: "/"
+                      # 💡 중요: 프론트가 /spring/websocket-test.html 로 요청하면,
+                      # Spring Boot에게는 /websocket-test.html 로 전달되도록 /spring 을 떼어냅니다.
+
+                      timeout: 0s 
+                      idle_timeout: 0s
+                  
+                  - match: { prefix: "/dotnet2/" }
+                    route: 
+                      cluster: dotnet2_cluster
+                      prefix_rewrite: "/"
+                      # 💡 중요: 프론트가 /spring/websocket-test.html 로 요청하면,
+                      # Spring Boot에게는 /websocket-test.html 로 전달되도록 /spring 을 떼어냅니다.
+
+                      timeout: 0s 
+                      idle_timeout: 0s
+
+                  - match: { prefix: "/" }
+                    route: 
+                      cluster: spring_cluster
+                      # 💡 중요: 프론트가 /spring/websocket-test.html 로 요청하면,
+                      # Spring Boot에게는 /websocket-test.html 로 전달되도록 /spring 을 떼어냅니다.
+
+                      timeout: 0s 
+                      idle_timeout: 0s
+
+
                   # 인증(Auth) 서버 - REST API
                   - match: { prefix: "/auth" }
                     route: { cluster: auth_cluster }
@@ -192,6 +222,40 @@ data:
                 address:
                   # 실제 채팅 서비스가 떠있는 주소와 포트 번호 (예: 9095)를 입력하세요.
                   socket_address: { address: chat-ws-service, port_value: 3013 }
+      - name: dotnet_cluster
+        connect_timeout: 5s
+        type: LOGICAL_DNS
+        load_assignment:
+          cluster_name: dotnet_cluster
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  # 💡 Spring 서비스를 가리키는 K8s Service 이름과 포트
+                  socket_address: { address: dotnet-ws-service, port_value: 8080 }
+      - name: dotnet2_cluster
+        connect_timeout: 5s
+        type: LOGICAL_DNS
+        load_assignment:
+          cluster_name: dotnet2_cluster
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  # 💡 Spring 서비스를 가리키는 K8s Service 이름과 포트
+                  socket_address: { address: dotnet-ws2-service, port_value: 8080 }
+      - name: spring_cluster
+        connect_timeout: 5s
+        type: LOGICAL_DNS
+        load_assignment:
+          cluster_name: spring_cluster
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  # 💡 Spring 서비스를 가리키는 K8s Service 이름과 포트
+                  socket_address: { address: spring-ws-service, port_value: 8080 }
+
       # 인증(Auth) 클러스터
       - name: auth_cluster
         connect_timeout: 0.25s
