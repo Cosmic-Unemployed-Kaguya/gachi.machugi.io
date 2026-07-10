@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: chat-ws-service
-          image: lujol/test-ws:1.0.7
+          image: lujol/test-ws:1.0.8
 
           ports:
             - containerPort: 3013

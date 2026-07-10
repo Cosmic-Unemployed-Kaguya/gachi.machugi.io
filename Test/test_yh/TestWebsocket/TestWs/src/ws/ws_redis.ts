@@ -42,11 +42,11 @@ export default async ({ws} : {ws: Server}) =>{
         // !!!! 테스트 기록 용 !!!!
         const podName = os.hostname(); 
         
-        sendRedis(String(userIdxStr), {
+        const connectRes = {
             event: "on_connect",
             data: podName
-        }as BaseRes)
-
+        };
+        socket.send(JSON.stringify(connectRes));
 
         /**  @TODO 유저 닉네임 가져오기 (gRPC 추가해야함;;;;) */
         socket.userNickname = "temp"+ userIdxStr
