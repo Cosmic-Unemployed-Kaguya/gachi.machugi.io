@@ -3,6 +3,8 @@ package kaguya.chat_spring.websocket.chat.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kaguya.chat_spring.websocket.chat.service.WebSocketChatService;
 import kaguya.chat_spring.websocket.chat.model.ChatPayload;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -14,21 +16,18 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
  * - Controller 개념이 없음. WebSocketHandler 클래스가 모든 라우팅 및 비즈니스 로직을 담당함
  * - 접속한 사용자의 WebSocketSession을 서버 메모리의 List나 Map에 직접 저장하고, 메시지를 보낼 때마다 반복문을 돌며 발송해야 함
  */
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class ChatHandler extends TextWebSocketHandler {
 
     private final ObjectMapper objectMapper;
     private final WebSocketChatService chatService;
-    // 생성자
-    public ChatHandler(ObjectMapper objectMapper, WebSocketChatService chatService) {
-        this.objectMapper = objectMapper;
-        this.chatService = chatService;
-    }
 
     // 클라이언트가 웹소켓 연결을 성공하면 스프링이 WebSocketSession 객체를 생성 (Callback)
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        System.out.println("웹 소켓 세션 연결됨: " + session.getId());
+        log.info("웹 소켓 세션 연결됨: {}", session.getId());
 
         // todo. 만약 로직을 추가한다면
         // 1. 인증 및 인가 확인
@@ -60,8 +59,8 @@ public class ChatHandler extends TextWebSocketHandler {
         String sessionId = session.getId();
 
         chatService.deleteSession(session, sessionId);
-
-        System.out.println("웹 소켓 세션 종료됨: " + sessionId);
+        
+        log.info("웹 소켓 세션 종료됨: {}", sessionId);
     }
 
     /**
