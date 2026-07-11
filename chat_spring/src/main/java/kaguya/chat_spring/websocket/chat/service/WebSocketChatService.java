@@ -167,9 +167,9 @@ public class WebSocketChatService {
     }
 
 
-    // =======================================================
-    // 세부 비지니스 로직: Subscriber 설정 (Subscriber가 호출)
-    // =======================================================
+    // ============================================================
+    // 세부 비지니스 로직: Subscriber 설정 (RedisSubscriber가 호출)
+    // ============================================================
 
     // 특정 방의 로컬 유저들에게 메시지 전송
     public void sendToLocalRoom(String roomId, ChatPayload payload) throws IOException {
@@ -214,8 +214,4 @@ public class WebSocketChatService {
             targetSession.sendMessage(new TextMessage(jsonMessage));
         }
     }
-
-    /**
-     * todo. 현재 room1 에 들어가잇는 사람이 채팅을 room2로 바꾸고(입장은 안하고) 전송했을 때 전송이 되는 문제
-     */
 }

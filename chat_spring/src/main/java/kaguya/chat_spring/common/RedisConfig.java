@@ -55,21 +55,6 @@ public class RedisConfig {
         return container;
     }
 
-/*
-
-    @Bean
-    public RedisMessageListenerContainer redisMessageListenerContainer(
-            RedisConnectionFactory connectionFactory,
-            MessageListenerAdapter listenerAdapter,
-            ChannelTopic channelTopic) {
-
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        container.addMessageListener(listenerAdapter, channelTopic);
-        return container;
-    }
- */
-
     /**
      * 메시지를 수신할 어댑터 설정 (pub/sub)
      * Redis에서 전달된 메시지를 RedisSubscriber의 onMessage() 메서드로 연결해주는 어댑터
