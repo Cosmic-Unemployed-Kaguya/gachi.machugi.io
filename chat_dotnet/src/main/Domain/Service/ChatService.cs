@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 using Chat.ChatControllers;
+using Chat.Model.Dto.Request;
 
-namespace Chat.ChatServices;
+namespace Chat.Service;
 
 public class ChatService
 {
@@ -19,12 +20,13 @@ public class ChatService
         _hubContext = hubContext;
     }
     //Controller가 DTO를 받아서 호출하는 메서드
-    public void ReserveRoom(JoinRoomDto dto)
+    public bool ReserveRoom(JoinRoomRequest request)
     {
         //예약맵에 저장
         //예약만 하는 이유는 ConnectionId가 아직 안나와서 ConnectionId는 소켓이 연결되고 나면 바로 나옴
-        _userRoomReserveMap[dto.UserIdx] = dto.RoomId;
-        Console.WriteLine($"입장 예약 {dto.UserIdx}, 방 {dto.RoomId}");
+        _userRoomReserveMap[request.UserIdx] = request.RoomId;
+        Console.WriteLine($"입장 예약 {request.UserIdx}, 방 {request.RoomId}");
+        return true;
     }
     //유저 입장 로직
     //Hub에 유저가 소켓을 꼽았을 때, 예약맵를 보고 진짜 방에 꽂아주는 메서드

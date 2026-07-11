@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Chat.ChatServices;
+using Chat.Service;
+using Chat.Model.Dto.Request;
 
 namespace Chat.ChatControllers;
 
@@ -18,7 +19,7 @@ public class ChatController : ControllerBase
     //외부 서비스가 유저 검증을 끝내고 여기로 HTTP POST 요청을 보낼 거임
     [HttpPost("reserve")]
     public IActionResult ReserveRoute(
-        [FromBody] JoinRoomDto dto
+        [FromBody] JoinRoomRequest dto
     )
     {
         //일단 나중에 예외처리 해야하는데 나중에

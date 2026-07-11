@@ -1,5 +1,5 @@
 using Chat.ChatControllers;
-using Chat.ChatServices;
+using Chat.Service;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<ChatService>();

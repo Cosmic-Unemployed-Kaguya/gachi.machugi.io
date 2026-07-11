@@ -1,4 +1,4 @@
-using Chat.ChatServices;
+using Chat.Service;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Chat.ChatControllers;
@@ -15,16 +15,16 @@ public class ChatHub : Hub
     //연결되면 hub에서 알아서 실행시킴
     public override async Task OnConnectedAsync()
     {
-        var httpContext = Context.GetHttpContext();
-        string? userIdx = httpContext?.Request.Query["userIdx"]; //소켓 연결 시점에는 자기가 누구인지만 밝힘
+        var context = Context.GetHttpContext();
+        string? userIdx = context?.Request.Query["userIdx"]; //소켓 연결 시점에는 자기가 누구인지만 밝힘
         string connectionId = Context.ConnectionId;
 
         if (!string.IsNullOrEmpty(userIdx))
         {
             //서비스의 진짜 입장 함수 발동
-            bool isSuccess = await _chatService.EnterRoom(connectionId, userIdx);
+            bool check = await _chatService.EnterRoom(connectionId, userIdx);
 
-            if (!isSuccess)
+            if (!check)
             {
                 //예약맵에 없는 유저라면 소켓 연결 강제 종료
                 Context.Abort();

@@ -6,4 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Google.Api.CommonProtos" Version="2.17.0" />
+    <PackageReference Include="Grpc.AspNetCore" Version="2.80.0" />
+
+    <Protobuf Include="Proto\chat.proto" GrpcServices="Server" AdditionalImportDirs="Proto/" />
+  </ItemGroup>
+
 </Project>
