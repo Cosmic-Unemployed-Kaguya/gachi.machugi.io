@@ -1,6 +1,8 @@
 package kaguya.chat_spring.common;
 
-import kaguya.chat_spring.websocket.chat.service.RedisSubscriber;
+import kaguya.chat_spring.STOMP.service.StompSubscriber;
+import kaguya.chat_spring.websocket.chat.service.WebSocketSubscriber;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,35 +36,54 @@ public class RedisConfig {
     }
 
     /**
+     * Raw WebSocket용 어뎁터
+     * Redis에서 전달된 메시지를 WebSocketSubscriber/StompSubscriber의 onMessage() 메서드로 연결해주는 어댑터
+     * RedisMessageListenerContainer가 메시지를 수신하면 해당 메서드를 자동으로 호출
+     */
+    @Bean
+    public MessageListenerAdapter rawListenerAdapter(WebSocketSubscriber subscriber) {
+        MessageListenerAdapter adapter = new MessageListenerAdapter(subscriber, "onMessage");
+        // 에러 증발 방지
+        adapter.setSerializer(new StringRedisSerializer());
+        return adapter;
+    }
+
+    /**
+     * STOMP용 어뎁터
+     */
+    @Bean
+    public MessageListenerAdapter stompListenerAdapter(StompSubscriber subscriber) {
+        MessageListenerAdapter adapter = new MessageListenerAdapter(subscriber, "onMessage");
+        adapter.setSerializer(new StringRedisSerializer());
+        return adapter;
+    }
+
+    /**
      * 메시지 리스너 컨테이너 설정 (pub/sub)
      * 동적 채널 수신을 위해 PatternTopic을 사용하여 멀티 토픽을 구독하도록 설정
      */
     @Bean
     public RedisMessageListenerContainer redisMessageListenerContainer(
             RedisConnectionFactory connectionFactory,
-            MessageListenerAdapter listenerAdapter) {
+            @Qualifier("rawListenerAdapter") MessageListenerAdapter rawListenerAdapter,
+            @Qualifier("stompListenerAdapter") MessageListenerAdapter stompListenerAdapter
+    ) {
 
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
 
         // PatternTopic을 사용해 여러 개의 동적 토픽 패턴을 리스너에 등록
-        container.addMessageListener(listenerAdapter, List.of(
-                new PatternTopic("room:*"),  // room:1, room:2 등 모든 방 메시지 수신
-                new PatternTopic("user:*"),  // user:admin, user:user1 등 모든 DM 메시지 수신
-                new PatternTopic("broadcast")  // 전역 공지 메시지 수신
-        ));
+        List<PatternTopic> topics = List.of(
+                new PatternTopic("room:*"),
+                new PatternTopic("user:*"),
+                new PatternTopic("broadcast")
+        );
+
+        // 동일한 토픽 목록에 대해 Raw 리스너와 STOMP 리스너를 각각 등록
+        container.addMessageListener(rawListenerAdapter, topics);
+        container.addMessageListener(stompListenerAdapter, topics);
 
         return container;
-    }
-
-    /**
-     * 메시지를 수신할 어댑터 설정 (pub/sub)
-     * Redis에서 전달된 메시지를 RedisSubscriber의 onMessage() 메서드로 연결해주는 어댑터
-     * RedisMessageListenerContainer가 메시지를 수신하면 해당 메서드를 자동으로 호출
-     */
-    @Bean
-    public MessageListenerAdapter listenerAdapter(RedisSubscriber subscriber) {
-        return new MessageListenerAdapter(subscriber, "onMessage");
     }
 
     /**

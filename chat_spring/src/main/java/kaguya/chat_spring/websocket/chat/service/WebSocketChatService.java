@@ -1,7 +1,8 @@
 package kaguya.chat_spring.websocket.chat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kaguya.chat_spring.websocket.chat.model.ChatPayload;
+import kaguya.chat_spring.common.RedisPublisher;
+import kaguya.chat_spring.common.ChatPayload;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;

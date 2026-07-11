@@ -31,13 +31,14 @@ public class StompConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
 /*
-        // 만약 내장 브로커가 아닌 커스텀 브로커를 사용한다면 (ex. RabbitMQ/kafka/Redis ...)
+        // 만약 내장 브로커가 아닌 커스텀 브로커를 사용한다면 (ex. RabbitMQ/kafka ...)
         registry.enableStompBrokerRelay("/topic", "/queue")
                 .setRelayHost("192.168.0.10") // RabbitMQ 서버 IP
                 .setRelayPort(61613)  // STOMP 기본 포트
                 .setClientLogin("guest")
                 .setClientPasscode("guest");
 */
+        // 하지만 redis의 pub-sub 지원(동기화)은 안해줘서 이건 직접 구현해야됨
 
         // 클라이언트가 메시지를 구독(수신)할 때 사용할 접두사
         // /topic은 1:N (방, 브로드캐스트), /queue는 1:1 (DM)에 사용

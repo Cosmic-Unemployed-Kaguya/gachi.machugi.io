@@ -1,7 +1,7 @@
 package kaguya.chat_spring.websocket.chat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kaguya.chat_spring.websocket.chat.model.ChatPayload;
+import kaguya.chat_spring.common.ChatPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -9,14 +9,14 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class RedisSubscriber {
+public class WebSocketSubscriber {
 
     private final ObjectMapper objectMapper;
     private final WebSocketChatService chatService;
 
     public void onMessage(String message) {
         try {
-            // 역직렬화 (순수 JSON 문자열 -> 자바 객체 변환)
+            // 순수 JSON 문자열 -> 자바 객체 변환
             ChatPayload payload = objectMapper.readValue(message, ChatPayload.class);
 
             switch (payload.type()) {

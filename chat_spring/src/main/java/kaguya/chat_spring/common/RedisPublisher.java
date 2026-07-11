@@ -1,4 +1,4 @@
-package kaguya.chat_spring.websocket.chat.service;
+package kaguya.chat_spring.common;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;

@@ -2,7 +2,7 @@ package kaguya.chat_spring.websocket.chat.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kaguya.chat_spring.websocket.chat.service.WebSocketChatService;
-import kaguya.chat_spring.websocket.chat.model.ChatPayload;
+import kaguya.chat_spring.common.ChatPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
