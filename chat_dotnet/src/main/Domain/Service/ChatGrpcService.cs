@@ -18,7 +18,7 @@ public class ChatGrpcService : GrpcChat.ChatGrpcManager.ChatGrpcManagerBase
         return Task.FromResult(new GrpcChat.GrpcReserveRoomResponse
         {
             IsSuccess = _chatService.ReserveRoom(nativeRequest),
-            Message = "gRPC 기반 방 입장이 정상 예약되었습니다."
+            Message = "gRPC 기반 방 입장 예약 완료"
         });
     }
 }
