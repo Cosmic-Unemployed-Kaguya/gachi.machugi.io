@@ -1,0 +1,35 @@
+# 2-envoy-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: envoy-gateway
+  namespace: default
+  labels:
+    app: envoy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: envoy
+  template:
+    metadata:
+      labels:
+        app: envoy
+    spec:
+      containers:
+      - name: envoy
+        image: envoyproxy/envoy:v1.30.0 
+        ports:
+        - containerPort: 8080 # 메인
+        - containerPort: 9901 # 어드민
+        
+        volumeMounts:
+        - name: envoy-config-volume
+          mountPath: /etc/envoy/envoy.yaml
+          subPath: envoy.yaml
+          readOnly: true
+          
+      volumes:
+      - name: envoy-config-volume
+        configMap:
+          name: envoy-config

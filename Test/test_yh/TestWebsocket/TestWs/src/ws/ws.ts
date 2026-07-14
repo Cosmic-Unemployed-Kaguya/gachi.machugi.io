@@ -1,0 +1,163 @@
+
+import { Server, WebSocket } from 'ws';
+import { BaseReq, BaseRes } from '../dto/base';
+import { ExitRoomRes } from '../dto/exitRoom';
+import { JoinRoomReq, JoinSuccessRes } from '../dto/joinRoom';
+import { MessageReq, MessageRes } from '../dto/message';
+
+
+/** 방을 구현해야함 
+ * map <roomId, set<socket>> 
+ * ~~`
+ */
+
+export interface CustomSocket extends WebSocket{
+    userIdx : number;
+    userNickname: string;
+    roomId : string; 
+}
+
+
+export default async ({ws} : {ws: Server}) =>{
+
+    // room =  Map < roomId , socket > 
+    const rooms = new Map<string,Set<CustomSocket>>();
+
+    // 연결
+    ws.on('connection', (socket : CustomSocket, request) => {
+
+        const headers = request.headers;
+
+        const userIdxStr = headers['x-user-idx']; 
+        const userRoleStr = headers['x-user-role'];
+        
+        socket.userIdx = Number(userIdxStr);
+
+        /**  @TODO 유저 닉네임 가져오기 (gRPC 추가해야함;;;;) */
+        socket.userNickname = "temp"+ userIdxStr
+
+        // 요청 수신 시 
+        socket.on('message', data => {
+
+            /** 필요한 수순
+             * 1. 순수 문자열을 파싱해야함 > JSON
+             * 2. 이벤트 구분 필요 (방 입장, 채팅, 방 퇴장)
+             * 3. @TODO 유효성 검사!!! < 일단 스킵
+             * 4. 
+             * 
+             */
+            const strData = data.toString('utf-8');
+
+            const baseReq: BaseReq = JSON.parse(String(strData));
+            
+            switch(baseReq.event){
+                case "join_room": {
+
+                    // @TODO 원래 zod를 쓰던 뭘 쓰던 유효성 검사 필요함
+                    const req : JoinRoomReq =  baseReq.data
+                    const roomId : string = req.roomId;
+
+                    // 방이 원래 존재했음? 없으면 생성
+                    if (!rooms.has(roomId)) {
+                        rooms.set(roomId, new Set<CustomSocket>());
+                    }
+
+                    // 방 조회
+                    const currentRoom =  rooms.get(roomId)
+
+                    // 방에 추가
+                    if (currentRoom) {
+                        currentRoom.add(socket);
+                    }
+                    socket.roomId = roomId;
+
+                    // 응답 데이터
+                    const res : BaseRes = {
+                        event: "join_room",
+                        data : {userNickname : socket.userNickname} as JoinSuccessRes
+                    }
+
+                    // 전송
+                    sendAllMember(currentRoom!, res)
+
+                    console.log(`방 참여 ${req.roomId}`)
+                    break;
+                }
+                
+                case "chat":{
+
+                    // 보낸 이 방id
+                    const roomId : string = socket.roomId;
+
+                    // 방 조회
+                    const currentRoom =  rooms.get(roomId)
+
+                    if(!currentRoom) break;
+
+                    // 요청 데이터
+                    const msgReq : MessageReq = baseReq.data  
+
+                    // 응답 데이터
+                    const msgRes : MessageRes = {
+                        msg : msgReq.msg,
+                        userNickname : socket.userNickname
+                    }
+
+                    const res : BaseRes = {
+                        event : "message",
+                        data : msgRes
+                    }
+
+                    // 방의 모두에게 전송
+                    sendAllMember(currentRoom, res)
+
+                    console.log(JSON.stringify(msgRes))
+                    break;
+                }
+
+                case "exit_room":{
+
+                    if(!socket.roomId) break;
+
+                    // 보낸 이 방id
+                    const roomId : string = socket.roomId;
+
+                    // 방 조회
+                    const currentRoom =  rooms.get(roomId)
+
+                    if(!currentRoom) break;
+
+                    sendAllMember(currentRoom,{
+                        event: "exit_room",
+                        data : {userNickname: socket.userNickname} as ExitRoomRes} )
+
+
+                    /** @TODO 임시 */
+                    socket.roomId = "null"
+
+                    
+
+
+                    console.log('방 퇴장')
+                    break;
+                }
+            }
+
+        });
+
+
+        // 연결 종료 시 
+        socket.on('close', () => {
+            console.log('Client disconnected');
+        });
+    });
+
+}
+
+
+
+export function sendAllMember(currentRoom : Set<CustomSocket>, res: BaseRes){
+    currentRoom?.forEach(client => {
+        client.send(JSON.stringify(res))
+    });
+}

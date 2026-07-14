@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+ 
+kind: Deployment
+
+metadata:
+  name: chat-ws-service
+  labels:
+    app: chat-ws-service
+
+spec:
+
+  selector:
+    matchLabels:
+      app: chat-ws-service
+
+  replicas: 2
+
+  template:
+    
+    metadata:
+      labels:
+        app: chat-ws-service
+
+    spec:
+      containers:
+        - name: chat-ws-service
+          image: lujol/test-ws:1.0.8
+
+          ports:
+            - containerPort: 3013
+
+
+
+
+
+

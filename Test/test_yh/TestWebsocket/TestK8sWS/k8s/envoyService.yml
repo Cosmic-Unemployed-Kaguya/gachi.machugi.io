@@ -1,0 +1,17 @@
+# 3-envoy-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: envoy-service
+  namespace: default
+spec:
+  type: LoadBalancer 
+  selector:
+    app: envoy
+  ports:
+  - name: http
+    port: 8080      
+    targetPort: 8080 
+  - name: admin
+    port: 9901  
+    targetPort: 9901

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>SignalR 실시간 핑퐁 테스트 (RTT 측정 포함)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; }
+        #chatBox { width: 100%; height: 300px; border: 1px solid #ccc; background: #fff; overflow-y: scroll; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
+        .system { color: #0076ff; font-weight: bold; }
+        .user { color: #333; }
+        .rtt { color: #d9534f; font-weight: bold; font-size: 0.9em; } /* RTT 측정값 스타일 */
+    </style>
+</head>
+<body>
+    <h2>SignalR PING-PONG 및 응답 시간 테스트</h2>
+    
+    <div style="margin-bottom: 15px;">
+        <label>유저 아이디: </label>
+        <input type="text" id="userIdInput" value="Player_⚡" style="width: 100px;">
+        <button onclick="enterRoom()">1번 게임방 입장</button>
+    </div>
+
+    <div id="chatBox"></div>
+
+    <div>
+        <input type="text" id="msgInput" placeholder="메시지를 입력하거나 PING을 쳐보세요" style="width: 300px;" disabled>
+        <button id="sendBtn" onclick="sendChat()" disabled>전송</button>
+    </div>
+
+    <script>
+        // 본인의 dotnet 구동 포트(예: 5062)와 일치하는지 꼭 확인해!
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("http://localhost:8080/dotnet2/quiz",{
+                skipNegotiation: true, // 💡 핵심 1: 불필요한 HTTP 협상 과정(negotiate) 강제 생략!
+                transport: signalR.HttpTransportType.WebSockets // 💡 핵심 2: 오직 순수 웹소켓만 사용!
+            }) 
+            .withAutomaticReconnect()
+            .build();
+
+        const chatBox = document.getElementById("chatBox");
+        let lastSendTime = 0; // RTT 측정용 타임스탬프
+
+        connection.on("BroadcastMessage", (user, message) => {
+            const msgDiv = document.createElement("div");
+            
+            // 시스템 메시지 처리
+            if (user === "System") {
+                msgDiv.className = "system";
+                msgDiv.innerText = `📢 [시스템] ${message}`;
+            } else {
+                msgDiv.className = "user";
+                msgDiv.innerText = `👤 [${user}]: ${message}`;
+                
+                // 본인이 보낸 메시지에 대한 응답일 경우 RTT 측정
+                const myId = document.getElementById("userIdInput").value;
+                if (user === myId && lastSendTime !== 0) {
+                    const rtt = (performance.now() - lastSendTime).toFixed(2);
+                    const rttSpan = document.createElement("span");
+                    rttSpan.className = "rtt";
+                    rttSpan.innerText = ` (⏱️ RTT: ${rtt}ms)`;
+                    msgDiv.appendChild(rttSpan);
+                    lastSendTime = 0; // 초기화
+                }
+            }
+            
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        connection.start()
+            .then(() => console.log("SignalR 연결 성공!"))
+            .catch(err => console.error("연결 실패: ", err.toString()));
+
+        function enterRoom() {
+            const roomId = "room_1";
+            const userId = document.getElementById("userIdInput").value;
+
+            connection.invoke("JoinRoom", roomId, userId)
+                .then(() => {
+                    document.getElementById("msgInput").disabled = false;
+                    document.getElementById("sendBtn").disabled = false;
+                    document.getElementById("userIdInput").disabled = true;
+                })
+                .catch(err => console.error(err.toString()));
+        }
+
+        function sendChat() {
+            const roomId = "room_1";
+            const userId = document.getElementById("userIdInput").value;
+            const msgInput = document.getElementById("msgInput");
+            const message = msgInput.value;
+
+            if (!message.trim()) return;
+
+            // 메시지 전송 직전 시간 기록
+            lastSendTime = performance.now();
+
+            connection.invoke("SendMessage", roomId, userId, message)
+                .then(() => { msgInput.value = ""; })
+                .catch(err => {
+                    console.error(err.toString());
+                    lastSendTime = 0; // 에러 발생 시 초기화
+                });
+        }
+
+        document.getElementById("msgInput").addEventListener("keyup", (e) => {
+            if (e.key === "Enter") sendChat();
+        });
+    </script>
+</body>
+</html>

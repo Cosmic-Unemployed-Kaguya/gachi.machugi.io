@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+ 
+kind: Deployment
+
+metadata:
+  name: spring-ws-service
+  labels:
+    app: spring-ws-service
+
+spec:
+
+  selector:
+    matchLabels:
+      app: spring-ws-service
+
+  replicas: 2
+
+  template:
+    
+    metadata:
+      labels:
+        app: spring-ws-service
+
+    spec:
+      containers:
+        - name: spring-ws-service
+          image: lujol/test-spring-ws:1.0.4
+
+          ports:
+            - containerPort: 8080
+
+
+
+
+
+

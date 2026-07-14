@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+ 
+kind: Deployment
+
+metadata:
+  name: dotnet-ws-service
+  labels:
+    app: dotnet-ws-service
+
+spec:
+
+  selector:
+    matchLabels:
+      app: dotnet-ws-service
+
+  replicas: 2
+
+  template:
+    
+    metadata:
+      labels:
+        app: dotnet-ws-service
+
+    spec:
+      containers:
+        - name: dotnet-ws-service
+          image: lujol/test_dn_ws:1.0.1
+
+          ports:
+            - containerPort: 8080
+
+
+
+
+
+
