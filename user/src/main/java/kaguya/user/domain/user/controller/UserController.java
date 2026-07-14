@@ -25,7 +25,7 @@ public class UserController {
             @RequestHeader(value = "x-user-id", required = false) String username
     ) {
 
-        if (username == null) {
+        if (username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
@@ -40,7 +40,7 @@ public class UserController {
             @RequestHeader(value = "x-user-id", required = false) String username
     ) {
 
-        if (username == null) {
+        if (username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
@@ -56,7 +56,7 @@ public class UserController {
             @RequestBody @Valid UpdatePasswordReq request
     ) {
 
-        if (username == null) {
+        if (username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
@@ -72,7 +72,7 @@ public class UserController {
             @RequestBody @Valid UpdateNicknameReq request
     ) {
 
-        if (username == null) {
+        if (username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
@@ -87,7 +87,7 @@ public class UserController {
             @RequestHeader(value = "x-user-id", required = false) String username
     ) {
 
-        if (username == null) {
+        if (username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 

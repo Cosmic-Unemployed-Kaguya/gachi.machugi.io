@@ -98,6 +98,7 @@ static_resources:
                     - exact: "set-cookie"
                     - exact: "x-user-id"
                     - exact: "x-user-role"
+                    - exact: "x-guest-id"
                   allowed_client_headers:
                     patterns:
                     - exact: "set-cookie"

@@ -33,7 +33,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
     ) {
 
         String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
-        if (username == null) {
+        if (username == null || username.isBlank()) {
             // 예외를 던지면 GlobalGrpcExceptionHandler가 가로채어 표준 gRPC 에러 응답으로 변환
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
@@ -57,7 +57,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
     ) {
 
         String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
-        if (username == null) {
+        if (username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
@@ -81,7 +81,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
     ) {
 
         String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
-        if (username == null) {
+        if (username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
@@ -108,7 +108,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
     ) {
 
         String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
-        if (username == null) {
+        if (username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
@@ -130,7 +130,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
     ) {
 
         String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
-        if (username == null) {
+        if (username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
