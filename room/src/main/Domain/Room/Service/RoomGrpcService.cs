@@ -1,9 +1,8 @@
 using Grpc.Core;
-using Room.Service;
 using Room.Util;
 using GrpcRoom = Room.Service.Proto;
 
-namespace Room.Services;
+namespace Room.Service;
 
 //proto 명세에서 정의한 RoomGrpcManager의 Base 클래스를 상속, 이름 한번 기괴하네
 public class RoomGrpcService : GrpcRoom.RoomGrpcManager.RoomGrpcManagerBase
