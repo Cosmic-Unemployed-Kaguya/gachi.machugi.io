@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import kaguya.user.domain.auth.model.dto.response.CheckTokenRes;
 import kaguya.user.domain.auth.service.AuthService;
+import kaguya.user.domain.common.model.enums.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.WebUtils;
 
 import java.io.IOException;
+import java.util.regex.Pattern;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +26,8 @@ import java.util.List;
 public class ExtAuthzFilter extends OncePerRequestFilter {
 
     private final AuthService authService;
+    // 게스트 UUID 정규식 패턴
+    private static final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
     /**
      * 필터를 적용하지 않을 경로 설정
@@ -67,11 +71,19 @@ public class ExtAuthzFilter extends OncePerRequestFilter {
         }
         // accessToken 없으면 게스트
         else {
-            // X-User-Id와 X-User-Role 빈 값으로 덮기 (헤더 조작 방지)
-            response.setHeader("X-User-Id", "");
-            response.setHeader("X-User-Role", "");
+            // cookie의 guestId 값 가져오기
+            Cookie guestCookie = WebUtils.getCookie(request, "guestId");
+            String guestId = (guestCookie != null) ? guestCookie.getValue() : "";
 
-            // todo. X-Guest-Id 세팅
+            // 잘못된 쿠키 값 차단
+            if (guestId.isBlank() || !UUID_PATTERN.matcher(guestId).matches()) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);  // 400 차단
+                return;
+            }
+
+            // X-User-Id에 게스트 UUID 및 권한 세팅
+            response.setHeader("X-User-Id", guestId);
+            response.setHeader("X-User-Role", Role.GUEST.name());
 
             response.setStatus(HttpServletResponse.SC_OK);
         }
