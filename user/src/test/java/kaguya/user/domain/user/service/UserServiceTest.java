@@ -8,6 +8,8 @@ import kaguya.user.domain.user.model.dto.response.MyPageRes;
 import kaguya.user.domain.user.model.dto.response.ProfileReq;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.repository.UserRepository;
+import kaguya.user.global.exception.BusinessException;
+import kaguya.user.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +23,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.mockito.Mockito.times;
@@ -86,6 +89,7 @@ class UserServiceTest {
         // given
         String username = "testID";
         UserEntity user = createUser();
+        String originalPassword = user.getPassword();
 
         UpdatePasswordReq request = new UpdatePasswordReq(
                 "encodedPassword123",
@@ -94,7 +98,7 @@ class UserServiceTest {
 
         given(userRepository.findByUsername(username)).willReturn(Optional.of(user));
         given(passwordEncoder.matches(request.currentPassword(), user.getPassword())).willReturn(true);
-        given(passwordEncoder.matches(request.newPassword(), user.getPassword())).willReturn(false);
+        given(passwordEncoder.matches(request.newPassword(), originalPassword)).willReturn(false);
         given(passwordEncoder.encode(request.newPassword())).willReturn("encryptedNewPassword");
 
         // when
@@ -148,7 +152,92 @@ class UserServiceTest {
     /**
      * 비정상 테스트 (Negative Test)
      */
-    // todo. 비정상 테스트
+    @Test
+    @DisplayName("마이페이지 - 존재하지 않는 사용자")
+    void 마이페이지_존재하지_않는_사용자() {
+        // given
+        String username = "test123";
+        given(userRepository.findByUsername(username)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userService.getMyPage(username))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("닉네임 변경 - 기존 닉네임과 동일")
+    void 닉네임_변경_기존_닉네임과_동일() {
+        // given
+        String username = "testID";
+        UpdateNicknameReq req = new UpdateNicknameReq("user1");
+        UserEntity user = createUser();
+
+        given(userRepository.findByUsername(username)).willReturn(Optional.of(user));
+        // (service 로직) 기존 닉네임과 바꿀 닉네임 비교
+
+        // when & then
+        assertThatThrownBy(() -> userService.updateNickname(username, req))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.SAME_AS_OLD_NICKNAME);
+    }
+
+    @Test
+    @DisplayName("닉네임 변경 - 이미 존재하는 닉네임")
+    void 닉네임_변경_이미_존재하는_닉네임() {
+        // given
+        String username = "testID";
+        UpdateNicknameReq req = new UpdateNicknameReq("user2");
+        UserEntity user = createUser();
+
+        given(userRepository.findByUsername(username)).willReturn(Optional.of(user));
+        given(userRepository.existsByNickname(req.nickname())).willReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> userService.updateNickname(username, req))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.EXISTS_NICKNAME);
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 - 현재 비밀번호 불일치")
+    void 비밀번호_변경_현재_비밀번호_불일치() {
+        // given
+        String username = "testID";
+        UpdatePasswordReq req = new UpdatePasswordReq("wrongCurrentPassword", "newPassword12!");
+        UserEntity user = createUser();
+
+        given(userRepository.findByUsername(username)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(req.currentPassword(), user.getPassword())).willReturn(false);
+
+        // when & then
+        assertThatThrownBy(() -> userService.updatePassword(username, req))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_CURRENT_PASSWORD);
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 - 기존 비밀번호와 동일")
+    void 비밀번호_변경_기존_비밀번호와_동일() {
+        // given
+        String username = "testID";
+        UpdatePasswordReq req = new UpdatePasswordReq("correctCurrentPassword", "sameOldPassword");
+        UserEntity user = createUser();
+
+        given(userRepository.findByUsername(username)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(req.currentPassword(), user.getPassword())).willReturn(true);
+        given(passwordEncoder.matches(req.newPassword(), user.getPassword())).willReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> userService.updatePassword(username, req))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.SAME_AS_OLD_PASSWORD);
+    }
 
     /**
      * 헬퍼 메서드

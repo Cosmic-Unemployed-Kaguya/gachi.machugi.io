@@ -7,6 +7,8 @@ import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
 import kaguya.user.domain.user.model.dto.response.ProfileReq;
 import kaguya.user.domain.user.service.UserService;
+import kaguya.user.global.exception.BusinessException;
+import kaguya.user.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +22,12 @@ public class UserController {
 
     @GetMapping("/my")
     public ResponseEntity<BaseRes<MyPageRes>> getMyPage(
-            @RequestHeader(value = "x-user-id") String username
+            @RequestHeader(value = "x-user-id", required = false) String username
     ) {
+
+        if (username == null) {
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
 
         MyPageRes data = userService.getMyPage(username);
 
@@ -31,8 +37,12 @@ public class UserController {
 
     @GetMapping("/my/profile")
     public ResponseEntity<BaseRes<ProfileReq>> getProfile(
-            @RequestHeader("x-user-id") String username
+            @RequestHeader(value = "x-user-id", required = false) String username
     ) {
+
+        if (username == null) {
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
 
         ProfileReq data = userService.getProfile(username);
 
@@ -42,9 +52,13 @@ public class UserController {
 
     @PatchMapping("/my/password")
     public ResponseEntity<BaseRes<Void>> updatePasswords(
-            @RequestHeader("x-user-id") String username,
+            @RequestHeader(value = "x-user-id", required = false) String username,
             @RequestBody @Valid UpdatePasswordReq request
     ) {
+
+        if (username == null) {
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
 
         userService.updatePassword(username, request);
 
@@ -54,9 +68,13 @@ public class UserController {
 
     @PatchMapping("/my/nickname")
     public ResponseEntity<BaseRes<Void>> updateNickname(
-            @RequestHeader("x-user-id") String username,
+            @RequestHeader(value = "x-user-id", required = false) String username,
             @RequestBody @Valid UpdateNicknameReq request
     ) {
+
+        if (username == null) {
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
 
         userService.updateNickname(username, request);
 
@@ -66,8 +84,12 @@ public class UserController {
 
     @DeleteMapping("/my/withdraw")
     public ResponseEntity<BaseRes<Void>> withdraw(
-            @RequestHeader("x-user-id") String username
+            @RequestHeader(value = "x-user-id", required = false) String username
     ) {
+
+        if (username == null) {
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
 
         userService.withdraw(username);
 

@@ -26,7 +26,9 @@ public class AuthController {
      * @return BaseRes<void>: HTTP 201 생성
      */
     @PostMapping("/register")
-    public ResponseEntity<BaseRes<Void>> register(@RequestBody @Valid RegisterReq request) {
+    public ResponseEntity<BaseRes<Void>> register(
+            @RequestBody @Valid RegisterReq request
+    ) {
 
         authService.register(request);
         BaseRes<Void> response = new BaseRes<>("201", "회원가입 성공", null);
@@ -40,7 +42,9 @@ public class AuthController {
      * @return BaseRes<String>: HTTP 200 성공, nickname 전달
      */
     @PostMapping("/login")
-    public ResponseEntity<BaseRes<String>> login(@RequestBody @Valid LoginReq request) {
+    public ResponseEntity<BaseRes<String>> login(
+            @RequestBody @Valid LoginReq request
+    ) {
 
         LoginRes data = authService.login(request);
 

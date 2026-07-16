@@ -8,6 +8,8 @@ import kaguya.user.domain.user.model.dto.response.MyPageRes;
 import kaguya.user.domain.user.model.dto.response.ProfileReq;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.service.UserService;
+import kaguya.user.global.exception.BusinessException;
+import kaguya.user.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -100,8 +103,8 @@ class UserControllerTest {
 
         UserEntity user = createUser();
         UpdatePasswordReq request = new UpdatePasswordReq(
-                "encodedPassword123",
-                "changedPassword123!@"
+                "encodedPassword12!@",
+                "changedPassword12!@"
         );
 
         // 비밀번호 변경 return이 null이어서 given 의미 없음
@@ -158,7 +161,72 @@ class UserControllerTest {
     /**
      * 비정상 테스트 (Negative Test)
      */
-    // todo. 비정상 테스트
+    @Test
+    @DisplayName("존재하지 않는 API 요청")
+    void 존재하지_않는_API_요청() throws Exception {
+
+        mockMvc.perform(get("/users/myPage"))
+
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("404_PAGE_NOT_FOUND"))
+                .andExpect(jsonPath("$.message").value("페이지를 찾을 수 없습니다."));
+    }
+
+    @Test
+    @DisplayName("마이페이지 - 인증정보(헤더) 누락")
+    void 마이페이지_인증정보_누락 () throws Exception {
+
+        mockMvc.perform(get("/users/my"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("403_DENIED_PERMISSION"))
+                .andExpect(jsonPath("$.message").value("접근 권한이 없습니다."));
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 - 비밀번호 정규식 위반")
+    void 비밀번호_번경_정규식_위반() throws Exception {
+
+        UserEntity user = createUser();
+        UpdatePasswordReq request = new UpdatePasswordReq(
+                "encodedPassword12!@",
+                "changedPassword12"
+        );
+
+        mockMvc.perform(patch("/users/my/password")
+                        .header("X-User-Id", user.getUsername())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+
+                // 응답 검증
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("400_INVALID_INPUT_VALUE"))
+                .andExpect(jsonPath("$.message").value("비밀번호는 8~20자리이며, 영문, 숫자, 특수문자를 포함해야 합니다."));
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경 - 현재 비밀번호 불일치 (service에서 커스텀 예외가 잘 throws 되는지 확인)")
+    void 로그인_비밀번호_불일치() throws Exception {
+
+        UserEntity user = createUser();
+        UpdatePasswordReq request = new UpdatePasswordReq(
+                "encodedPassword12",  // 현재 비밀번호는 encodedPassword12!@
+                "changedPassword12!@"
+        );
+
+        willThrow(new BusinessException(ErrorCode.INVALID_CURRENT_PASSWORD))
+                .given(userService).updatePassword(user.getUsername(), request);
+
+        mockMvc.perform(patch("/users/my/password")
+                        .header("X-User-Id", user.getUsername())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+
+                // 응답 검증
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("400_INVALID_CURRENT_PASSWORD"))
+                .andExpect(jsonPath("$.message").value("현재 비밀번호와 일치하지 않습니다."));
+    }
+
 
     /**
      * 헬퍼 메서드
@@ -166,7 +234,7 @@ class UserControllerTest {
     private UserEntity createUser() {
         return UserEntity.builder()
                 .username("testID")
-                .password("encodedPassword123")
+                .password("encodedPassword12!@#")
                 .email("aaaa@bbbb.com")
                 .nickname("user1")
                 .name("홍길동")
