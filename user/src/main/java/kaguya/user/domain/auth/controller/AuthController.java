@@ -1,8 +1,10 @@
 package kaguya.user.domain.auth.controller;
 
 import jakarta.validation.Valid;
+import kaguya.user.domain.auth.model.dto.request.GuestReq;
 import kaguya.user.domain.auth.model.dto.request.LoginReq;
 import kaguya.user.domain.auth.model.dto.request.RegisterReq;
+import kaguya.user.domain.auth.model.dto.response.GuestRes;
 import kaguya.user.domain.common.model.dto.BaseRes;
 import kaguya.user.domain.auth.model.dto.response.LoginRes;
 import kaguya.user.domain.auth.service.AuthService;
@@ -117,7 +119,7 @@ public class AuthController {
      * @return <BaseRes<void>: HTTP 200 성공
      */
     @PostMapping("/reissue")
-    public ResponseEntity<BaseRes<Void>> renewToken (
+    public ResponseEntity<BaseRes<Void>> renewToken(
             @CookieValue(name = "refreshToken", required = false) String refreshToken
     ) {
 
@@ -134,5 +136,26 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .body(new BaseRes<>("200", "토큰 갱신", null));
+    }
+
+    @PostMapping("/guests")
+    public ResponseEntity<BaseRes<String>> guest(
+            @RequestBody @Valid GuestReq request
+    ) {
+
+        GuestRes data = authService.guest(request);
+
+        // Guest Cookie
+        ResponseCookie guestCookie = ResponseCookie.from("guestId", data.guestId())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(60 * 60 * 5)  // 5시간
+                .sameSite("Lax")
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, guestCookie.toString())
+                .body(new BaseRes<>("201", "게스트 유저 생성", data.nickname()));
     }
 }

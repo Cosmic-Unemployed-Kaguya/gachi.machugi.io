@@ -2,6 +2,7 @@ package kaguya.user.domain.user.controller;
 
 import jakarta.validation.Valid;
 import kaguya.user.domain.common.model.dto.BaseRes;
+import kaguya.user.domain.common.model.enums.Role;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
@@ -22,10 +23,11 @@ public class UserController {
 
     @GetMapping("/my")
     public ResponseEntity<BaseRes<MyPageRes>> getMyPage(
-            @RequestHeader(value = "x-user-id", required = false) String username
+            @RequestHeader(value = "x-user-id", required = false) String username,
+            @RequestHeader(value = "x-user-role", required = false) String role
     ) {
 
-        if (username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
@@ -37,10 +39,11 @@ public class UserController {
 
     @GetMapping("/my/profile")
     public ResponseEntity<BaseRes<ProfileReq>> getProfile(
-            @RequestHeader(value = "x-user-id", required = false) String username
+            @RequestHeader(value = "x-user-id", required = false) String username,
+            @RequestHeader(value = "x-user-role", required = false) String role
     ) {
 
-        if (username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
@@ -53,10 +56,11 @@ public class UserController {
     @PatchMapping("/my/password")
     public ResponseEntity<BaseRes<Void>> updatePasswords(
             @RequestHeader(value = "x-user-id", required = false) String username,
+            @RequestHeader(value = "x-user-role", required = false) String role,
             @RequestBody @Valid UpdatePasswordReq request
     ) {
 
-        if (username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
@@ -69,10 +73,11 @@ public class UserController {
     @PatchMapping("/my/nickname")
     public ResponseEntity<BaseRes<Void>> updateNickname(
             @RequestHeader(value = "x-user-id", required = false) String username,
+            @RequestHeader(value = "x-user-role", required = false) String role,
             @RequestBody @Valid UpdateNicknameReq request
     ) {
 
-        if (username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
@@ -84,10 +89,11 @@ public class UserController {
 
     @DeleteMapping("/my/withdraw")
     public ResponseEntity<BaseRes<Void>> withdraw(
-            @RequestHeader(value = "x-user-id", required = false) String username
+            @RequestHeader(value = "x-user-id", required = false) String username,
+            @RequestHeader(value = "x-user-role", required = false) String role
     ) {
 
-        if (username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 

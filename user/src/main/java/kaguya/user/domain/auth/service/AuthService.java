@@ -1,9 +1,11 @@
 package kaguya.user.domain.auth.service;
 
 import kaguya.user.domain.auth.mapper.AuthMapper;
+import kaguya.user.domain.auth.model.dto.request.GuestReq;
 import kaguya.user.domain.auth.model.dto.request.LoginReq;
 import kaguya.user.domain.auth.model.dto.request.RegisterReq;
 import kaguya.user.domain.auth.model.dto.response.CheckTokenRes;
+import kaguya.user.domain.auth.model.dto.response.GuestRes;
 import kaguya.user.domain.auth.model.dto.response.LoginRes;
 import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.user.model.entity.UserEntity;
@@ -15,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -53,6 +56,7 @@ public class AuthService {
             throw new BusinessException(ErrorCode.EXISTS_EMAIL);
         }
 
+        // 사용된 닉네임인지 확인
         if(userRepository.existsByNickname(registerData.account().nickname())) {
             throw new BusinessException(ErrorCode.EXISTS_NICKNAME);
         }
@@ -178,5 +182,16 @@ public class AuthService {
         String role = jwtProvider.getRole(accessToken);
 
         return new CheckTokenRes(username, role);
+    }
+
+    public GuestRes guest(GuestReq guestData) {
+
+        String guestId = UUID.randomUUID().toString();
+        String key = "GUSET:" + guestId;
+
+        // 게스트 유저 정보는 5시간 관리
+        redisRepository.save(key, guestData.nickname(), 5, TimeUnit.HOURS);
+
+        return new GuestRes(guestId, guestData.nickname());
     }
 }
