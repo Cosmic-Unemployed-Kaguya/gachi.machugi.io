@@ -8,9 +8,15 @@
   "main": "index.js",
   "scripts": {
     "test": "node -r ts-node/register --test test/**/*.ts",
-    "build:proto": "protoc --plugin=protoc-gen-ts_proto=node_modules\\.bin\\protoc-gen-ts_proto.cmd --ts_proto_out=src\\generated --ts_proto_opt=outputServices=grpc-js,env=node,esModuleInterop=true,removeEnumPrefix=true -I=proto proto\\*.proto",
-    "build": "tsc",
-    "start": "node dist/src/app.js"
+    
+    "dev": "ts-node -r tsconfig-paths/register src/app.ts",
+
+    "build:proto": "protoc --plugin=protoc-gen-ts_proto=node_modules\\.bin\\protoc-gen-ts_proto.cmd --ts_proto_out=src\\generated --ts_proto_opt=outputServices=grpc-js,env=node,esModuleInterop=true,removeEnumPrefix=true -I=proto proto\\machugi\\board\\*.proto",
+    "build": "tsc && tsc-alias",
+    "start": "node dist/src/app.js",
+
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "format:test": "prettier --write \"test/**/*.{js,jsx,ts,tsx}\""
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.11.0",
@@ -33,12 +39,15 @@
     "lodash": "^4.18.0"
   },
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.2",
     "@types/pg": "^8.20.0",
     "protoc": "^34.0.0",
     "ts-node": "^10.9.2",
-    "ts-proto": "^2.11.6"
+    "ts-proto": "^2.11.6",
+    "tsc-alias": "^1.9.0",
+    "tsconfig-paths": "^4.2.0"
   }
 }

@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package machugi.board;
+
+import "google/api/annotations.proto";
+import "machugi/board/common.proto";
+
+service QuizCommentGrpcService {
+  rpc GetQuizComment(GrpcPagingQuizCommentRequest) returns (GrpcCommentPageResponse) {
+    option (google.api.http) = {get: "/api/quiz/{quiz_idx}/comment"};
+  }
+
+  rpc AddQuizComment(GrpcUpsertQuizCommentRequest) returns (GrpcCommentResponse) {
+    option (google.api.http) = {
+      post: "/api/quiz/{quiz_idx}/comment"
+      body: "*"
+    };
+  }
+
+  rpc GetQuizCommentReplies(GrpcPagingQuizCommentRequest) returns (GrpcCommentPageResponse) {
+    option (google.api.http) = {get: "/api/quiz/comment/{comment_idx}"};
+  }
+
+  rpc UpdateQuizComment(GrpcUpsertQuizCommentRequest) returns (GrpcCommentResponse) {
+    option (google.api.http) = {
+      put: "/api/quiz/comment/{comment_idx}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteQuizComment(GrpcCommentIdxRequest) returns (GrpcCommentIdxRequest) {
+    option (google.api.http) = {delete: "/api/quiz/comment/{comment_idx}"};
+  }
+}
+
+message GrpcPagingQuizCommentRequest {
+  // js 호환 상 int32 많이 쓴다고 함
+  int32 page = 1;
+
+  int32 size = 2;
+
+  // nullable
+  optional string search = 3;
+  optional string filter = 4;
+  optional string sort = 5;
+
+  oneof idx {
+    uint64 quiz_idx = 6;
+    uint64 comment_idx = 8;
+  }
+}
+
+message GrpcUpsertQuizCommentRequest {
+  string content = 1;
+  BoardState state = 2;
+  optional uint64 parent = 3;
+
+  oneof idx {
+    uint64 quiz_idx = 5;
+    uint64 comment_idx = 6;
+  }
+}

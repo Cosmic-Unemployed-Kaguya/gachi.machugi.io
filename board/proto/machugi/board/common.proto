@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package machugi.board;
+
+import "google/protobuf/timestamp.proto";
+
+enum BoardState {
+  BOARD_STATE_UNSPECIFIED = 0;
+  BOARD_STATE_PUBLIC = 1;
+  BOARD_STATE_PRIVATE = 2;
+  BOARD_STATE_BLOCKED = 3;
+}
+
+message GrpcPagingRequest {
+  // js 호환 상 int32 많이 쓴다고 함
+  int32 page = 1;
+
+  int32 size = 2;
+
+  // nullable
+  optional string search = 3;
+  optional string filter = 4;
+  optional string sort = 5;
+
+  // optional uint64 board_idx = 6;
+
+  oneof idx {
+    uint64 board_idx = 7;
+    uint64 comment_idx = 8;
+  }
+}
+
+message GrpcCommentResponse {
+  uint64 idx = 1;
+  // parent만 optional 처리
+  optional uint64 parent = 2;
+  string user_nick_name = 3;
+  string content = 4;
+  BoardState state = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message GrpcCommentPageResponse {
+  repeated GrpcCommentResponse items = 1;
+
+  int32 total_count = 2;
+  int32 current_page = 3;
+  int32 total_pages = 4;
+  bool has_next = 5;
+}
+
+message GrpcCommentIdxRequest {
+  uint64 comment_idx = 1;
+}

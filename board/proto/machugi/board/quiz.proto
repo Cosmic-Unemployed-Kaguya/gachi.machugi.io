@@ -1,0 +1,17 @@
+syntax = "proto3";
+package machugi.board;
+
+option java_multiple_files = true;
+option java_package = "com.example.grpc.user";
+
+service QuizService {
+  rpc IsQuiz(QuizIdxRequest) returns (IsQuizRespons) {}
+}
+
+message QuizIdxRequest {
+  uint64 quiz_idx = 1;
+}
+
+message IsQuizRespons {
+  bool is_quiz = 1;
+}

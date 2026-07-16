@@ -1,0 +1,35 @@
+syntax = "proto3";
+package machugi.board;
+
+option java_multiple_files = true;
+option java_package = "com.example.grpc.user";
+
+service UserService {
+  rpc GetUserInfo(UserInfoRequest) returns (UserInfoResponse) {}
+  rpc GetUserListInfo(UserInfoListRequset) returns (UserInfoListResponse) {}
+}
+
+message UserInfoRequest {
+  uint64 user_idx = 1;
+}
+
+message UserInfoResponse {
+  uint64 user_idx = 1;
+  UserRole role = 2;
+  string nick_name = 3;
+}
+
+message UserInfoListRequset {
+  // repeated uint64 user_idx = 1;
+  repeated uint64 user_idxs = 2;
+}
+
+message UserInfoListResponse {
+  repeated UserInfoResponse users = 1;
+}
+
+enum UserRole {
+  USER_ROLE_UNSPECIFIED = 0;
+  USER_ROLE_USER = 1;
+  USER_ROLE_ADMIN = 2;
+}

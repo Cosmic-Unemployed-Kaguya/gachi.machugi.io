@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package machugi.board;
+
+import "google/api/annotations.proto";
+import "machugi/board/common.proto";
+
+service BoardCommentGrpcService {
+  rpc GetComment(GrpcPagingRequest) returns (GrpcCommentPageResponse) {
+    option (google.api.http) = {get: "/api/notice/{board_idx}/comment"};
+  }
+
+  rpc AddComment(GrpcUpsertCommentRequest) returns (GrpcCommentResponse) {
+    option (google.api.http) = {
+      post: "/api/notice/{board_idx}/comment"
+      body: "*"
+    };
+  }
+
+  rpc GetCommentReplies(GrpcPagingRequest) returns (GrpcCommentPageResponse) {
+    option (google.api.http) = {get: "/api/notice/comment/{comment_idx}"};
+  }
+
+  rpc UpdateComment(GrpcUpsertCommentRequest) returns (GrpcCommentResponse) {
+    option (google.api.http) = {
+      put: "/api/notice/comment/{comment_idx}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteComment(GrpcCommentIdxRequest) returns (GrpcCommentIdxRequest) {
+    option (google.api.http) = {delete: "/api/notice/comment/{comment_idx}"};
+  }
+}
+
+message GrpcUpsertCommentRequest {
+  string content = 1;
+  BoardState state = 2;
+  optional uint64 parent = 3;
+
+  oneof idx {
+    uint64 board_idx = 5;
+    uint64 comment_idx = 6;
+  }
+}
