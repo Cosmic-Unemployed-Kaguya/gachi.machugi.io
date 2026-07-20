@@ -1,7 +1,9 @@
-package kaguya.chat_spring.common;
+package kaguya.chat_spring.chat.common;
 
-import kaguya.chat_spring.STOMP.service.StompSubscriber;
-import kaguya.chat_spring.websocket.chat.service.WebSocketSubscriber;
+import kaguya.chat_spring.chat.subscriber.BaseSubscriber;
+import kaguya.chat_spring.chat.subscriber.BroadcastSubscriber;
+import kaguya.chat_spring.chat.subscriber.DirectMessageSubscriber;
+import kaguya.chat_spring.chat.subscriber.LobbySubscriber;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -14,8 +16,6 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-
-import java.util.List;
 
 @Configuration
 public class RedisConfig {
@@ -35,27 +35,30 @@ public class RedisConfig {
         return new LettuceConnectionFactory(host, port);
     }
 
-    /**
-     * Raw WebSocket용 어뎁터
-     * Redis에서 전달된 메시지를 WebSocketSubscriber/StompSubscriber의 onMessage() 메서드로 연결해주는 어댑터
-     * RedisMessageListenerContainer가 메시지를 수신하면 해당 메서드를 자동으로 호출
-     */
-    @Bean
-    public MessageListenerAdapter rawListenerAdapter(WebSocketSubscriber subscriber) {
+    private MessageListenerAdapter createAdapter(BaseSubscriber<?> subscriber) {
         MessageListenerAdapter adapter = new MessageListenerAdapter(subscriber, "onMessage");
-        // 에러 증발 방지
         adapter.setSerializer(new StringRedisSerializer());
         return adapter;
     }
 
-    /**
-     * STOMP용 어뎁터
-     */
     @Bean
-    public MessageListenerAdapter stompListenerAdapter(StompSubscriber subscriber) {
-        MessageListenerAdapter adapter = new MessageListenerAdapter(subscriber, "onMessage");
-        adapter.setSerializer(new StringRedisSerializer());
-        return adapter;
+    public MessageListenerAdapter roomListenerAdapter(LobbySubscriber subscriber) {
+        return createAdapter(subscriber);
+    }
+
+    @Bean
+    public MessageListenerAdapter lobbyListenerAdapter(LobbySubscriber subscriber) {
+        return createAdapter(subscriber);
+    }
+
+    @Bean
+    public MessageListenerAdapter broadcastListenerAdapter(BroadcastSubscriber subscriber) {
+        return createAdapter(subscriber);
+    }
+
+    @Bean
+    public MessageListenerAdapter dmListenerAdapter(DirectMessageSubscriber subscriber) {
+        return createAdapter(subscriber);
     }
 
     /**
@@ -65,23 +68,19 @@ public class RedisConfig {
     @Bean
     public RedisMessageListenerContainer redisMessageListenerContainer(
             RedisConnectionFactory connectionFactory,
-            @Qualifier("rawListenerAdapter") MessageListenerAdapter rawListenerAdapter,
-            @Qualifier("stompListenerAdapter") MessageListenerAdapter stompListenerAdapter
+            @Qualifier("roomListenerAdapter") MessageListenerAdapter roomAdapter,
+            @Qualifier("lobbyListenerAdapter") MessageListenerAdapter lobbyAdapter,
+            @Qualifier("broadcastListenerAdapter") MessageListenerAdapter broadcastAdapter,
+            @Qualifier("dmListenerAdapter") MessageListenerAdapter dmAdapter
     ) {
-
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
 
-        // PatternTopic을 사용해 여러 개의 동적 토픽 패턴을 리스너에 등록
-        List<PatternTopic> topics = List.of(
-                new PatternTopic("room:*"),
-                new PatternTopic("user:*"),
-                new PatternTopic("broadcast")
-        );
-
-        // 동일한 토픽 목록에 대해 Raw 리스너와 STOMP 리스너를 각각 등록
-        container.addMessageListener(rawListenerAdapter, topics);
-        container.addMessageListener(stompListenerAdapter, topics);
+        // 컨트롤러에서 설정한 발행(Publish) 토픽 경로
+        container.addMessageListener(roomAdapter, new PatternTopic("chat:room:*"));
+        container.addMessageListener(lobbyAdapter, new PatternTopic("chat:lobby"));
+        container.addMessageListener(broadcastAdapter, new PatternTopic("chat:broadcast"));
+        container.addMessageListener(dmAdapter, new PatternTopic("chat:dm:*"));
 
         return container;
     }

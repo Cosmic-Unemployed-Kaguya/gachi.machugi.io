@@ -1,10 +1,9 @@
-package kaguya.chat_spring.websocket.chat.service;
+package kaguya.chat_spring.backup.raw_websocket.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kaguya.chat_spring.common.RedisPublisher;
-import kaguya.chat_spring.common.ChatPayload;
+import kaguya.chat_spring.chat.common.RedisPublisher;
+import kaguya.chat_spring.backup.raw_websocket.common.ChatPayload;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -13,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 public class WebSocketChatService {
 

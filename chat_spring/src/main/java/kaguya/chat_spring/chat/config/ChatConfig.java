@@ -1,4 +1,4 @@
-package kaguya.chat_spring.STOMP.config;
+package kaguya.chat_spring.chat.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -8,7 +8,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration
 @EnableWebSocketMessageBroker
-public class StompConfig implements WebSocketMessageBrokerConfigurer {
+public class ChatConfig implements WebSocketMessageBrokerConfigurer {
 
     /**
      * 클라이언트가 웹소켓에 연결할 때 설정할 엔드포인트 주소 설정
@@ -16,8 +16,8 @@ public class StompConfig implements WebSocketMessageBrokerConfigurer {
      */
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // 프론트엔드가 최초로 웹소켓 연결을 맺을 엔드포인트 주소 (ws://localhost:8080/ws-stomp)
-        registry.addEndpoint("/ws-stomp")
+        // 프론트엔드가 최초로 웹소켓 연결을 맺을 엔드포인트 주소 (ws://localhost:8080/ws-chat)
+        registry.addEndpoint("/ws-chat")
                 .setAllowedOriginPatterns("*"); // 테스트용 (원래는 특정 도메인만 허용)
         // .withSockJS(); // 구형 브라우저 지원이 필요하면 활성화
     }

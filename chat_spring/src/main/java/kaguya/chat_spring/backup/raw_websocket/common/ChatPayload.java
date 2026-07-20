@@ -1,4 +1,4 @@
-package kaguya.chat_spring.common;
+package kaguya.chat_spring.backup.raw_websocket.common;
 
 public record ChatPayload(
         MessageType type,  // ENTER, TALK, BROADCAST, DM

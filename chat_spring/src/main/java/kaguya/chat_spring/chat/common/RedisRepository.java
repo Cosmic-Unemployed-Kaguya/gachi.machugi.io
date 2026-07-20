@@ -1,4 +1,4 @@
-package kaguya.chat_spring.common;
+package kaguya.chat_spring.chat.common;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;

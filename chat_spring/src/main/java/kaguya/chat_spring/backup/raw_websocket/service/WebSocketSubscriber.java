@@ -1,14 +1,13 @@
-package kaguya.chat_spring.websocket.chat.service;
+package kaguya.chat_spring.backup.raw_websocket.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kaguya.chat_spring.common.ChatPayload;
+import kaguya.chat_spring.backup.raw_websocket.common.ChatPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 @Slf4j
+//@Service
 @RequiredArgsConstructor
-@Service
 public class WebSocketSubscriber {
 
     private final ObjectMapper objectMapper;

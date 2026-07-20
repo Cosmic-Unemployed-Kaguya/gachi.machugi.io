@@ -1,11 +1,10 @@
-package kaguya.chat_spring.websocket.chat.config;
+package kaguya.chat_spring.backup.raw_websocket.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kaguya.chat_spring.websocket.chat.service.WebSocketChatService;
-import kaguya.chat_spring.common.ChatPayload;
+import kaguya.chat_spring.backup.raw_websocket.service.WebSocketChatService;
+import kaguya.chat_spring.backup.raw_websocket.common.ChatPayload;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -17,7 +16,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
  * - 접속한 사용자의 WebSocketSession을 서버 메모리의 List나 Map에 직접 저장하고, 메시지를 보낼 때마다 반복문을 돌며 발송해야 함
  */
 @Slf4j
-@Component
+//@Component
 @RequiredArgsConstructor
 public class ChatHandler extends TextWebSocketHandler {
 

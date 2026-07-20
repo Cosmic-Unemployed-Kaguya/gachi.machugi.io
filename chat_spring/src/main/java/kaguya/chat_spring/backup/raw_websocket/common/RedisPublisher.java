@@ -1,10 +1,10 @@
-package kaguya.chat_spring.common;
+package kaguya.chat_spring.backup.raw_websocket.common;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-@Service
+//@Service
 public class RedisPublisher {
 
     private final RedisTemplate<String, Object> redisTemplate;
