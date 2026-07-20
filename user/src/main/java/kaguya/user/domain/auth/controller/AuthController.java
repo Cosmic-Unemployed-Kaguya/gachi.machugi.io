@@ -154,7 +154,8 @@ public class AuthController {
                 .sameSite("Lax")
                 .build();
 
-        return ResponseEntity.ok()
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
                 .header(HttpHeaders.SET_COOKIE, guestCookie.toString())
                 .body(new BaseRes<>("201", "게스트 유저 생성", data.nickname()));
     }

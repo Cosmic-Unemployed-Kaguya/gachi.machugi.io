@@ -57,7 +57,8 @@ class UserControllerTest {
         given(userService.getMyPage(user.getUsername())).willReturn(myPage);
 
         mockMvc.perform(get("/users/my")
-                        .header("X-User-Id", user.getUsername()))
+                        .header("X-User-Id", user.getUsername())
+                        .header("X-User-Role", user.getRole()))
 
                 // 응답 검증
                 .andExpect(status().isOk())
@@ -84,7 +85,8 @@ class UserControllerTest {
         given(userService.getProfile(user.getUsername())).willReturn(response);
 
         mockMvc.perform(get("/users/my/profile")
-                        .header("X-User-Id", user.getUsername()))
+                        .header("X-User-Id", user.getUsername())
+                        .header("X-User-Role", user.getRole()))
 
                 // 응답 검증
                 .andExpect(status().isOk())
@@ -111,6 +113,7 @@ class UserControllerTest {
 
         mockMvc.perform(patch("/users/my/password")
                         .header("X-User-Id", user.getUsername())
+                        .header("X-User-Role", user.getRole())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
 
@@ -133,6 +136,7 @@ class UserControllerTest {
 
         mockMvc.perform(patch("/users/my/nickname")
                         .header("X-User-Id", user.getUsername())
+                        .header("X-User-Role", user.getRole())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
 
@@ -149,7 +153,8 @@ class UserControllerTest {
         UserEntity user = createUser();
 
         mockMvc.perform(delete("/users/my/withdraw")
-                        .header("X-User-Id", user.getUsername()))
+                        .header("X-User-Id", user.getUsername())
+                        .header("X-User-Role", user.getRole()))
 
                 // 응답 검증
                 .andExpect(status().isOk())
@@ -218,6 +223,7 @@ class UserControllerTest {
 
         mockMvc.perform(patch("/users/my/password")
                         .header("X-User-Id", user.getUsername())
+                        .header("X-User-Role", user.getRole())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
 
