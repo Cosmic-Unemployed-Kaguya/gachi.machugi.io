@@ -1,11 +1,9 @@
 package kaguya.user.domain.auth.service;
 
 import kaguya.user.domain.auth.mapper.AuthMapper;
-import kaguya.user.domain.auth.model.dto.request.AccountReq;
-import kaguya.user.domain.auth.model.dto.request.LoginReq;
-import kaguya.user.domain.auth.model.dto.request.RegisterReq;
-import kaguya.user.domain.auth.model.dto.request.UserReq;
+import kaguya.user.domain.auth.model.dto.request.*;
 import kaguya.user.domain.auth.model.dto.response.CheckTokenRes;
+import kaguya.user.domain.auth.model.dto.response.GuestRes;
 import kaguya.user.domain.auth.model.dto.response.LoginRes;
 import kaguya.user.domain.common.model.enums.Gender;
 import kaguya.user.domain.common.model.enums.Role;
@@ -23,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -181,6 +180,28 @@ class AuthServiceTest {
         assertThat(result.username()).isEqualTo(username);
         assertThat(result.role()).isEqualTo(role);
     }
+
+    @Test
+    @DisplayName("게스트 성공")
+    void 게스트_성공() {
+        // gievn
+        GuestReq request = new GuestReq("게스트1");
+        String guestId = UUID.randomUUID().toString();
+
+        // when
+        GuestRes result = authService.guest(request);
+
+        // then
+        verify(redisRepository).save(
+                startsWith("GUSET:"),
+                eq(request.nickname()),
+                eq(5L),
+                eq(TimeUnit.HOURS)
+        );
+        assertThat(result.guestId()).isNotBlank();
+        assertThat(result.nickname()).isEqualTo(request.nickname());
+    }
+
 
     /**
      * 비정상 테스트 (Negative Test)

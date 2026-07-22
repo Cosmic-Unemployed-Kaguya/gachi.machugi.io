@@ -2,10 +2,8 @@ package kaguya.user.domain.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
-import kaguya.user.domain.auth.model.dto.request.AccountReq;
-import kaguya.user.domain.auth.model.dto.request.LoginReq;
-import kaguya.user.domain.auth.model.dto.request.RegisterReq;
-import kaguya.user.domain.auth.model.dto.request.UserReq;
+import kaguya.user.domain.auth.model.dto.request.*;
+import kaguya.user.domain.auth.model.dto.response.GuestRes;
 import kaguya.user.domain.auth.model.dto.response.LoginRes;
 import kaguya.user.domain.auth.service.AuthService;
 import kaguya.user.domain.common.model.enums.Gender;
@@ -21,6 +19,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -137,6 +136,30 @@ class AuthControllerTest {
                 // Access 쿠키 검증
                 .andExpect(cookie().exists("accessToken"))
                 .andExpect(cookie().value("accessToken", "accessToken-AAABBBCCC"));
+    }
+
+    @Test
+    @DisplayName("게스트 성공")
+    void 게스트() throws Exception {
+
+        GuestReq request = new GuestReq("게스트1");
+        GuestRes response = new GuestRes(UUID.randomUUID().toString(), request.nickname());
+
+        given(authService.guest(any(GuestReq.class))).willReturn(response);
+
+        mockMvc.perform(post("/auth/guests")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+
+                // 응답 검증
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value("201"))
+                .andExpect(jsonPath("$.message").value("게스트 유저 생성"))
+                .andExpect(jsonPath("$.data").value(request.nickname()))
+
+                // 쿠키 검증
+                .andExpect(cookie().exists("guestId"))
+                .andExpect(cookie().value("guestId", response.guestId()));
     }
 
 
