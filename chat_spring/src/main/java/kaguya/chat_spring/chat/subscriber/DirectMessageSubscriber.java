@@ -1,7 +1,7 @@
 package kaguya.chat_spring.chat.subscriber;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kaguya.chat_spring.chat.model.DirectMessageDto;
+import kaguya.chat_spring.chat.model.dto.DirectMessageDto;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;

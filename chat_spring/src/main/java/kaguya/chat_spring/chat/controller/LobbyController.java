@@ -2,19 +2,17 @@ package kaguya.chat_spring.chat.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kaguya.chat_spring.backup.raw_websocket.common.ChatPayload;
 import kaguya.chat_spring.chat.common.RedisPublisher;
-import kaguya.chat_spring.chat.model.DirectMessageDto;
-import kaguya.chat_spring.chat.model.LobbyDto;
+import kaguya.chat_spring.chat.model.dto.DirectMessageDto;
+import kaguya.chat_spring.chat.model.dto.request.EnterLobbyReq;
+import kaguya.chat_spring.chat.model.dto.LobbyDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
-/**
- * @MessageMapping으로 프론트가 보낸 목적지 주소('/app/...') 가로채기
- * @PostMapping 이라고 이해하면 편함
- */
+import java.util.Map;
+
 @Controller
 @RequiredArgsConstructor
 public class LobbyController {
@@ -24,19 +22,22 @@ public class LobbyController {
 
     /**
      * 로비(Lobby) 입장
-     * 프론트엔드 전송 목적지: /app/chat.lobby.enter
+     * 프론트엔드 전송 목적지: /pub/chat/lobby/enter
      */
-    @MessageMapping("/chat.lobby.enter")
-    public void enter(DirectMessageDto directMessageDto) throws JsonProcessingException {
+    @MessageMapping("/chat/lobby/enter")
+    public void enter(SimpMessageHeaderAccessor headerAccessor) throws JsonProcessingException {
+
+        Map<String, Object> attributes = headerAccessor.getSessionAttributes();
+        String userId = (String) attributes.get("userId");
 
         DirectMessageDto enter = new DirectMessageDto(
                 "[System]",
-                directMessageDto.receiver(),
+                userId,
                 "로비에 입장하였습니다."
         );
 
         // 발행할 topic 설정
-        String topic = "chat:dm:" + directMessageDto.receiver();
+        String topic = "chat:dm:" + userId;
         // Redis로 발행하기 위한 json을 String 타입으로 변경
         String message = objectMapper.writeValueAsString(enter);
 
@@ -45,10 +46,10 @@ public class LobbyController {
 
     /**
      * 로비(Lobby) 대화
-     * 프론트엔드 전송 목적지: /app/chat.lobby
+     * 프론트엔드 전송 목적지: /pub/chat/lobby
      * 프론트엔드 전송 데이터: { "sender": "user1", "message": "안녕하세요" }
      */
-    @MessageMapping("/chat.lobby.talk")
+    @MessageMapping("/chat/lobby/talk")
     public void talk(LobbyDto lobbyDto) throws JsonProcessingException {
 
         String topic = "chat:lobby";

@@ -1,5 +1,6 @@
 package kaguya.chat_spring.chat.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -7,8 +8,11 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 @Configuration
+@RequiredArgsConstructor
 @EnableWebSocketMessageBroker
 public class ChatConfig implements WebSocketMessageBrokerConfigurer {
+
+    private final AuthHandshakeInterceptor authHandshakeInterceptor;
 
     /**
      * 클라이언트가 웹소켓에 연결할 때 설정할 엔드포인트 주소 설정
@@ -18,8 +22,9 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // 프론트엔드가 최초로 웹소켓 연결을 맺을 엔드포인트 주소 (ws://localhost:8080/ws-chat)
         registry.addEndpoint("/ws-chat")
-                .setAllowedOriginPatterns("*"); // 테스트용 (원래는 특정 도메인만 허용)
-        // .withSockJS(); // 구형 브라우저 지원이 필요하면 활성화
+                .setAllowedOriginPatterns("*")   // 테스트용 (원래는 특정 도메인만 허용)
+                .addInterceptors(authHandshakeInterceptor)
+                .withSockJS();  // SockJS 지원
     }
 
     /**
@@ -41,12 +46,12 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
         // 하지만 redis의 pub-sub 지원(동기화)은 안해줘서 이건 직접 구현해야됨
 
         // 클라이언트가 메시지를 구독(수신)할 때 사용할 접두사
-        // /topic은 1:N (방, 브로드캐스트), /queue는 1:1 (DM)에 사용
-        registry.enableSimpleBroker("/topic", "/queue");
+        // /sub은 1:N (방, 브로드캐스트), /queue는 1:1 (DM)에 사용
+        registry.enableSimpleBroker("/sub", "/queue");
 
         // 클라이언트가 서버로 메시지를 발행(송신)할 때 사용할 접두사
-        // 프론트엔드에서 보낸 목적지 주소가 /app/... 으로 시작하면 Controller로 라우팅
-        registry.setApplicationDestinationPrefixes("/app");
+        // 프론트엔드에서 보낸 목적지 주소가 /pub/... 으로 시작하면 Controller로 라우팅
+        registry.setApplicationDestinationPrefixes("/pub");
     }
 
 

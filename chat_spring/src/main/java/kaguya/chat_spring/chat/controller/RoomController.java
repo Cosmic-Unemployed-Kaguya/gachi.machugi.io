@@ -2,19 +2,13 @@ package kaguya.chat_spring.chat.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kaguya.chat_spring.chat.model.LobbyDto;
-import kaguya.chat_spring.backup.raw_websocket.common.ChatPayload;
 import kaguya.chat_spring.chat.common.RedisPublisher;
-import kaguya.chat_spring.chat.model.RoomDto;
+import kaguya.chat_spring.chat.model.dto.RoomDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
 
-/**
- * @MessageMapping으로 프론트가 보낸 목적지 주소('/app/...') 가로채기
- * @PostMapping 이라고 이해하면 편함
- */
 @Controller
 @RequiredArgsConstructor
 public class RoomController {
@@ -24,7 +18,7 @@ public class RoomController {
 
     /**
      * 방(Room) 입장
-     * 프론트엔드 전송 목적지: /app/chat.room.{roomId}.enter
+     * 프론트엔드 전송 목적지: /pub/chat/room/{roomId}/enter
      * 프론트엔드 전송 데이터: { "sender": "user1" }
      */
     @MessageMapping("/chat.room.{roomId}.enter")
@@ -46,10 +40,10 @@ public class RoomController {
 
     /**
      * 방(Room) 대화
-     * 프론트엔드 전송 목적지: /app/chat.room.{roomId}.talk
+     * 프론트엔드 전송 목적지: /pub/chat/room/{roomId}/talk
      * 프론트엔드 전송 데이터: { "sender": "user1", "message": "안녕하세요" }
      */
-    @MessageMapping("/chat.room.{roomId}.talk")
+    @MessageMapping("/chat/room/{roomId}/talk")
     public void talk(@DestinationVariable String roomId, RoomDto roomDto) throws JsonProcessingException {
 
         RoomDto room = new RoomDto(

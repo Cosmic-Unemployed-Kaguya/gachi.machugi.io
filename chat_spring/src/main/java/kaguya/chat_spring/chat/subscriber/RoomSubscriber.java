@@ -1,7 +1,7 @@
 package kaguya.chat_spring.chat.subscriber;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kaguya.chat_spring.chat.model.RoomDto;
+import kaguya.chat_spring.chat.model.dto.RoomDto;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -16,6 +16,6 @@ public class RoomSubscriber extends BaseSubscriber<RoomDto> {
 
     @Override
     protected String getDestination(String topic, RoomDto dto) {
-        return "/topic/room/" + dto.roomId();
+        return "/sub/room/" + dto.roomId();
     }
 }

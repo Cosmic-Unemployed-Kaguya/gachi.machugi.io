@@ -1,7 +1,7 @@
 package kaguya.chat_spring.chat.subscriber;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kaguya.chat_spring.chat.model.BroadcastDto;
+import kaguya.chat_spring.chat.model.dto.BroadcastDto;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -16,6 +16,6 @@ public class BroadcastSubscriber extends BaseSubscriber<BroadcastDto> {
 
     @Override
     protected String getDestination(String topic, BroadcastDto dto) {
-        return "/topic/broadcast";
+        return "/sub/broadcast";
     }
 }
