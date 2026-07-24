@@ -1,0 +1,30 @@
+{
+  "scripts": {
+    "test": "node -r ts-node/register --test test/**/*.ts",
+    "dev": "ts-node -r tsconfig-paths/register src/app.ts",
+    "build": "tsc && tsc-alias",
+    "start": "node dist/src/app.js",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "format:test": "prettier --write \"test/**/*.{js,jsx,ts,tsx}\""
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "ioredis": "^5.11.1",
+    "reflect-metadata": "^0.2.2",
+    "typedi": "^0.10.0",
+    "winston": "^3.19.0",
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.0.0",
+    "@types/ws": "^8.18.1",
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.9.0",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^6.0.3"
+  }
+}
