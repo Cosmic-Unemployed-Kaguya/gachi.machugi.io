@@ -6,7 +6,7 @@ import { MessageReq, MessageRes } from "@common/model/message";
 import logger from "@common/util/logger";
 import { MessageEvent } from "@decorator/messageEvent";
 import { Inject, Service } from "typedi";
-import { RedisClient } from "../common/redis/redisClient";
+import { RedisPubClient } from "../common/redis/redisPubClient";
 import { RoomManager } from "../room/roomManager";
 
 
@@ -14,7 +14,7 @@ import { RoomManager } from "../room/roomManager";
 export class MessageEventHandler{
 
     constructor(
-        @Inject() private redisClient : RedisClient,
+        @Inject() private redisPubClient : RedisPubClient,
         @Inject() private roomManager : RoomManager,
     ){}
 
@@ -36,7 +36,7 @@ export class MessageEventHandler{
         }
         
         // redis로 전파
-        this.redisClient.publishMessage(roomIdx ,res);
+        this.redisPubClient.publishMessage(roomIdx ,res);
 
         logger.info(`방 참여 ${req.roomIdx}`)
 
@@ -66,7 +66,7 @@ export class MessageEventHandler{
         }
 
         // redis로 전파
-        this.redisClient.publishMessage(socket.roomIdx, res);
+        this.redisPubClient.publishMessage(socket.roomIdx, res);
 
         logger.info(`채팅 : ${socket.userNickname}  : ${msgReq.msg}`)
     }
@@ -92,7 +92,7 @@ export class MessageEventHandler{
             data : {userNickname: socket.userNickname} as ExitRoomRes
         }
 
-        this.redisClient.publishMessage(roomId, res );
+        this.redisPubClient.publishMessage(roomId, res );
         
         logger.info(`퇴장 : ${socket.userNickname}`);
     }

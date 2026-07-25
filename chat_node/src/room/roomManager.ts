@@ -1,3 +1,4 @@
+import { BaseRes } from "@common/model/base";
 import { CustomSocket } from "@common/model/customSocket";
 import { Service } from "typedi";
 import { Room } from "./room";
@@ -5,11 +6,11 @@ import { Room } from "./room";
 @Service()
 export class RoomManager{
 
-
+    // Map < roomIdx , Room >
     private rooms :Map<number, Room> = new Map;
 
 
-    public async sendMessage(roomIdx: number, data: any){
+    public async sendMessage(roomIdx: number, data: BaseRes){
         
         const room = this.rooms.get(roomIdx)
 
@@ -84,5 +85,16 @@ export class RoomManager{
     }
 
     
+    public async kickUser( roomIdx: number , userIdx : number ){
+
+        const room = this.rooms.get(roomIdx);
+
+        if(!room){
+            return;
+        }
+        
+        await room.kickUserByIdx(userIdx);
+
+    }
     
 }
