@@ -1,9 +1,10 @@
 import { UserGrpcClient } from "@common/grpc-client/userClient";
 import { CustomSocket } from "@common/model/customSocket";
 import { ServerEvent } from "@decorator/serverEvent";
+import { GetUserNicknameResponse } from "@generated/machugi/chat/user";
+import * as crypto from 'crypto';
 import { IncomingMessage } from "node:http";
 import { Inject, Service } from "typedi";
-
 /**
  * connection,  error, headers, close, listening, wsClientError
  */
@@ -26,11 +27,21 @@ export class ServerEventHandler{
         const userRoleStr = headers['x-user-role'];
 
         // 1.1 유저 정보 socket에 저장
-        const userIdx: number = Number(userIdxStr) 
+        // const userIdx: number = Number(userIdxStr) 
+
+        // 테스트용
+        const randomNum : number = crypto.randomInt(0, 100);
+        const userIdx : number  = randomNum;
+
+        if (Number.isNaN(userIdx)) {
+            console.error("유효하지 않은 유저 ID입니다:", userIdxStr);
+            return;
+        }
 
         socket.userIdx = userIdx;
-        socket.userNickname = await this.userClient.getUserNickname(userIdx)
-
+        
+        const userData : GetUserNicknameResponse = await this.userClient.getUserNickname({userIdx})
+        socket.userNickname = userData.nickname;
     }
 
     @ServerEvent('close')

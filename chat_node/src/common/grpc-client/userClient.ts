@@ -1,14 +1,12 @@
-import { Service } from "typedi";
+import config from "@common/config";
+import { GrpcClient, GrpcClientProperty } from "@cosmic-unemployed-kaguya/grpc-express";
+import { GetUserNicknameRequest, GetUserNicknameResponse, UserChatGrpcServiceClient } from "@generated/machugi/chat/user";
 
-/**
- * @TODO
- */
-@Service()
+
+@GrpcClient(UserChatGrpcServiceClient, config.userService)
 export class UserGrpcClient{
 
-    constructor(){}
+    @GrpcClientProperty()
+    public getUserNickname: (userIdxReq : GetUserNicknameRequest) => Promise<GetUserNicknameResponse>
 
-    public async getUserNickname(userIdx : number) : Promise<string>{
-        return "test" + userIdx
-    }
 }

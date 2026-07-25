@@ -1,0 +1,13 @@
+syntax = "proto3";
+package machugi.chat;
+
+import "google/protobuf/empty.proto";
+
+service ChatGrpcService {
+  rpc KickUser(KickUserRequest) returns (google.protobuf.Empty) {}
+}
+
+message KickUserRequest {
+  uint64 room_idx = 1;
+  uint64 user_idx = 2;
+}
