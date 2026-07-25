@@ -4,8 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kaguya.chat_spring.chat.common.RedisPublisher;
 import kaguya.chat_spring.chat.model.dto.DirectMessageDto;
-import kaguya.chat_spring.chat.model.dto.request.EnterLobbyReq;
-import kaguya.chat_spring.chat.model.dto.LobbyDto;
+import kaguya.chat_spring.chat.model.dto.request.TalkReq;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -50,10 +49,10 @@ public class LobbyController {
      * 프론트엔드 전송 데이터: { "sender": "user1", "message": "안녕하세요" }
      */
     @MessageMapping("/chat/lobby/talk")
-    public void talk(LobbyDto lobbyDto) throws JsonProcessingException {
+    public void talk(TalkReq talkReq) throws JsonProcessingException {
 
         String topic = "chat:lobby";
-        String message = objectMapper.writeValueAsString(lobbyDto);
+        String message = objectMapper.writeValueAsString(talkReq);
 
         redisPublisher.publish(topic, message);
     }
