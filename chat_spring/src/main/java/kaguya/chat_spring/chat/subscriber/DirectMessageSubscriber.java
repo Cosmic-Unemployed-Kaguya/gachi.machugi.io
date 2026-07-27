@@ -16,6 +16,6 @@ public class DirectMessageSubscriber extends BaseSubscriber<DirectMessageDto> {
 
     @Override
     protected String getDestination(String topic, DirectMessageDto dto) {
-        return "/queue/dm/" + dto.receiver();
+        return "/user/" + dto.receiver() + "/queue/dm";
     }
 }

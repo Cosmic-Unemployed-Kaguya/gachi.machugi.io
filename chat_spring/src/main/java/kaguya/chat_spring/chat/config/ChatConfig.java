@@ -1,5 +1,7 @@
 package kaguya.chat_spring.chat.config;
 
+import kaguya.chat_spring.chat.config.handshake.AuthHandshakeInterceptor;
+import kaguya.chat_spring.chat.config.handshake.UserPrincipalHandshakeHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -24,6 +26,7 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws-chat")
                 .setAllowedOriginPatterns("*")   // 테스트용 (원래는 특정 도메인만 허용)
                 .addInterceptors(authHandshakeInterceptor)
+                .setHandshakeHandler(new UserPrincipalHandshakeHandler())
                 .withSockJS();  // SockJS 지원
     }
 

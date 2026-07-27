@@ -1,4 +1,4 @@
-package kaguya.chat_spring.chat.config;
+package kaguya.chat_spring.chat.config.handshake;
 
 import jakarta.servlet.http.HttpServletRequest;
 import kaguya.chat_spring.chat.common.RedisRepository;
@@ -39,7 +39,7 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
                 return false;
             }
 
-            if (Role.USER.name().equals(userRole)) {
+            if (!Role.GUEST.name().equals(userRole)) {
                 try {
                     nickname = userGrpcClient.getNickname(userId);
                 } catch (Exception e) {
@@ -47,8 +47,8 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
                 }
 
             }
-            else if (Role.GUEST.name().equals(userRole)) {
-                nickname = redisRepository.get("GUSET:" + userId);
+            else {
+                nickname = redisRepository.get("GUEST:" + userId);
             }
 
             attributes.put("userId", userId);

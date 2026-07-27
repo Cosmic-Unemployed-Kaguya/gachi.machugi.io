@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kaguya.chat_spring.chat.common.RedisPublisher;
 import kaguya.chat_spring.chat.model.dto.DirectMessageDto;
 import kaguya.chat_spring.chat.model.dto.request.DirectMessageReq;
+import kaguya.chat_spring.chat.model.dto.MessageDto;
 import kaguya.chat_spring.chat.model.dto.request.TalkReq;
 import kaguya.chat_spring.chat.model.enums.Role;
 import lombok.RequiredArgsConstructor;
@@ -22,15 +23,28 @@ public class GlobalController {
     private final RedisPublisher redisPublisher;  // Redis Publisher
 
     /**
-     * 전체 공지 (Broadcast)
-     * 프론트엔드 전송 목적지: /pub/chat/broadcast
-     * 프론트엔드 전송 데이터: { "sender": "운영자", "message": "서버 점검 안내" }
+     * 전체 공지 (notice)
+     * 프론트엔드 전송 목적지: /pub/chat/notice
+     * 프론트엔드 전송 데이터: { "message": "서버 점검 안내" }
      */
-    @MessageMapping("/chat/broadcast")
-    public void broadcast(TalkReq talkReq) throws JsonProcessingException {
+    @MessageMapping("/chat/notice")
+    public void notice(SimpMessageHeaderAccessor headerAccessor, TalkReq talkReq) throws JsonProcessingException {
+
+        Map<String, Object> attributes = headerAccessor.getSessionAttributes();
+        String role = (String) attributes.get("role");
+
+        if (!Role.ADMIN.name().equals(role)) {
+            // 관리자(ADMIN) 기능
+            return;
+        }
+
+        MessageDto messageDto = new MessageDto(
+                "[관리자]",
+                talkReq.message()
+        );
 
         String topic = "chat:broadcast";
-        String message = objectMapper.writeValueAsString(talkReq);
+        String message = objectMapper.writeValueAsString(messageDto);
 
         redisPublisher.publish(topic, message);
     }
@@ -38,7 +52,7 @@ public class GlobalController {
     /**
      * 귓속말 (DM) - 유저만 가능
      * 프론트엔드 전송 목적지: /pub/chat/dm
-     * 프론트엔드 전송 데이터: { "sender": "user1", "receiver": "user2", "message": "비밀이야" }
+     * 프론트엔드 전송 데이터: { "receiver": "user2", "message": "비밀이야" }
      */
     @MessageMapping("/chat/dm")
     public void directMessage(SimpMessageHeaderAccessor headerAccessor, DirectMessageReq directMessageReq) throws JsonProcessingException {
@@ -46,7 +60,7 @@ public class GlobalController {
         Map<String, Object> attributes = headerAccessor.getSessionAttributes();
         String role = (String) attributes.get("role");
         if (Role.GUEST.name().equals(role)) {
-            // 게스트 유저는 DM 못보냄
+            // 게스트(GUEST)는 DM 못보냄
             return;
         }
 

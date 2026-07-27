@@ -1,6 +1,6 @@
 package kaguya.chat_spring.chat.model.dto;
 
-public record RoomDto(
+public record RoomMessageDto(
         String roomId,
         String sender,
         String message
