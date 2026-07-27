@@ -1,9 +1,6 @@
 package kaguya.chat_spring.chat.common;
 
-import kaguya.chat_spring.chat.subscriber.BaseSubscriber;
-import kaguya.chat_spring.chat.subscriber.BroadcastSubscriber;
-import kaguya.chat_spring.chat.subscriber.DirectMessageSubscriber;
-import kaguya.chat_spring.chat.subscriber.LobbySubscriber;
+import kaguya.chat_spring.chat.subscriber.*;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -35,30 +32,19 @@ public class RedisConfig {
         return new LettuceConnectionFactory(host, port);
     }
 
+    /**
+     * Redis 메시지를 수신하면 Subscriber의 onMessage() 메서드가 호출되도록 등록
+     * 수신된 Redis 메시지 바이트 배열을 문자열(JSON)로 변환하기 위해 StringRedisSerializer를 설정
+     */
     private MessageListenerAdapter createAdapter(BaseSubscriber<?> subscriber) {
         MessageListenerAdapter adapter = new MessageListenerAdapter(subscriber, "onMessage");
         adapter.setSerializer(new StringRedisSerializer());
+
+        // MessageListenerAdapter 초기화
+        // redisMessageListenerContainer에서 new로 직접 객체를 생성했기 때문에
+        adapter.afterPropertiesSet();
+
         return adapter;
-    }
-
-    @Bean
-    public MessageListenerAdapter roomListenerAdapter(LobbySubscriber subscriber) {
-        return createAdapter(subscriber);
-    }
-
-    @Bean
-    public MessageListenerAdapter lobbyListenerAdapter(LobbySubscriber subscriber) {
-        return createAdapter(subscriber);
-    }
-
-    @Bean
-    public MessageListenerAdapter broadcastListenerAdapter(BroadcastSubscriber subscriber) {
-        return createAdapter(subscriber);
-    }
-
-    @Bean
-    public MessageListenerAdapter dmListenerAdapter(DirectMessageSubscriber subscriber) {
-        return createAdapter(subscriber);
     }
 
     /**
@@ -68,19 +54,19 @@ public class RedisConfig {
     @Bean
     public RedisMessageListenerContainer redisMessageListenerContainer(
             RedisConnectionFactory connectionFactory,
-            @Qualifier("roomListenerAdapter") MessageListenerAdapter roomAdapter,
-            @Qualifier("lobbyListenerAdapter") MessageListenerAdapter lobbyAdapter,
-            @Qualifier("broadcastListenerAdapter") MessageListenerAdapter broadcastAdapter,
-            @Qualifier("dmListenerAdapter") MessageListenerAdapter dmAdapter
+            RoomSubscriber roomSubscriber,
+            LobbySubscriber lobbySubscriber,
+            BroadcastSubscriber broadcastSubscriber,
+            DirectMessageSubscriber dmSubscriber
     ) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
 
-        // 컨트롤러에서 설정한 발행(Publish) 토픽 경로
-        container.addMessageListener(roomAdapter, new PatternTopic("chat:room:*"));
-        container.addMessageListener(lobbyAdapter, new PatternTopic("chat:lobby"));
-        container.addMessageListener(broadcastAdapter, new PatternTopic("chat:broadcast"));
-        container.addMessageListener(dmAdapter, new PatternTopic("chat:dm:*"));
+        // 빈으로 주입받은 Subscriber를 이용해 어댑터를 즉석에서 생성 및 등록
+        container.addMessageListener(createAdapter(roomSubscriber), new PatternTopic("chat:room:*"));
+        container.addMessageListener(createAdapter(lobbySubscriber), new PatternTopic("chat:lobby"));
+        container.addMessageListener(createAdapter(broadcastSubscriber), new PatternTopic("chat:broadcast"));
+        container.addMessageListener(createAdapter(dmSubscriber), new PatternTopic("chat:dm:*"));
 
         return container;
     }

@@ -23,7 +23,7 @@ public class GlobalController {
     private final RedisPublisher redisPublisher;  // Redis Publisher
 
     /**
-     * 전체 공지 (notice)
+     * 전체 공지 (notice) - 관리자만 가능
      * 프론트엔드 전송 목적지: /pub/chat/notice
      * 프론트엔드 전송 데이터: { "message": "서버 점검 안내" }
      */
@@ -34,7 +34,7 @@ public class GlobalController {
         String role = (String) attributes.get("role");
 
         if (!Role.ADMIN.name().equals(role)) {
-            // 관리자(ADMIN) 기능
+            // 관리자(ADMIN)가 아니면 공지 못보냄
             return;
         }
 
@@ -43,9 +43,12 @@ public class GlobalController {
                 talkReq.message()
         );
 
+        // 발행할 topic 설정
         String topic = "chat:broadcast";
+        // Redis로 발행하기 위한 json을 String 타입으로 변경
         String message = objectMapper.writeValueAsString(messageDto);
 
+        // 메시지 발행
         redisPublisher.publish(topic, message);
     }
 
@@ -59,6 +62,7 @@ public class GlobalController {
 
         Map<String, Object> attributes = headerAccessor.getSessionAttributes();
         String role = (String) attributes.get("role");
+
         if (Role.GUEST.name().equals(role)) {
             // 게스트(GUEST)는 DM 못보냄
             return;

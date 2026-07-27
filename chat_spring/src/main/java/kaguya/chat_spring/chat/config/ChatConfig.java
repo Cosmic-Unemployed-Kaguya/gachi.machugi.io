@@ -25,9 +25,9 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
         // 프론트엔드가 최초로 웹소켓 연결을 맺을 엔드포인트 주소 (ws://localhost:8080/ws-chat)
         registry.addEndpoint("/ws-chat")
                 .setAllowedOriginPatterns("*")   // 테스트용 (원래는 특정 도메인만 허용)
-                .addInterceptors(authHandshakeInterceptor)
-                .setHandshakeHandler(new UserPrincipalHandshakeHandler())
-                .withSockJS();  // SockJS 지원
+                .addInterceptors(authHandshakeInterceptor)  // Handshake 인터셉터
+                .setHandshakeHandler(new UserPrincipalHandshakeHandler())  // HandshakeHandler
+                .withSockJS();
     }
 
     /**
