@@ -10,7 +10,3 @@ export interface BaseRes {
     data? : any;
 }
 
-export interface RedisDto{
-    roomIdx : number;
-    data : BaseRes;
-}
