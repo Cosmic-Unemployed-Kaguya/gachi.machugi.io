@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package Proto.chat;
+
+import "google/api/annotations.proto";
+
+option csharp_namespace = "Chat.Service.Proto";
+
+service ChatGrpcManager {
+  rpc ReserveRoom(GrpcReserveRoomRequest) returns (GrpcReserveRoomResponse) {
+    option (google.api.http) = {
+      post: "/api/chat/reserve"
+      body: "*"
+    };
+  }
+}
+
+message GrpcReserveRoomRequest {
+  string room_id = 1;
+  string user_idx = 2;
+}
+
+message GrpcReserveRoomResponse {
+  bool is_success = 1;
+  string message = 2;
+}
