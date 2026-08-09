@@ -31,6 +31,7 @@ export default async ({ expressApp }: { expressApp: express.Application } ) => {
     Container.set(socket.Server , ws);
 
     const wsLoader = Container.get(WsLoader);
+    wsLoader.startLoadWs();
 
     logger.info("ws 로드 완료");
 

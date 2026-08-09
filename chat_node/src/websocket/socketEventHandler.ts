@@ -1,13 +1,16 @@
 import { CustomSocket } from "@common/model/customSocket";
 import logger from "@common/util/logger";
 import { SocketEvent } from "@decorator/socketEvent";
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
+import { RoomManager } from "../room/roomManager";
 
 
 @Service()
 export class SocketEventHandler{
     
-    constructor(){}
+    constructor(
+        @Inject() private roomManager : RoomManager
+    ){}
 
     /**
      * 입력받은 데이터를 내부에서 사용할 수 있게 변환
@@ -22,13 +25,18 @@ export class SocketEventHandler{
 
     @SocketEvent('close')
     public close(socket : CustomSocket , code: number, reason: Buffer){
-        // @TODO 임시
-        logger.info('연결 종료')
+        // @TODO 연결이 끊긴 대상에 대한 후속 조치(방에서 퇴장 등)
+
+        this.roomManager.exitRoom(socket);
+
+        logger.info(`${socket.userNickname} 님과의 연결이 종료되었습니다.`)
+        logger.debug(`CLOSE. uid: ${socket.userIdx}, code : ${code}, reason : ${reason}`)
     }
 
     @SocketEvent('error')
     public error(socket : CustomSocket, error: Error){
-        logger.info('에러')
+        logger.error(error);
+        
     }
 
 }

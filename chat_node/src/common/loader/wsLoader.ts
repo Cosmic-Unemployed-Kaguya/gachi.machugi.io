@@ -1,7 +1,8 @@
+import { WsError } from '@common/error/wsError';
+import { catchAsyncEvent } from '@common/error/wsErrorHandler';
 import { BaseReq } from '@common/model/base';
 import { CustomSocket } from '@common/model/customSocket';
 import { EventMap, EventMetadata } from '@common/model/event';
-import logger from '@common/util/logger';
 import 'reflect-metadata';
 import { Inject, Service } from "typedi";
 import { RawData, Server } from "ws";
@@ -21,11 +22,13 @@ export class WsLoader {
         @Inject() private serverHandler : ServerEventHandler,
         @Inject() private socketHandler : SocketEventHandler, 
         @Inject() private messageHandler: MessageEventHandler
-    ){
-        this.bindServerEv()
+    ){}
+
+    public async startLoadWs(){
+        await this.bindServerEv()
     }
 
-    private bindServerEv(){
+    private async bindServerEv(){
 
         this.serverEvList = Reflect.getMetadata('ws:server', this.serverHandler.constructor)
         this.socketEvList = Reflect.getMetadata('ws:socket', this.socketHandler.constructor)
@@ -40,23 +43,25 @@ export class WsLoader {
 
             
             if (serverEv.event === 'connection'){
-                this.ws.on('connection' ,  (socket : CustomSocket, request) => {
-                    (this.serverHandler as any)[serverEv.methodName].bind(this.serverHandler)(socket, request)
-                    
+                this.ws.on('connection' ,
+                    catchAsyncEvent( async (socket : CustomSocket, request: any) => {
+                    const onConnect = (this.serverHandler as any)[serverEv.methodName].bind(this.serverHandler)
+                    await onConnect(socket, request);
                     this.bindSocketEv(socket);
                     
-                })
+                }));
             }else{
-                this.ws.on(serverEv.event , (this.serverHandler as any)[serverEv.methodName].bind(this.serverHandler))
+                const serverHandler = (this.serverHandler as any)[serverEv.methodName].bind(this.serverHandler)
+                this.ws.on(serverEv.event , catchAsyncEvent(serverHandler));
             }
 
         });
 
 
         if (!this.serverEvList.some(ev => ev.event === 'connection')) {
-            this.ws.on('connection', (socket: CustomSocket) => {
+            this.ws.on('connection', catchAsyncEvent(async (socket: CustomSocket) => {
                 this.bindSocketEv(socket);
-            });
+            }));
 
         }
 
@@ -64,40 +69,37 @@ export class WsLoader {
 
     private bindSocketEv(socket : CustomSocket){
 
-        socket.on('message' , (data : RawData) => {
-            try{
+        socket.on('message' ,
+            catchAsyncEvent( async (data : RawData) => {
+    
                 const strData = data.toString('utf-8');
-                const baseReq: BaseReq = JSON.parse(strData);
+                // const baseReq: BaseReq = JSON.parse(strData);
+                const parsedData = JSON.parse(strData);
+                const baseReq :BaseReq = await BaseReq.parseAsync(parsedData);
 
-                this.bindMessageEv(socket ,baseReq)
-            }catch(error){
-                // 임시
-                logger.error(error)
-                throw new Error('비!!!!!상!!!!!!!');
-                
-                
-            }
+                await this.bindMessageEv(socket ,baseReq)
 
-        })
+            }).bind(null, socket)
+        )
 
         this.socketEvList.forEach( socketEv => {
-            socket.on(socketEv.event , (this.socketHandler as any)[socketEv.methodName].bind(this.socketHandler, socket))
+            const socketHandler = (this.socketHandler as any)[socketEv.methodName].bind(this.socketHandler)
+            socket.on(socketEv.event , catchAsyncEvent(socketHandler).bind(null,socket))
 
         } )
 
     }
 
-    private bindMessageEv( socket : CustomSocket ,baseReq : BaseReq){
+    private async bindMessageEv( socket : CustomSocket ,baseReq : BaseReq){
         
         const methodName = this.messageEvList.get(baseReq.event);
 
         if(!methodName){
-            // 임시
-            throw new Error('진짜 큰일남!!!');
+            throw WsError.fromType('NOT_FOUND_EVENT_ERROR');
         }
 
-        (this.messageHandler as any)[methodName].bind(this.messageHandler)(socket, baseReq)
-        
+        const msgHandler = (this.messageHandler as any)[methodName].bind(this.messageHandler)
+        await catchAsyncEvent(msgHandler)(socket, baseReq);
 
     }
 

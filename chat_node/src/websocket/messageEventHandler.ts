@@ -1,3 +1,4 @@
+import { WsError } from "@common/error/wsError";
 import { BaseReq, BaseRes } from "@common/model/base";
 import { CustomSocket } from "@common/model/customSocket";
 import { ExitRoomRes } from "@common/model/exitRoom";
@@ -9,7 +10,10 @@ import { Inject, Service } from "typedi";
 import { RedisPubClient } from "../common/redis/redisPubClient";
 import { RoomManager } from "../room/roomManager";
 
-
+/**
+ * 웹프레임워크의 Controller 격.
+ * 요청/응답 데이터에 대한 관리.
+ */
 @Service()
 export class MessageEventHandler{
 
@@ -19,15 +23,16 @@ export class MessageEventHandler{
     ){}
 
     @MessageEvent("join_room")
-    public joinRoom(socket : CustomSocket, baseReq : BaseReq){
+    public async joinRoom(socket : CustomSocket, baseReq : BaseReq){
 
-        // @TODO 원래 zod를 쓰던 뭘 쓰던 유효성 검사 필요함
-        const req : JoinRoomReq =  baseReq.data
+        // zod를 통한 유효성 검사
+        const req : JoinRoomReq = await JoinRoomReq.parseAsync(baseReq.data)
+
         const roomIdx : number = req.roomIdx;
 
 
         // 입장
-        this.roomManager.createAndJoinRoom(roomIdx,socket);
+        this.roomManager.joinRoom(roomIdx,socket);
         
         // 응답 데이터
         const res : BaseRes = {
@@ -44,15 +49,14 @@ export class MessageEventHandler{
     }
 
     @MessageEvent("chat")
-    public chat(socket : CustomSocket, baseReq : BaseReq){
+    public async chat(socket : CustomSocket, baseReq : BaseReq){
 
         if(!socket.roomIdx){
-            // TODO 임시
-            throw new Error('방에 들어가 있지 않음')
+            throw WsError.fromType('NOT_IN_ROOM');
         }
 
         // 요청 데이터
-        const msgReq : MessageReq = baseReq.data  
+        const msgReq : MessageReq = await MessageReq.parseAsync(baseReq.data)  
 
         // 응답 데이터
         const msgRes : MessageRes = {
@@ -72,16 +76,16 @@ export class MessageEventHandler{
     }
 
     @MessageEvent("exit_room")
-    public exitRoom(socket : CustomSocket, baseReq : BaseReq){
+    public async exitRoom(socket : CustomSocket, baseReq : BaseReq){
 
 
         if(!socket.roomIdx) {
-            // TODO 임시
-            throw new Error('방에 들어가 있지 않음');
+
+            throw WsError.fromType('NOT_IN_ROOM');
         }
 
         // 보낸 이 방id
-        const roomId : number = socket.roomIdx;
+        const roomIdx : number = socket.roomIdx;
 
 
         // 퇴장
@@ -92,7 +96,7 @@ export class MessageEventHandler{
             data : {userNickname: socket.userNickname} as ExitRoomRes
         }
 
-        this.redisPubClient.publishMessage(roomId, res );
+        this.redisPubClient.publishMessage(roomIdx , res);
         
         logger.info(`퇴장 : ${socket.userNickname}`);
     }

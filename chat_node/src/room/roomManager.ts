@@ -1,6 +1,7 @@
 import { BaseRes } from "@common/model/base";
 import { CustomSocket } from "@common/model/customSocket";
 import { Service } from "typedi";
+import { WsError } from './../common/error/wsError';
 import { Room } from "./room";
 
 @Service()
@@ -15,31 +16,39 @@ export class RoomManager{
         const room = this.rooms.get(roomIdx)
 
         if(!room){
-            // @TODO 에러처리 
-            // 그런 room은 세상에 존재하지않아요!!!!!!!!!!!!!
-            return;
+            throw WsError.fromType('ROOM_NOT_FOUND');
         }
+
         await room.sendMessage(data);
     }
 
+    public createRoom(roomIdx : number){
+        const room = this.rooms.get(roomIdx)
+        if(room){
+            throw WsError.fromType('ROOM_ALREADY_EXISTS');
+        }
+        
+        const newRoom = new Room();
+        this.rooms.set(roomIdx, newRoom);
+    }
 
-    public createAndJoinRoom(roomIdx : number, socket : CustomSocket) {
+    public joinRoom(roomIdx : number, socket : CustomSocket) {
 
 
         // 이미 해당 방에 들어가 있는 경우
         if(socket.roomIdx == roomIdx) {
-            // TODO 님 이미 들어가있음 처리
+            throw WsError.fromType('ALREADY_IN_ROOM');
             
         }
         // 다른 방에 들어가 있는 경우
         if(socket.roomIdx){
-            // TODO 퇴장 먼저 하셈 처리
+            // 퇴장 먼저 하셈 처리
             // 여기서 바로 옮겨줄지? 사용자가 퇴장 후 재입장 하도록 할지?
             // 일단 바로 옮겨줍시다
 
             const prevRoom = this.rooms.get(socket.roomIdx);
 
-            if (!prevRoom) throw new Error('존재 하지 않는 방. 뭔가뭔가 오류가 생김!@!@!');
+            if (!prevRoom) throw WsError.fromType('ROOM_NOT_FOUND');
 
             socket.roomIdx = undefined;
             prevRoom.exitUser(socket);
@@ -48,14 +57,19 @@ export class RoomManager{
 
         const room = this.rooms.get(roomIdx)
 
-        // 없으면 방 새로 만들고 입장
+        //  // 없으면 방 새로 만들고 입장
+        // 없으면 에러. 방 생성/삭제 로직의 트리거는 전적으로 Room서비스에 맡김.
         if(!room){
-            const newRoom = new Room();         
 
-            newRoom.enterUser(socket);
-            socket.roomIdx = roomIdx;
+            // const newRoom = new Room();         
 
-            this.rooms.set(roomIdx, newRoom);
+            // newRoom.enterUser(socket);
+            // socket.roomIdx = roomIdx;
+
+            // this.rooms.set(roomIdx, newRoom);
+
+            // 
+            throw WsError.fromType('ROOM_NOT_FOUND')
 
         }else{
             room.enterUser(socket);
@@ -69,14 +83,13 @@ export class RoomManager{
     public exitRoom( socket : CustomSocket){
 
         if(!socket.roomIdx){
-            // TODO 임시
-            throw new Error('방에 들어가있지않습니다')
+
+            throw WsError.fromType('NOT_IN_ROOM')
         }
 
         const room = this.rooms.get(socket.roomIdx);
         if(!room){
-            // TODO 임시
-            throw new Error('존재 하지 않는 방. 뭔가뭔가 오류가 생김!@!@!')
+            throw WsError.fromType('ROOM_NOT_FOUND')
         }
 
         socket.roomIdx = undefined;
@@ -90,7 +103,7 @@ export class RoomManager{
         const room = this.rooms.get(roomIdx);
 
         if(!room){
-            return;
+            throw WsError.fromType('ROOM_NOT_FOUND')
         }
         
         await room.kickUserByIdx(userIdx);
