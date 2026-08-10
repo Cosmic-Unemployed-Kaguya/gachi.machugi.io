@@ -4,6 +4,7 @@ import kaguya.chat_spring.chat.config.handshake.AuthHandshakeInterceptor;
 import kaguya.chat_spring.chat.config.handshake.UserPrincipalHandshakeHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -39,7 +40,7 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
 /*
-        // 만약 내장 브로커가 아닌 커스텀 브로커를 사용한다면 (ex. RabbitMQ/kafka ...)
+        // 만약 내장 브로커가 아닌 커스텀 브로커를 사용한다면 (ex. RabbitMQ)
         registry.enableStompBrokerRelay("/topic", "/queue")
                 .setRelayHost("192.168.0.10") // RabbitMQ 서버 IP
                 .setRelayPort(61613)  // STOMP 기본 포트
@@ -55,6 +56,9 @@ public class ChatConfig implements WebSocketMessageBrokerConfigurer {
         // 클라이언트가 서버로 메시지를 발행(송신)할 때 사용할 접두사
         // 프론트엔드에서 보낸 목적지 주소가 /pub/... 으로 시작하면 Controller로 라우팅
         registry.setApplicationDestinationPrefixes("/pub");
+
+        // 에러 핸들링을 위한 prefix 설정
+        registry.setUserDestinationPrefix("/user");
     }
 
 

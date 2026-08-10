@@ -3,6 +3,8 @@ package kaguya.chat_spring.chat.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kaguya.chat_spring.chat.common.RedisPublisher;
+import kaguya.chat_spring.chat.common.exception.ErrorCode;
+import kaguya.chat_spring.chat.common.exception.WebSocketException;
 import kaguya.chat_spring.chat.model.dto.DirectMessageDto;
 import kaguya.chat_spring.chat.model.dto.request.DirectMessageReq;
 import kaguya.chat_spring.chat.model.dto.MessageDto;
@@ -35,7 +37,7 @@ public class GlobalController {
 
         if (!Role.ADMIN.name().equals(role)) {
             // 관리자(ADMIN)가 아니면 공지 못보냄
-            return;
+            throw new WebSocketException(ErrorCode.ADMIN_ONLY);
         }
 
         MessageDto messageDto = new MessageDto(
@@ -61,11 +63,11 @@ public class GlobalController {
     public void directMessage(SimpMessageHeaderAccessor headerAccessor, DirectMessageReq directMessageReq) throws JsonProcessingException {
 
         Map<String, Object> attributes = headerAccessor.getSessionAttributes();
-        String role = (String) attributes.get("role");
+        String role = (String) attributes.get("userRole");
 
         if (Role.GUEST.name().equals(role)) {
             // 게스트(GUEST)는 DM 못보냄
-            return;
+            throw new WebSocketException(ErrorCode.DENIED_PERMISSION);
         }
 
         String nickname = (String) attributes.get("nickname");

@@ -6,6 +6,7 @@ import kaguya.chat_spring.chat.model.enums.Role;
 import kaguya.chat_spring.chat.service.UserGrpcClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import javax.naming.AuthenticationException;
 import java.util.Map;
 
 @Slf4j
@@ -36,6 +38,9 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
             if (userId == null || userRole == null) {
                 log.warn("웹소켓 연결 실패: 인증 헤더 누락");
+
+                // 프론트는 상태코드만 전달
+                response.setStatusCode(HttpStatus.UNAUTHORIZED);
                 return false;
             }
 
@@ -44,11 +49,20 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
                     nickname = userGrpcClient.getNickname(userId);
                 } catch (Exception e) {
                     log.error("user 서비스 통신간 에러 발생: {}", e.getMessage());
+                    response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+                    return false;
                 }
 
             }
             else {
-                nickname = redisRepository.get("GUEST:" + userId);
+                try {
+                    nickname = redisRepository.get("GUEST:" + userId);
+                } catch (Exception e) {
+                    log.error("redis 통신간 에러 발생: {}", e.getMessage());
+                    response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+                    return false;
+                }
+
             }
 
             attributes.put("userId", userId);
