@@ -16,7 +16,12 @@ export default class ChatGrpcServer {
         await this.redisPubClient.publishKickUser(req.roomIdx, req.userIdx);
 
         // Empty 반환을 위함(void)
-        return {}
+        return {};
     }
+    
+    // public async gameStart (req : GameStartRequest):  Promise<Empty> {
+        
+    //     return {};
+    // }
 
 }

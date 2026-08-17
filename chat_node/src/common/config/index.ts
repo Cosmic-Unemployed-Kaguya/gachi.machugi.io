@@ -39,6 +39,8 @@ export default{
 
     redisSubServer :  getEnv("REDIS_SUB","redis://redis-service:6379" ),
 
+    redisKvServer:  getEnv("REDIS_KV","redis://redis-service:6379"),
+
     userService: getEnv("USER_SERVICE", "localhost:3001"),
     roomService: getEnv("ROOM_SERVICE", "localhost:3001"),
 

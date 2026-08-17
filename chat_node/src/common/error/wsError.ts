@@ -97,6 +97,10 @@ export const WsErrorCode = {
     MISSING_REQUIRED_FIELD: { code: "MISSING_REQUIRED_FIELD", message: "필수 항목이 누락되었습니다." },
 
     NOT_FOUND_EVENT_ERROR: {code: "NOT_FOUND_EVENT_ERROR", message:'존재하지 않는 이벤트입니다.'},
+    INVALID_TICKET: { code: "INVALID_TICKET", message: "유효하지 않은 티켓입니다." },
+    INVALID_ACCESS: { code: "INVALID_ACCESS", message: "잘못된 접근입니다." },
+
+    INVALID_REQUEST: { code: "INVALID_REQUEST", message: "잘못된 요청입니다." },
     
     // 4. 시스템 및 서버 내부
     INTERNAL_CONNECTION_ERROR: { code: "INTERNAL_CONNECTION_ERROR", message: "내부 통신 중 에러가 발생했습니다." },

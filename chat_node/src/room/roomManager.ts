@@ -1,5 +1,6 @@
 import { BaseRes } from "@common/model/base";
 import { CustomSocket } from "@common/model/customSocket";
+import logger from "@common/util/logger";
 import { Service } from "typedi";
 import { WsError } from './../common/error/wsError';
 import { Room } from "./room";
@@ -15,8 +16,11 @@ export class RoomManager{
         
         const room = this.rooms.get(roomIdx)
 
+        // 해당 서버에 존재하지 않는 room. 
         if(!room){
-            throw WsError.fromType('ROOM_NOT_FOUND');
+            logger.debug('존재하지 않는 room 입니다')
+            return;
+            // throw WsError.fromType('ROOM_NOT_FOUND');
         }
 
         await room.sendMessage(data);
@@ -57,19 +61,19 @@ export class RoomManager{
 
         const room = this.rooms.get(roomIdx)
 
-        //  // 없으면 방 새로 만들고 입장
-        // 없으면 에러. 방 생성/삭제 로직의 트리거는 전적으로 Room서비스에 맡김.
+        // 없으면 방 새로 만들고 입장
+        // x 없으면 에러. 방 생성/삭제 로직의 트리거는 전적으로 Room서비스에 맡김. x
         if(!room){
 
-            // const newRoom = new Room();         
+            const newRoom = new Room();         
 
-            // newRoom.enterUser(socket);
-            // socket.roomIdx = roomIdx;
+            newRoom.enterUser(socket);
+            socket.roomIdx = roomIdx;
 
-            // this.rooms.set(roomIdx, newRoom);
+            this.rooms.set(roomIdx, newRoom);
 
-            // 
-            throw WsError.fromType('ROOM_NOT_FOUND')
+            
+            // throw WsError.fromType('ROOM_NOT_FOUND')
 
         }else{
             room.enterUser(socket);
@@ -95,6 +99,18 @@ export class RoomManager{
         socket.roomIdx = undefined;
         room.exitUser(socket);
 
+    }
+    
+    public deleteRoom( roomIdx : number){
+        const room = this.rooms.get(roomIdx);
+        
+        // 해당 서버에 해당 방이 없을 수 도 있음
+        if (!room) return;
+
+        // room 삭제 (일단 이정도만 하면 메모리에서 지워지는듯?)
+        room.destroy();
+        this.rooms.delete(roomIdx);
+        
     }
 
     

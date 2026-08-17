@@ -3,11 +3,33 @@ package machugi.chat;
 
 import "google/protobuf/empty.proto";
 
+// room > chat
 service ChatGrpcService {
   rpc KickUser(KickUserRequest) returns (google.protobuf.Empty) {}
+  rpc ExitUser(ExitUserRequest) returns (google.protobuf.Empty) {}
+  rpc CreateRoom(CreateRoomRequest) returns (google.protobuf.Empty) {}
+  rpc DeleteRoom(DeleteRoomRequest) returns (google.protobuf.Empty) {}
+  rpc GameStart(GameStartRequest) returns (google.protobuf.Empty) {}
 }
 
 message KickUserRequest {
   uint64 room_idx = 1;
   uint64 user_idx = 2;
+}
+
+message ExitUserRequest {
+  uint64 room_idx = 1;
+  uint64 user_idx = 2;
+}
+
+message CreateRoomRequest {
+  uint64 room_idx = 1;
+}
+
+message DeleteRoomRequest {
+  uint64 room_idx = 1;
+}
+
+message GameStartRequest {
+  uint64 room_idx = 1;
 }

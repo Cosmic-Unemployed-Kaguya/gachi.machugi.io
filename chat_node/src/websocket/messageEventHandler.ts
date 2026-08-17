@@ -4,6 +4,7 @@ import { CustomSocket } from "@common/model/customSocket";
 import { ExitRoomRes } from "@common/model/exitRoom";
 import { JoinRoomReq, JoinSuccessRes } from "@common/model/joinRoom";
 import { MessageReq, MessageRes } from "@common/model/message";
+import { RedisKvClient } from "@common/redis/redisKvClient";
 import logger from "@common/util/logger";
 import { MessageEvent } from "@decorator/messageEvent";
 import { Inject, Service } from "typedi";
@@ -19,19 +20,24 @@ export class MessageEventHandler{
 
     constructor(
         @Inject() private redisPubClient : RedisPubClient,
+        @Inject() private redisKvClient : RedisKvClient,
         @Inject() private roomManager : RoomManager,
     ){}
 
     @MessageEvent("join_room")
     public async joinRoom(socket : CustomSocket, baseReq : BaseReq){
 
-        // zod를 통한 유효성 검사
+        // 1.zod를 통한 유효성 검사
         const req : JoinRoomReq = await JoinRoomReq.parseAsync(baseReq.data)
 
         const roomIdx : number = req.roomIdx;
 
+        // 2.티켓 확인
+        if(!this.redisKvClient.checkEnterTicket(socket.userIdx, req.roomIdx , req.ticketUuid)){
+            throw WsError.fromType('INVALID_REQUEST')
+        }
 
-        // 입장
+        // 3.입장
         this.roomManager.joinRoom(roomIdx,socket);
         
         // 응답 데이터
@@ -40,7 +46,7 @@ export class MessageEventHandler{
             data : {userNickname : socket.userNickname} as JoinSuccessRes
         }
         
-        // redis로 전파
+        // 4.redis로 전파
         this.redisPubClient.publishMessage(roomIdx ,res);
 
         logger.info(`방 참여 ${req.roomIdx}`)

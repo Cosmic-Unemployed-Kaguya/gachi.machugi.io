@@ -1,5 +1,6 @@
 import config from "@common/config";
 import { PublishMessageDto } from "@common/model/publishMessage";
+import logger from "@common/util/logger";
 import { KickUserRequest } from "@generated/machugi/chat/chat";
 import Redis from "ioredis";
 import { Inject, Service } from "typedi";
@@ -27,19 +28,28 @@ export class RedisSubClient {
     // redis에서 메시지 수신 시 
     private async onMessage(channel : string , message: string){
         
-        switch(channel){
-            case('global_chat_channel'):
-                const messageDto : PublishMessageDto = JSON.parse(message);
-                await this.roomManager.sendMessage(messageDto.roomIdx, messageDto.data);
-                break;
+        try{
+            switch(channel){
+                case('global_chat_channel'):
+                    const messageDto : PublishMessageDto = JSON.parse(message);
+                    await this.roomManager.sendMessage(messageDto.roomIdx, messageDto.data);
+                    break;
 
 
-            case('kick_user_channel'):
-                const kickUserDto : KickUserRequest = JSON.parse(message);
-                await this.roomManager.kickUser(kickUserDto.roomIdx, kickUserDto.userIdx);
-                break;
+                case('game_start'):
 
+                    break;
+
+                case('kick_user_channel'):
+                    const kickUserDto : KickUserRequest = JSON.parse(message);
+                    await this.roomManager.kickUser(kickUserDto.roomIdx, kickUserDto.userIdx);
+                    break;
+
+            }
+        }catch(error){
+            logger.error('redis Sub 처리 실패 : ' ,error);
         }
+
 
     }
 

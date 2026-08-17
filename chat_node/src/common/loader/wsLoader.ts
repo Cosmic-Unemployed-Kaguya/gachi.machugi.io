@@ -70,14 +70,14 @@ export class WsLoader {
     private bindSocketEv(socket : CustomSocket){
 
         socket.on('message' ,
-            catchAsyncEvent( async (data : RawData) => {
+            catchAsyncEvent( async (sock: CustomSocket ,data : RawData) => {
     
                 const strData = data.toString('utf-8');
                 // const baseReq: BaseReq = JSON.parse(strData);
                 const parsedData = JSON.parse(strData);
                 const baseReq :BaseReq = await BaseReq.parseAsync(parsedData);
 
-                await this.bindMessageEv(socket ,baseReq)
+                await this.bindMessageEv(sock ,baseReq)
 
             }).bind(null, socket)
         )

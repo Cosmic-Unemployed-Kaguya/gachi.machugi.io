@@ -1,6 +1,7 @@
 import { WsError } from "@common/error/wsError";
 import { BaseRes } from "@common/model/base";
 import { CustomSocket } from "@common/model/customSocket";
+import { WebSocket } from "ws";
 
 
 export class Room{
@@ -9,6 +10,10 @@ export class Room{
     private kickedUsers : Set<number> = new Set();
 
     constructor(){}
+
+    public getUsers(){
+        return this.sockets
+    }
 
     public enterUser(socket : CustomSocket){
         if(this.kickedUsers.has(socket.userIdx)) {
@@ -28,6 +33,14 @@ export class Room{
                 client.send(JSON.stringify(data))
             }      
         })
+    }
+
+
+    public destroy(){
+        this.sockets.forEach( user => {
+            user.roomIdx = undefined;
+        } )
+        this.sockets.clear();
     }
 
     public async kickUserByIdx(userIdx : number){
