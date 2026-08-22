@@ -21,4 +21,7 @@ public interface QuestionService {
 
     // 문제 삭제
     void deleteQuestion(Long questionIdx);
+
+    // 랜덤 문제 조회
+    List<QuestionResponse> getRandomQuestionList(Long quizIdx);
 }
