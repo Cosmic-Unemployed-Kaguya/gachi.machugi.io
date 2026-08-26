@@ -31,6 +31,7 @@ public class SecurityConfig {
                 // 페이지 접근 설정
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()  // 인증 관련은 전부 통과
+                        .requestMatchers("/verifications/**").permitAll()  // todo. gRPC 추가 시 삭제
                         .anyRequest().authenticated()  // 나머지는 Envoy가 인증해준 유저만
                 )
 

@@ -46,7 +46,8 @@ public class ExtAuthzFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith("/auth");
+        return path.startsWith("/auth")
+                || path.startsWith("/verifications"); // todo. gRPC 추가 시 삭제
     }
 
     /**
