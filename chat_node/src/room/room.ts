@@ -1,4 +1,3 @@
-import { WsError } from "@common/error/wsError";
 import { BaseRes } from "@common/model/base";
 import { CustomSocket } from "@common/model/customSocket";
 import { WebSocket } from "ws";
@@ -7,7 +6,9 @@ import { WebSocket } from "ws";
 export class Room{
 
     private sockets :  Set<CustomSocket> = new Set();
-    private kickedUsers : Set<number> = new Set();
+    // private kickedUsers : Set<number> = new Set();
+
+    private currentAnswer : string;
 
     constructor(){}
 
@@ -16,9 +17,9 @@ export class Room{
     }
 
     public enterUser(socket : CustomSocket){
-        if(this.kickedUsers.has(socket.userIdx)) {
-            throw WsError.fromType('USER_KICKED')
-        }
+        // if(this.kickedUsers.has(socket.userIdx)) {
+        //     throw WsError.fromType('USER_KICKED')
+        // }
         this.sockets.add(socket);
     }
 
@@ -42,21 +43,32 @@ export class Room{
         } )
         this.sockets.clear();
     }
-
-    public async kickUserByIdx(userIdx : number){
-        this.sockets.forEach((socket) => {
-            if(socket.userIdx == userIdx) {
-                this.sockets.delete(socket);
-                this.kickedUsers.add(socket.userIdx);
-                socket.send(JSON.stringify(
-                    {
-                        event : 'kick'
-                    } as BaseRes
-                ))
-            }
-            return;
-        })
+    
+    public setAnswer(answer : string){
+        this.currentAnswer = answer;
     }
+
+    public checkAnswer(userAnswer : string) : boolean{
+        // @TODO 정답 확인 로직~!~!~
+        if(userAnswer == this.currentAnswer) return true
+        
+        return false
+    }
+
+    // public async kickUserByIdx(userIdx : number){
+    //     this.sockets.forEach((socket) => {
+    //         if(socket.userIdx == userIdx) {
+    //             this.sockets.delete(socket);
+    //             this.kickedUsers.add(socket.userIdx);
+    //             socket.send(JSON.stringify(
+    //                 {
+    //                     event : 'kick'
+    //                 } as BaseRes
+    //             ))
+    //         }
+    //         return;
+    //     })
+    // }
     
     
 }

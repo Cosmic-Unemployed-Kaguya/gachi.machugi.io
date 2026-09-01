@@ -42,7 +42,7 @@ export default{
     redisKvServer:  getEnv("REDIS_KV","redis://redis-service:6379"),
 
     userService: getEnv("USER_SERVICE", "localhost:3001"),
-    roomService: getEnv("ROOM_SERVICE", "localhost:3001"),
+    roomService: getEnv("ROOM_SERVICE", "room-service:8080"),
 
     grpcServerAddress: getEnv("GRPC_SERVER_ADDRESS", "localhost:3002"),
 }

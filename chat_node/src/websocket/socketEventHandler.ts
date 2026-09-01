@@ -1,9 +1,9 @@
 import { CustomSocket } from "@common/model/customSocket";
 import { ExitRoomRes } from "@common/model/exitRoom";
-import { RedisPubClient } from "@common/redis/redisPubClient";
 import logger from "@common/util/logger";
 import { SocketEvent } from "@decorator/socketEvent";
 import { Inject, Service } from "typedi";
+import { RedisPubClient } from "../redis/redisPubClient";
 import { RoomManager } from "../room/roomManager";
 import { RoomGrpcClient } from './../common/grpc-client/roomClient';
 

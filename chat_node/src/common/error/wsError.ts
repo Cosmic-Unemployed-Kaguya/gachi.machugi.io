@@ -109,7 +109,7 @@ export const WsErrorCode = {
     SERVER_EVENT_LOAD_ERROR: {code: "SERVER_EVENT_LOAD_ERROR", message: "서버 이벤트 로드 중 에러가 발생했습니다."},
     SOCKET_EVENT_LOAD_ERROR: {code: "SOCKET_EVENT_LOAD_ERROR", message: "소켓 이벤트 로드 중 에러가 발생했습니다."},
     MESSAGE_EVENT_LOAD_ERROR: {code: "MESSAGE_EVENT_LOAD_ERROR", message:'메세지 이벤트 로드 중 에러가 발생했습니다.'},
-
+    REDIS_ERROR:{code: 'MESSAGE_EVENT_LOAD_ERROR', message:'Redis와 통신 중 에러 발생'}
 
 } as const;
 

@@ -1,12 +1,19 @@
 import { BaseRes } from "@common/model/base";
 import { CustomSocket } from "@common/model/customSocket";
-import logger from "@common/util/logger";
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
+import { RedisSubClient } from '../redis/redisSubClient';
 import { WsError } from './../common/error/wsError';
 import { Room } from "./room";
 
 @Service()
 export class RoomManager{
+
+    @Inject(() => RedisSubClient)
+    private redisSubClient: RedisSubClient;
+    
+    constructor(
+        // @Inject() private redisSubClient: RedisSubClient
+    ){}
 
     // Map < roomIdx , Room >
     private rooms :Map<number, Room> = new Map;
@@ -18,9 +25,7 @@ export class RoomManager{
 
         // 해당 서버에 존재하지 않는 room. 
         if(!room){
-            logger.debug('존재하지 않는 room 입니다')
-            return;
-            // throw WsError.fromType('ROOM_NOT_FOUND');
+            throw WsError.fromType('ROOM_NOT_FOUND');
         }
 
         await room.sendMessage(data);
@@ -31,13 +36,12 @@ export class RoomManager{
         if(room){
             throw WsError.fromType('ROOM_ALREADY_EXISTS');
         }
-        
-        const newRoom = new Room();
-        this.rooms.set(roomIdx, newRoom);
+
+        this.createRoomAndSub(roomIdx);
+
     }
 
     public joinRoom(roomIdx : number, socket : CustomSocket) {
-
 
         // 이미 해당 방에 들어가 있는 경우
         if(socket.roomIdx == roomIdx) {
@@ -65,22 +69,17 @@ export class RoomManager{
         // x 없으면 에러. 방 생성/삭제 로직의 트리거는 전적으로 Room서비스에 맡김. x
         if(!room){
 
-            const newRoom = new Room();         
-
+            const newRoom = this.createRoomAndSub(roomIdx);
+            
             newRoom.enterUser(socket);
             socket.roomIdx = roomIdx;
 
-            this.rooms.set(roomIdx, newRoom);
-
-            
             // throw WsError.fromType('ROOM_NOT_FOUND')
 
         }else{
             room.enterUser(socket);
             socket.roomIdx = roomIdx;
         }
-
-
 
     }
 
@@ -110,20 +109,41 @@ export class RoomManager{
         // room 삭제 (일단 이정도만 하면 메모리에서 지워지는듯?)
         room.destroy();
         this.rooms.delete(roomIdx);
+
+        // 구독 해지
+        this.redisSubClient.unSubscribe('room:'+ roomIdx);
         
     }
 
-    
-    public async kickUser( roomIdx: number , userIdx : number ){
+    public getRoom(roomIdx : number) : Room{
 
         const room = this.rooms.get(roomIdx);
-
         if(!room){
             throw WsError.fromType('ROOM_NOT_FOUND')
         }
-        
-        await room.kickUserByIdx(userIdx);
-
+        return room;
     }
+
+    
+    private createRoomAndSub(roomIdx : number) : Room{
+        const newRoom = new Room();
+        this.rooms.set(roomIdx, newRoom);
+        // 해당 방 구독
+        this.redisSubClient.onSubscribe('room:'+ roomIdx);
+
+        return newRoom;
+    }
+
+    // public async kickUser( roomIdx: number , userIdx : number ){
+
+    //     const room = this.rooms.get(roomIdx);
+
+    //     if(!room){
+    //         throw WsError.fromType('ROOM_NOT_FOUND')
+    //     }
+        
+    //     await room.kickUserByIdx(userIdx);
+
+    // }
     
 }

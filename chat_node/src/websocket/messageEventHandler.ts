@@ -4,11 +4,11 @@ import { CustomSocket } from "@common/model/customSocket";
 import { ExitRoomRes } from "@common/model/exitRoom";
 import { JoinRoomReq, JoinSuccessRes } from "@common/model/joinRoom";
 import { MessageReq, MessageRes } from "@common/model/message";
-import { RedisKvClient } from "@common/redis/redisKvClient";
 import logger from "@common/util/logger";
 import { MessageEvent } from "@decorator/messageEvent";
 import { Inject, Service } from "typedi";
-import { RedisPubClient } from "../common/redis/redisPubClient";
+import { RedisKvClient } from "../redis/redisKvClient";
+import { RedisPubClient } from "../redis/redisPubClient";
 import { RoomManager } from "../room/roomManager";
 
 /**
@@ -24,11 +24,11 @@ export class MessageEventHandler{
         @Inject() private roomManager : RoomManager,
     ){}
 
-    @MessageEvent("join_room")
-    public async joinRoom(socket : CustomSocket, baseReq : BaseReq){
+    @MessageEvent("join_room", JoinRoomReq)
+    public async joinRoom(socket : CustomSocket, req : JoinRoomReq){
 
-        // 1.zod를 통한 유효성 검사
-        const req : JoinRoomReq = await JoinRoomReq.parseAsync(baseReq.data)
+        // // 1.zod를 통한 유효성 검사
+        // const req : JoinRoomReq = await JoinRoomReq.parseAsync(joinRoomReq)
 
         const roomIdx : number = req.roomIdx;
 
@@ -54,35 +54,52 @@ export class MessageEventHandler{
 
     }
 
-    @MessageEvent("chat")
-    public async chat(socket : CustomSocket, baseReq : BaseReq){
+    @MessageEvent("chat", MessageReq)
+    public async chat(socket : CustomSocket, req : MessageReq){
 
         if(!socket.roomIdx){
             throw WsError.fromType('NOT_IN_ROOM');
         }
 
-        // 요청 데이터
-        const msgReq : MessageReq = await MessageReq.parseAsync(baseReq.data)  
+        // // 요청 데이터
+        // const req : MessageReq = await MessageReq.parseAsync(msgReq)  
 
         // 응답 데이터
         const msgRes : MessageRes = {
-            msg : msgReq.msg,
+            msg : req.msg,
             userNickname : socket.userNickname
         }
+        let res : BaseReq
 
-        const res : BaseRes = {
-            event : "chat",
-            data : msgRes
+        // 정답 확인 로직
+        const room = this.roomManager.getRoom(socket.roomIdx);
+        
+        if(room.checkAnswer(req.msg)){
+            // 정답일시
+            // redis를 통해 선점(SET + NX + EX)
+            this.redisKvClient.setWithExpiration(socket.roomIdx, socket.userIdx)
+
+            res = {
+                event : "correct",
+                data : msgRes
+            }
+
+        }else{
+            // 그 외
+            res = {
+                event : "chat",
+                data : msgRes
+            }
         }
 
         // redis로 전파
         this.redisPubClient.publishMessage(socket.roomIdx, res);
 
-        logger.info(`채팅 : ${socket.userNickname}  : ${msgReq.msg}`)
+        logger.info(`채팅 : ${socket.userNickname}  : ${req.msg}`)
     }
 
     @MessageEvent("exit_room")
-    public async exitRoom(socket : CustomSocket, baseReq : BaseReq){
+    public async exitRoom(socket : CustomSocket){
 
 
         if(!socket.roomIdx) {
