@@ -1,6 +1,7 @@
 package kaguya.user.domain.common.service;
 
 import kaguya.user.domain.common.model.dto.request.CheckVerificationCodeReq;
+import kaguya.user.domain.common.model.dto.request.SendVerificationCodeReq;
 import kaguya.user.domain.common.repository.RedisRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,26 +21,44 @@ public class VerificationService {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final int CODE_LENGTH = 6;
 
-    public void sendVerificationCode(String email) {
+    public void sendVerificationCode(SendVerificationCodeReq request) {
 
+        String type = request.verificationType().name();
+        String email = request.email();
+
+        // 카운트 증가 후 시도횟수 확인
+        String limitKey = "verification:limit:" + type + ":" + email;
+        Long currentCount = redisRepository.increment(limitKey, 2, TimeUnit.HOURS);
+
+        if (currentCount > 5) {
+            // todo. 커스텀 Exception으로 변경
+            throw new RuntimeException("요청 횟수 초과");
+        }
+
+        // 인증코드 생성
         String verificationCode = createVerificationCode();
 
         String subject = "[같이맞추기.IO] 인증코드 전송 메일입니다.";
         String content = "<h1> 인증코드는 [ " + verificationCode + " ] 입니다.</h1>";
 
         // redis에 이메일 인증코드 저장
-        redisRepository.save(email, verificationCode, 10, TimeUnit.MINUTES);
+        String verificationKey = "verification:code:" + type + ":" + email;
+        redisRepository.save(verificationKey, verificationCode, 10, TimeUnit.MINUTES);
 
+        // 메일 전송
         mailService.sendHtmlMail(email, subject, content);
     }
 
     public String checkVerificationCode(CheckVerificationCodeReq request) {
 
-        String email = request.email();
+        String type = request.verificationType().name();
         String userCode = request.verificationCode();
+        String email = request.email();
 
-        // 검증코드 확인
-        String serverCode = redisRepository.get(email);
+        // 검증코드 조회 및 확인
+        String verificationKey = "verification:code:" + type + ":" + email;
+        String serverCode = redisRepository.get(verificationKey);
+
         if (!userCode.equals(serverCode)) {
             // todo. 커스텀 Exception으로 변경
             throw new RuntimeException("잘못된 인증코드 입니다.");
@@ -48,8 +67,10 @@ public class VerificationService {
 
         // 추후 작업(3단계)을 위한 일회용 인증코드 생성 및 Redis 저장
         String oneTimeAuthCode = UUID.randomUUID().toString();
-        redisRepository.save(oneTimeAuthCode, email, 10, TimeUnit.MINUTES);
+        String oneTimeKey = "verification:oneTimeAuthCode:" + type + ":" + oneTimeAuthCode;
+        redisRepository.save(oneTimeKey, email, 10, TimeUnit.MINUTES);
 
+        // 일회용 인증코드 반환
         return oneTimeAuthCode;
     }
 

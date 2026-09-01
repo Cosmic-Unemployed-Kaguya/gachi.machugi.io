@@ -3,6 +3,8 @@ package kaguya.user.domain.user.controller;
 import jakarta.validation.Valid;
 import kaguya.user.domain.common.model.dto.BaseRes;
 import kaguya.user.domain.common.model.enums.Role;
+import kaguya.user.domain.user.model.dto.request.FindUsernameReq;
+import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
@@ -101,5 +103,29 @@ public class UserController {
 
         BaseRes<Void> response = new BaseRes<>("200", "회원 탈퇴", null);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/find/id")
+    public ResponseEntity<BaseRes<String>> findUsername (
+            @RequestBody @Valid FindUsernameReq request
+    ) {
+
+        String maskedUsername = userService.findUsername(request.oneTimeAuthCode());
+
+        return ResponseEntity.ok(
+                new BaseRes<>("200", "찾은 아이디", maskedUsername)
+        );
+    }
+
+    @PatchMapping("/reset/password")
+    public ResponseEntity<BaseRes<Void>> resetPassword (
+            @RequestBody @Valid ResetPasswordReq request
+    ) {
+
+        userService.resetPassword(request);
+
+        return ResponseEntity.ok(
+                new BaseRes<>("200", "비밀번호 수정 완료", null)
+        );
     }
 }

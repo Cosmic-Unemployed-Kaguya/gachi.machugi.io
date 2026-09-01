@@ -27,7 +27,7 @@ public class VerificationController {
     public ResponseEntity<BaseRes<Void>> sendVerificationCode(
             @RequestBody @Valid SendVerificationCodeReq request
     ) {
-        verificationService.sendVerificationCode(request.email());
+        verificationService.sendVerificationCode(request);
 
         return ResponseEntity.ok(
                 new BaseRes<>("200", "인증코드 전송 완료. 메일을 확인하세요.", null)

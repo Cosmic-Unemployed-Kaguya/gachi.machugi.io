@@ -15,6 +15,7 @@ public enum ErrorCode {
     EXPIRED_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "401_EXPIRED_ACCESS_TOKEN", "접근 토큰이 만료되었습니다."),  // (Front) 갱신토큰으로 재시도
     EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "401_EXPIRED_REFRESH_TOKEN", "갱신 토큰이 만료되었습니다."),  // (Front) 로그인 페이지로
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "401_INVALID_CREDENTIALS", "아이디 또는 비밀번호가 일치하지 않습니다."),
+    INVALID_AUTH_CODE(HttpStatus.UNAUTHORIZED, "401_INVALID_AUTH_CODE", "인증코드가 만료되었거나 올바르지 않습니다."),
 
     // 403 Forbidden
     DENIED_PERMISSION(HttpStatus.FORBIDDEN, "403_DENIED_PERMISSION", "접근 권한이 없습니다."),
