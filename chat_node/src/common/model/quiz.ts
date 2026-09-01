@@ -5,7 +5,7 @@ export const QuizAnswerReq = z.object({
   problemText: z.string().max(500),
   problemUrl: z.string().max(2048), 
   type: z.string(),
-  answer: z.string().max(255),
+  answer: z.array(z.string().max(255)),
 });
 
 export type QuizAnswerReq = z.infer<typeof QuizAnswerReq>;
