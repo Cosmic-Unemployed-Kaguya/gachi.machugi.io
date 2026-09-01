@@ -23,6 +23,10 @@ public class UserController {
 
     private final UserService userService;
 
+    /**
+     *  마이페이지
+     */
+
     @GetMapping("/my")
     public ResponseEntity<BaseRes<MyPageRes>> getMyPage(
             @RequestHeader(value = "x-user-id", required = false) String username,
@@ -104,6 +108,10 @@ public class UserController {
         BaseRes<Void> response = new BaseRes<>("200", "회원 탈퇴", null);
         return ResponseEntity.ok(response);
     }
+
+    /**
+     * 아이디 찾기 / 비밀번호 초기화
+     */
 
     @PostMapping("/find/id")
     public ResponseEntity<BaseRes<String>> findUsername (

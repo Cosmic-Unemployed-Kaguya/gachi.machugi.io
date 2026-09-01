@@ -3,6 +3,8 @@ package kaguya.user.domain.common.service;
 import kaguya.user.domain.common.model.dto.request.CheckVerificationCodeReq;
 import kaguya.user.domain.common.model.dto.request.SendVerificationCodeReq;
 import kaguya.user.domain.common.repository.RedisRepository;
+import kaguya.user.global.exception.BusinessException;
+import kaguya.user.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -27,17 +29,15 @@ public class VerificationService {
         String email = request.email();
 
         // 카운트 증가 후 시도횟수 확인
-        String limitKey = "verification:limit:" + type + ":" + email;
+        String limitKey = "verification:send_limit:" + type + ":" + email;
         Long currentCount = redisRepository.increment(limitKey, 2, TimeUnit.HOURS);
 
         if (currentCount > 5) {
-            // todo. 커스텀 Exception으로 변경
-            throw new RuntimeException("요청 횟수 초과");
+            throw new BusinessException(ErrorCode.EXCEED_REQUEST_LIMIT);
         }
 
         // 인증코드 생성
         String verificationCode = createVerificationCode();
-
         String subject = "[같이맞추기.IO] 인증코드 전송 메일입니다.";
         String content = "<h1> 인증코드는 [ " + verificationCode + " ] 입니다.</h1>";
 
@@ -59,11 +59,30 @@ public class VerificationService {
         String verificationKey = "verification:code:" + type + ":" + email;
         String serverCode = redisRepository.get(verificationKey);
 
-        if (!userCode.equals(serverCode)) {
-            // todo. 커스텀 Exception으로 변경
-            throw new RuntimeException("잘못된 인증코드 입니다.");
+        if (serverCode == null) {
+            throw new BusinessException(ErrorCode.INVALID_AUTH_CODE);
         }
-        redisRepository.delete(email);
+
+        if (!userCode.equals(serverCode)) {
+            // 카운트 증가 후 시도횟수 확인
+            String limitKey = "verification:fail_limit:" + type + ":" + email;
+            Long failCount = redisRepository.increment(limitKey, 10, TimeUnit.MINUTES);
+
+            if (failCount >= 5) {
+                // 5회 이상 실패 시 코드 무효화 및 카운트 삭제
+                redisRepository.delete(verificationKey);
+                redisRepository.delete(limitKey);
+
+                throw new BusinessException(ErrorCode.AUTH_LOCKED);
+            }
+
+            throw new BusinessException(ErrorCode.INVALID_AUTH_CODE);
+        }
+        redisRepository.delete(verificationKey);
+
+        // 성공했으므로 실패 카운트 초기화
+        String limitKey = "verification:fail_limit:" + type + ":" + email;
+        redisRepository.delete(limitKey);
 
         // 추후 작업(3단계)을 위한 일회용 인증코드 생성 및 Redis 저장
         String oneTimeAuthCode = UUID.randomUUID().toString();

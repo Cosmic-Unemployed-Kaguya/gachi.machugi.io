@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
 public record ResetPasswordReq(
+
         @NotBlank(message = "인증 토큰이 필요합니다.")
         String oneTimeAuthCode,
 
