@@ -1,6 +1,6 @@
+import { GrpcError } from "@cosmic-unemployed-kaguya/grpc-express";
 import { Metadata } from "@grpc/grpc-js";
 
-import { GrpcError } from "../error-handler/error";
 import { toAppRole } from "../mapper/userMapper";
 import { UserData } from "../middlewares/appRequest";
 
@@ -15,17 +15,10 @@ import { UserRole } from "@generated/machugi/board/user";
  * @returns
  */
 export function GrpcAuth(allowedRoles?: UserRole[]): MethodDecorator {
-  return function (
-    target: any,
-    property: string | symbol,
-    descriptor: PropertyDescriptor,
-  ) {
+  return function (target: any, property: string | symbol, descriptor: PropertyDescriptor) {
     let originalMethod = descriptor.value;
 
-    descriptor.value = async function (
-      req: AuthRequest<object>,
-      metadata: Metadata,
-    ) {
+    descriptor.value = async function (req: AuthRequest<object>, metadata: Metadata) {
       try {
         // 1. 메타데이터에서 userIdx 및 userRole 꺼내기
         const userIdxStr = getStrFromMeta(metadata, "x-user-idx");
@@ -76,10 +69,7 @@ export function GrpcAuth(allowedRoles?: UserRole[]): MethodDecorator {
   };
 }
 
-const getStrFromMeta = (
-  metaData: Metadata,
-  key: string,
-): string | undefined => {
+const getStrFromMeta = (metaData: Metadata, key: string): string | undefined => {
   const rawValue = metaData.get(key)[0];
 
   if (!rawValue) {

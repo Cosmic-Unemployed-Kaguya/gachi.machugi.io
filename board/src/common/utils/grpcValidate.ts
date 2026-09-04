@@ -1,6 +1,5 @@
+import { GrpcError } from "@cosmic-unemployed-kaguya/grpc-express";
 import z from "zod";
-
-import { GrpcError } from "../error-handler/error";
 
 /**
  *  요청값에 대해 내가 정의해둔 dto로 검증하는 함수

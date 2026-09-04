@@ -1,6 +1,6 @@
+import { GrpcClient, GrpcClientProperty } from "@cosmic-unemployed-kaguya/grpc-express";
 import config from "../config";
 
-import { GrpcClient, GrpcClientProperty } from "@decorator/grpcClient";
 
 import {
   UserInfoListRequset,
@@ -13,12 +13,8 @@ import {
 @GrpcClient(UserServiceClient, config.userService)
 export default class UserClient {
   @GrpcClientProperty()
-  public getUserInfo: (
-    userInfoReq: UserInfoRequest,
-  ) => Promise<UserInfoResponse>;
+  public getUserInfo: (userInfoReq: UserInfoRequest) => Promise<UserInfoResponse>;
 
   @GrpcClientProperty()
-  public getUserListInfo: (
-    userInfoListReq: UserInfoListRequset,
-  ) => Promise<UserInfoListResponse>;
+  public getUserListInfo: (userInfoListReq: UserInfoListRequset) => Promise<UserInfoListResponse>;
 }
