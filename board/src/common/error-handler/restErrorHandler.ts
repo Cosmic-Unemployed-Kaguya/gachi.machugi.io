@@ -13,12 +13,7 @@ import { sendError } from "@dto/baseRes";
 // 2. 예상 못한 에러가 나와도 포장하는 작업이 필요
 // 3. 해당 핸들러는 express(RestApi) 기준, gRPC의 출력에 맞춘 핸들러는 후에 작성 필요
 
-export const restErrorConverter = (
-  err: any,
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+export const restErrorConverter = (err: any, req: Request, res: Response, next: NextFunction) => {
   let error = err;
 
   // ** switch 문을 안쓰는 이유?
@@ -35,12 +30,7 @@ export const restErrorConverter = (
   next(error);
 };
 
-export const errorHandler = (
-  err: any,
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
   // 이곳에 들어오는 에러는 위 converter를 거쳐서 오기에 ApiError 형식
   // 에러를 포장 후 출력하는 로직
 

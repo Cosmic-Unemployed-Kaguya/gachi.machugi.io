@@ -1,7 +1,7 @@
 import { BoardType } from "@common/model/enum/boardType";
 import { TypeOrmRepository } from "@common/utils/typeOrmBaseRepository";
 
-import { BoardEntity } from "@domain/board/boardEntity";
+import { BoardEntity } from "@common/model/entity/boardEntity";
 
 import { Page, PagingReqType } from "@dto/paging";
 
@@ -14,9 +14,7 @@ export class BoardRepository extends TypeOrmRepository<BoardEntity> {
    * @param pagingDTO
    * @returns Page<BoardEntity>
    */
-  async findNoticeByPaging(
-    pagingDTO: PagingReqType,
-  ): Promise<Page<BoardEntity>> {
+  async findNoticeByPaging(pagingDTO: PagingReqType): Promise<Page<BoardEntity>> {
     // 1. type이 notice인거
     const qb = this.createQueryBuilder("board").where("board.type = :type", {
       type: BoardType.NOTICE,

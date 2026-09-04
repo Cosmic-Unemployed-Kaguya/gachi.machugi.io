@@ -1,16 +1,12 @@
 import { toGrpcState } from "./boardStateMapper";
 
-import { BoardEntity } from "@domain/board/boardEntity";
+import { BoardEntity } from "@common/model/entity/boardEntity";
 
 import { NoticeDetailRes } from "@dto/noticeDetailDTO";
 import { NoticeListRes } from "@dto/noticeListDTO";
 import { Page } from "@dto/paging";
 
-import {
-  GrpcNoticeDetailResponse,
-  GrpcNoticeListResponse,
-  GrpcNoticePageResponse,
-} from "@generated/machugi/board/notice";
+import { GrpcNoticeDetailResponse, GrpcNoticeListResponse, GrpcNoticePageResponse } from "@generated/machugi/board/notice";
 
 export const toNoticeDetail = (boardEntity: BoardEntity): NoticeDetailRes => {
   return {
@@ -35,9 +31,7 @@ export const toNoticeListRes = (entity: BoardEntity): NoticeListRes => {
   };
 };
 
-export const toGrpcNoticePage = (
-  pagingData: Page<NoticeListRes>,
-): GrpcNoticePageResponse => {
+export const toGrpcNoticePage = (pagingData: Page<NoticeListRes>): GrpcNoticePageResponse => {
   return {
     items: pagingData.items.map((item): GrpcNoticeListResponse => ({
       idx: item.idx,
@@ -54,9 +48,7 @@ export const toGrpcNoticePage = (
   };
 };
 
-export const toGrpcNoticeDetail = (
-  noticeDetail: NoticeDetailRes,
-): GrpcNoticeDetailResponse => {
+export const toGrpcNoticeDetail = (noticeDetail: NoticeDetailRes): GrpcNoticeDetailResponse => {
   return {
     idx: noticeDetail.idx,
     content: noticeDetail.content,

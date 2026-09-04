@@ -7,7 +7,7 @@ import { UserData } from "@common/middlewares/appRequest";
 import { UpsertCommentReqType } from "@common/model/dto/commentUpsertReq";
 import { PagingReqType } from "@common/model/dto/paging";
 
-import { QuizCommentEntity } from "@domain/quiz-comment/quizCommentEntity";
+import { QuizCommentEntity } from "@common/model/entity/quizCommentEntity";
 import { QuizCommentRepository } from "@domain/quiz-comment/quizCommentRepository";
 import QuizCommentService from "@domain/quiz-comment/quizCommentService";
 

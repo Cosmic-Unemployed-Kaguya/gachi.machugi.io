@@ -1,8 +1,4 @@
-import { Timestamp } from "typeorm";
-import z from "zod";
 
-import { BoardCommentEntity } from "../entity/boardComment";
-import { BoardEntity } from "../entity/boardEntity";
 import { BoardState } from "../enum/boardState";
 
 // 공지 상세 조회

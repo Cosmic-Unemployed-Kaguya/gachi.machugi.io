@@ -1,14 +1,11 @@
-import { BoardCommentEntity } from "@domain/board-comment/boardCommentEntity";
-import { QuizCommentEntity } from "@domain/quiz-comment/quizCommentEntity";
+import { BoardCommentEntity } from "@common/model/entity/boardCommentEntity";
+import { QuizCommentEntity } from "@common/model/entity/quizCommentEntity";
 
 import { CommentListRes } from "@dto/commentListRes";
 import { CommentRes } from "@dto/commentRes";
 import { Page } from "@dto/paging";
 
-import {
-  GrpcCommentPageResponse,
-  GrpcCommentResponse,
-} from "@generated/machugi/board/common";
+import { GrpcCommentPageResponse, GrpcCommentResponse } from "@generated/machugi/board/common";
 
 export const toCommentListRes = (
   entity: BoardCommentEntity | QuizCommentEntity,
@@ -24,10 +21,7 @@ export const toCommentListRes = (
   };
 };
 
-export const toCommentRes = (
-  entity: BoardCommentEntity | QuizCommentEntity,
-  userNickName: string,
-): CommentRes => {
+export const toCommentRes = (entity: BoardCommentEntity | QuizCommentEntity, userNickName: string): CommentRes => {
   return {
     idx: entity.idx,
     parent: entity.parent ? entity.parent.idx : null,
@@ -49,9 +43,7 @@ export const toGrpcCommentRes = (data: CommentRes): GrpcCommentResponse => {
   };
 };
 
-export const toGrpcCommentPageRes = (
-  pagingData: Page<CommentListRes>,
-): GrpcCommentPageResponse => {
+export const toGrpcCommentPageRes = (pagingData: Page<CommentListRes>): GrpcCommentPageResponse => {
   return {
     items: pagingData.items.map((item): GrpcCommentResponse => ({
       content: item.content,
