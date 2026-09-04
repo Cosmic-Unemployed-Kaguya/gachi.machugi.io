@@ -1,4 +1,4 @@
-import { QuizCommentEntity } from "./quizCommentEntity";
+import { QuizCommentEntity } from "../../common/model/entity/quizCommentEntity";
 
 import { TypeOrmRepository } from "@common/utils/typeOrmBaseRepository";
 
@@ -14,15 +14,9 @@ export class QuizCommentRepository extends TypeOrmRepository<QuizCommentEntity> 
    * @param pagingDTO
    * @returns Page<QuizCommentEntity>
    */
-  async findCommentByPaging(
-    quizIdx: number,
-    pagingDTO: PagingReqType,
-  ): Promise<Page<QuizCommentEntity>> {
+  async findCommentByPaging(quizIdx: number, pagingDTO: PagingReqType): Promise<Page<QuizCommentEntity>> {
     // 0. 해당 개시글에 대한 댓글 조회
-    const qb = this.createQueryBuilder("comment").where(
-      "comment.quizIdx = :quizIdx",
-      { quizIdx },
-    );
+    const qb = this.createQueryBuilder("comment").where("comment.quizIdx = :quizIdx", { quizIdx });
 
     // 1. 최상위 댓글만 조회
     qb.andWhere("comment.parent IS NULL");
@@ -45,15 +39,9 @@ export class QuizCommentRepository extends TypeOrmRepository<QuizCommentEntity> 
    * @param pagingDTO
    * @returns Page<QuizCommentEntity>
    */
-  async findCommentRepliesByPaging(
-    parentIdx: number,
-    pagingDTO: PagingReqType,
-  ): Promise<Page<QuizCommentEntity>> {
+  async findCommentRepliesByPaging(parentIdx: number, pagingDTO: PagingReqType): Promise<Page<QuizCommentEntity>> {
     // 0. 해당 댓글에 대한 대댓글 조회
-    const qb = this.createQueryBuilder("comment").where(
-      "comment.parent = :parentIdx",
-      { parentIdx },
-    );
+    const qb = this.createQueryBuilder("comment").where("comment.parent = :parentIdx", { parentIdx });
 
     // 2. 검색 범위 설정  < 댓글 검색이 필요한가? 싶긴한데 일단 넣어두기는 해봄
     if (pagingDTO.search) {

@@ -27,10 +27,8 @@ export const validate = (schemas: ValidationSchemas) => {
     try {
       // 스키마 존재 시 유효성 검사 후 데이터 추가
       if (schemas.body) req.bodyData = await schemas.body.parseAsync(req.body);
-      if (schemas.query)
-        req.queryData = await schemas.query.parseAsync(req.query);
-      if (schemas.params)
-        req.paramsData = await schemas.params.parseAsync(req.params);
+      if (schemas.query) req.queryData = await schemas.query.parseAsync(req.query);
+      if (schemas.params) req.paramsData = await schemas.params.parseAsync(req.params);
 
       next();
     } catch (error) {

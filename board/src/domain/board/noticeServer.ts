@@ -1,12 +1,10 @@
+import { GrpcServer } from "@cosmic-unemployed-kaguya/grpc-express";
 import { Inject } from "typedi";
 
 import NoticeService from "./noticeService";
 
 import UserClient from "@common/grpc-client/userClient";
-import {
-  toGrpcNoticeDetail,
-  toGrpcNoticePage,
-} from "@common/mapper/noticeMapper";
+import { toGrpcNoticeDetail, toGrpcNoticePage } from "@common/mapper/noticeMapper";
 import { grpcValidate } from "@common/utils/grpcValidate";
 
 import { AuthRequest } from "@dto/grpcBaseReq";
@@ -15,7 +13,6 @@ import { UpsertNoticeReq } from "@dto/noticeUpsertReq";
 import { PagingReq } from "@dto/paging";
 
 import { GrpcAuth } from "@decorator/grpcAuth";
-import { GrpcServer } from "@decorator/grpcServer";
 
 import { GrpcPagingRequest } from "@generated/machugi/board/common";
 import {
@@ -34,9 +31,7 @@ export default class NoticeGrpcServer {
     @Inject() private userClient: UserClient,
   ) {}
 
-  public async getNoticeList(
-    req: GrpcPagingRequest,
-  ): Promise<GrpcNoticePageResponse> {
+  public async getNoticeList(req: GrpcPagingRequest): Promise<GrpcNoticePageResponse> {
     // 1. 요청 데이터 유효성 검사
     const pagingReq = await grpcValidate(PagingReq, req);
 
@@ -50,9 +45,7 @@ export default class NoticeGrpcServer {
   }
 
   @GrpcAuth([UserRole.ADMIN])
-  public async addNotice(
-    req: AuthRequest<GrpcUpsertNoticeRequest>,
-  ): Promise<GrpcNoticeDetailResponse> {
+  public async addNotice(req: AuthRequest<GrpcUpsertNoticeRequest>): Promise<GrpcNoticeDetailResponse> {
     // 1. 요청 데이터 유효성 검사
     const upsertNoticeReq = await grpcValidate(UpsertNoticeReq, req);
 
@@ -68,9 +61,7 @@ export default class NoticeGrpcServer {
     return res;
   }
 
-  public async getNoticeDetail(
-    req: GrpcBoardIdxRequest,
-  ): Promise<GrpcNoticeDetailResponse> {
+  public async getNoticeDetail(req: GrpcBoardIdxRequest): Promise<GrpcNoticeDetailResponse> {
     // 1. 요청 데이터 유효성 검사
     const boardIdxReq = await grpcValidate(BoardIdxParamReq, req);
 
@@ -84,19 +75,14 @@ export default class NoticeGrpcServer {
   }
 
   @GrpcAuth([UserRole.ADMIN])
-  public async updateNotice(
-    req: AuthRequest<GrpcUpsertNoticeRequest>,
-  ): Promise<GrpcNoticeDetailResponse> {
+  public async updateNotice(req: AuthRequest<GrpcUpsertNoticeRequest>): Promise<GrpcNoticeDetailResponse> {
     // 1. 요청 데이터 유효성 검사
     const upsertNoticeReq = await grpcValidate(UpsertNoticeReq, req);
 
     const boardIdxReq = await grpcValidate(BoardIdxParamReq, req);
 
     // 2. 데이터 수정
-    const data = await this.noticeService.updateNotice(
-      boardIdxReq,
-      upsertNoticeReq,
-    );
+    const data = await this.noticeService.updateNotice(boardIdxReq, upsertNoticeReq);
 
     // 3. 반환 데이터 생성
     const res: GrpcNoticeDetailResponse = toGrpcNoticeDetail(data);
@@ -105,9 +91,7 @@ export default class NoticeGrpcServer {
   }
 
   @GrpcAuth([UserRole.ADMIN])
-  public async deleteNotice(
-    req: AuthRequest<GrpcBoardIdxRequest>,
-  ): Promise<GrpcNoticePageResponse> {
+  public async deleteNotice(req: AuthRequest<GrpcBoardIdxRequest>): Promise<GrpcNoticePageResponse> {
     const boardIdxReq = await grpcValidate(BoardIdxParamReq, req);
 
     const data = await this.noticeService.deleteNotice(boardIdxReq);

@@ -1,6 +1,6 @@
 import { Inject, Service } from "typedi";
 
-import { BoardCommentEntity } from "./boardCommentEntity";
+import { BoardCommentEntity } from "../../common/model/entity/boardCommentEntity";
 import { BoardCommentRepository } from "./boardCommentRepository";
 
 import { ForbiddenError } from "@common/error-handler/error";
@@ -31,38 +31,24 @@ export default class BoardCommentService {
    * @param pagingReq
    * @returns Page<CommentListRes>
    */
-  public async getCommentPage(
-    boardIdx: BoardIdxParamReqType,
-    pagingReq: PagingReqType,
-  ): Promise<Page<CommentListRes>> {
+  public async getCommentPage(boardIdx: BoardIdxParamReqType, pagingReq: PagingReqType): Promise<Page<CommentListRes>> {
     // 1. 댓글 데이터 조회
-    const pagingEntity: Page<BoardCommentEntity> =
-      await this.boardCommentRepository.findCommentByPaging(
-        boardIdx.boardIdx,
-        pagingReq,
-      );
+    const pagingEntity: Page<BoardCommentEntity> = await this.boardCommentRepository.findCommentByPaging(boardIdx.boardIdx, pagingReq);
 
     // 2. 댓글 작성자들 nickname 조회
-    const commenters: number[] = pagingEntity.items.map(
-      (entity) => entity.userIdx,
-    );
+    const commenters: number[] = pagingEntity.items.map((entity) => entity.userIdx);
 
-    const usersRes: UserInfoListResponse =
-      await this.userClient.getUserListInfo({ userIdxs: commenters });
+    const usersRes: UserInfoListResponse = await this.userClient.getUserListInfo({ userIdxs: commenters });
 
     // 3. idx와 닉네임을 매핑하여 dto에 추가
     // 3.1 <idx: nickname> 형태로 매핑
-    const userNicknameMap: Record<number, string> = usersRes.users.reduce<
-      Record<number, string>
-    >((acc, user) => {
+    const userNicknameMap: Record<number, string> = usersRes.users.reduce<Record<number, string>>((acc, user) => {
       acc[user.userIdx] = user.nickName;
       return acc;
     }, {});
 
     // 4. 반환 데이터 생성
-    const pageDTO: Page<CommentListRes> = toPageDTO(pagingEntity, (entity) =>
-      toCommentListRes(entity, userNicknameMap),
-    );
+    const pageDTO: Page<CommentListRes> = toPageDTO(pagingEntity, (entity) => toCommentListRes(entity, userNicknameMap));
     return pageDTO;
   }
 
@@ -73,20 +59,14 @@ export default class BoardCommentService {
    * @param upsertCommnetReq
    * @returns 댓글 리스트 반환
    */
-  public async addComment(
-    userData: UserData,
-    boardIdx: BoardIdxParamReqType,
-    upsertCommnetReq: UpsertCommentReqType,
-  ): Promise<CommentRes> {
+  public async addComment(userData: UserData, boardIdx: BoardIdxParamReqType, upsertCommnetReq: UpsertCommentReqType): Promise<CommentRes> {
     // 1. 새로운 entitiy 생성
     const comment: BoardCommentEntity = this.boardCommentRepository.create({
       board: { idx: boardIdx.boardIdx },
       content: upsertCommnetReq.content,
       state: upsertCommnetReq.state,
       userIdx: userData.userIdx,
-      parent: upsertCommnetReq.parent
-        ? { idx: upsertCommnetReq.parent }
-        : undefined,
+      parent: upsertCommnetReq.parent ? { idx: upsertCommnetReq.parent } : undefined,
     });
 
     // 2. 저장
@@ -107,38 +87,27 @@ export default class BoardCommentService {
    * @param pagingReq
    * @returns Page<CommentListRes>
    */
-  public async getCommentRepliesPage(
-    commentIdx: CommentIdxParamReqType,
-    pagingReq: PagingReqType,
-  ): Promise<Page<CommentListRes>> {
+  public async getCommentRepliesPage(commentIdx: CommentIdxParamReqType, pagingReq: PagingReqType): Promise<Page<CommentListRes>> {
     // 1. 해당 댓글(commentIdx)의 대댓글 데이터 조회
-    const pagingEntity: Page<BoardCommentEntity> =
-      await this.boardCommentRepository.findCommentRepliesByPaging(
-        commentIdx.commentIdx,
-        pagingReq,
-      );
-
-    // 2. 댓글 작성자들 nickname 조회
-    const commenters: number[] = pagingEntity.items.map(
-      (entity) => entity.userIdx,
+    const pagingEntity: Page<BoardCommentEntity> = await this.boardCommentRepository.findCommentRepliesByPaging(
+      commentIdx.commentIdx,
+      pagingReq,
     );
 
-    const usersRes: UserInfoListResponse =
-      await this.userClient.getUserListInfo({ userIdxs: commenters });
+    // 2. 댓글 작성자들 nickname 조회
+    const commenters: number[] = pagingEntity.items.map((entity) => entity.userIdx);
+
+    const usersRes: UserInfoListResponse = await this.userClient.getUserListInfo({ userIdxs: commenters });
 
     // 3. idx와 닉네임을 매핑하여 dto에 추가
     // 3.1 <idx: nickname> 형태로 매핑
-    const userNicknameMap: Record<number, string> = usersRes.users.reduce<
-      Record<number, string>
-    >((acc, user) => {
+    const userNicknameMap: Record<number, string> = usersRes.users.reduce<Record<number, string>>((acc, user) => {
       acc[user.userIdx] = user.nickName;
       return acc;
     }, {});
 
     // 4. 반환 데이터 생성
-    const pageDTO: Page<CommentListRes> = toPageDTO(pagingEntity, (entity) =>
-      toCommentListRes(entity, userNicknameMap),
-    );
+    const pageDTO: Page<CommentListRes> = toPageDTO(pagingEntity, (entity) => toCommentListRes(entity, userNicknameMap));
     return pageDTO;
   }
 
@@ -184,10 +153,7 @@ export default class BoardCommentService {
    * @param commentIdxReq
    * @returns  commentIdx
    */
-  public async deleteComment(
-    userData: UserData,
-    commentIdxReq: CommentIdxParamReqType,
-  ): Promise<CommentDeleteRes> {
+  public async deleteComment(userData: UserData, commentIdxReq: CommentIdxParamReqType): Promise<CommentDeleteRes> {
     // 1. db 조회, 없을 시 에러
     const comment = await this.boardCommentRepository.findOneByOrFail({
       idx: commentIdxReq.commentIdx,

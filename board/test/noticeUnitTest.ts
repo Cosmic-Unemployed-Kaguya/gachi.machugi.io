@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, it, mock } from "node:test";
 import { UpsertNoticeType } from "@common/model/dto/noticeUpsertReq";
 import { Page, PagingReqType } from "@common/model/dto/paging";
 
+import { BoardEntity } from "@common/model/entity/boardEntity";
 import { BoardCommentRepository } from "@domain/board-comment/boardCommentRepository";
-import { BoardEntity } from "@domain/board/boardEntity";
 import { BoardRepository } from "@domain/board/boardRepository";
 import NoticeService from "@domain/board/noticeService";
 

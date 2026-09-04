@@ -14,7 +14,7 @@ export const AppDataSource = new DataSource({
   database: config.dbDatabase,
   synchronize: true, // == ddlAuto, db랑 자동 연동 할 것인가?
 
-  entities: ["src/model/entity/*.ts"],
+  entities: ["src/common/model/entity/*.ts"],
 
   /** 기본값false, JS는 큰 수를 메모리에 못담아 큰 수를 db에 넣을 때 문자열로 바꿔서 넣음.
    *  true로 할 시 숫자로 들어가지만 큰 수의경우 깨질 위험이 있어 false로 사용  */

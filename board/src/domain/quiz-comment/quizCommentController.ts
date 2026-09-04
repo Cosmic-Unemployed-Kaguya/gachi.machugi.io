@@ -11,87 +11,66 @@ import { UpsertCommentReqType } from "@dto/commentUpsertReq";
 import { CommentIdxParamReqType, QuizIdxParamReqType } from "@dto/idxParamReq";
 import { PagingReqType } from "@dto/paging";
 
-export const getQuizComment = catchAsync(
-  async (req: AppRequest, res: Response) => {
-    const quizIdxReq: QuizIdxParamReqType = req.paramsData;
+export const getQuizComment = catchAsync(async (req: AppRequest, res: Response) => {
+  const quizIdxReq: QuizIdxParamReqType = req.paramsData;
 
-    const pageReq: PagingReqType = req.queryData;
+  const pageReq: PagingReqType = req.queryData;
 
-    const commentService = Container.get(QuizCommentService);
+  const commentService = Container.get(QuizCommentService);
 
-    const data = await commentService.getCommentPage(quizIdxReq, pageReq);
+  const data = await commentService.getCommentPage(quizIdxReq, pageReq);
 
-    return sendSuccess(res, data);
-  },
-);
+  return sendSuccess(res, data);
+});
 
-export const getQuizCommentReplies = catchAsync(
-  async (req: AppRequest, res: Response) => {
-    const commentIdxReq: CommentIdxParamReqType = req.paramsData;
+export const getQuizCommentReplies = catchAsync(async (req: AppRequest, res: Response) => {
+  const commentIdxReq: CommentIdxParamReqType = req.paramsData;
 
-    const pageReq: PagingReqType = req.queryData;
+  const pageReq: PagingReqType = req.queryData;
 
-    const commentService = Container.get(QuizCommentService);
+  const commentService = Container.get(QuizCommentService);
 
-    const data = await commentService.getCommentRepliesPage(
-      commentIdxReq,
-      pageReq,
-    );
+  const data = await commentService.getCommentRepliesPage(commentIdxReq, pageReq);
 
-    return sendSuccess(res, data);
-  },
-);
+  return sendSuccess(res, data);
+});
 
-export const addQuizComment = catchAsync(
-  async (req: AppRequest, res: Response) => {
-    const quizIdxReq: QuizIdxParamReqType = req.paramsData;
+export const addQuizComment = catchAsync(async (req: AppRequest, res: Response) => {
+  const quizIdxReq: QuizIdxParamReqType = req.paramsData;
 
-    const userData: UserData = req.userData!;
+  const userData: UserData = req.userData!;
 
-    const upsertCommentReq: UpsertCommentReqType = req.bodyData;
+  const upsertCommentReq: UpsertCommentReqType = req.bodyData;
 
-    const commentService = Container.get(QuizCommentService);
+  const commentService = Container.get(QuizCommentService);
 
-    const data = await commentService.addComment(
-      userData,
-      quizIdxReq,
-      upsertCommentReq,
-    );
+  const data = await commentService.addComment(userData, quizIdxReq, upsertCommentReq);
 
-    return sendSuccess(res, data);
-  },
-);
+  return sendSuccess(res, data);
+});
 
-export const updateQuizComment = catchAsync(
-  async (req: AppRequest, res: Response) => {
-    const commentIdxReq: CommentIdxParamReqType = req.paramsData;
+export const updateQuizComment = catchAsync(async (req: AppRequest, res: Response) => {
+  const commentIdxReq: CommentIdxParamReqType = req.paramsData;
 
-    const userData: UserData = req.userData!;
+  const userData: UserData = req.userData!;
 
-    const upsertCommentReq: UpsertCommentReqType = req.bodyData;
+  const upsertCommentReq: UpsertCommentReqType = req.bodyData;
 
-    const commentService = Container.get(QuizCommentService);
+  const commentService = Container.get(QuizCommentService);
 
-    const data = await commentService.updateComment(
-      userData,
-      commentIdxReq,
-      upsertCommentReq,
-    );
+  const data = await commentService.updateComment(userData, commentIdxReq, upsertCommentReq);
 
-    return sendSuccess(res, data);
-  },
-);
+  return sendSuccess(res, data);
+});
 
-export const deleteQuizComment = catchAsync(
-  async (req: AppRequest, res: Response) => {
-    const commentIdxReq: CommentIdxParamReqType = req.paramsData;
+export const deleteQuizComment = catchAsync(async (req: AppRequest, res: Response) => {
+  const commentIdxReq: CommentIdxParamReqType = req.paramsData;
 
-    const userData: UserData = req.userData!;
+  const userData: UserData = req.userData!;
 
-    const commentService = Container.get(QuizCommentService);
+  const commentService = Container.get(QuizCommentService);
 
-    const data = await commentService.deleteComment(userData, commentIdxReq);
+  const data = await commentService.deleteComment(userData, commentIdxReq);
 
-    return sendSuccess(res, data);
-  },
-);
+  return sendSuccess(res, data);
+});

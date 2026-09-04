@@ -59,12 +59,7 @@ export class BoardEntity extends DefaultEntity {
   })
   viewCount: number;
 
-  public update(
-    title: string,
-    state: BoardState,
-    isPinned: boolean,
-    content: string,
-  ) {
+  public update(title: string, state: BoardState, isPinned: boolean, content: string) {
     this.title = title;
     this.state = state;
     this.isPinned = isPinned;

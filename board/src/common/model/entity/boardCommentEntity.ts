@@ -1,15 +1,8 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  Tree,
-  TreeParent,
-} from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, Tree, TreeParent } from "typeorm";
 
 import { DefaultEntity } from "@common/utils/defaultEntity";
 
-import { BoardEntity } from "@domain/board/boardEntity";
+import { BoardEntity } from "@common/model/entity/boardEntity";
 
 import { BoardState } from "@enum/boardState";
 

@@ -64,10 +64,7 @@ export const toDtoMapper = <T extends object, K extends keyof T>(
  *
  *  @deprecated 코드가 너무 구려서 사용 안함
  */
-export const createDTO = <T extends object, K extends keyof T>(
-  entityPage: Page<T>,
-  keys: K[],
-): Page<Pick<T, K>> => {
+export const createDTO = <T extends object, K extends keyof T>(entityPage: Page<T>, keys: K[]): Page<Pick<T, K>> => {
   /**  
     const dtoItems : Pick<T,K> [] = []
 
