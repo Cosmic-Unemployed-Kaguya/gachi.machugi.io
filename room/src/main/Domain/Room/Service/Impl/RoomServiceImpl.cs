@@ -3,16 +3,20 @@ using Room.Model.Dto.Response;
 using Room.Model.Entity;
 using Room.Repository;
 using Room.Util;
+using Chat.Service.Proto;
 
 namespace Room.Service;
 
 public class RoomServiceImpl : RoomService
 {
     private readonly RoomRedis _roomRedis;
+    //chat 클라
+    private readonly ChatGrpcManager.ChatGrpcManagerClient _chatGrpcClient;
     //생성자
-    public RoomServiceImpl(RoomRedis roomRedis)
+    public RoomServiceImpl(RoomRedis roomRedis, ChatGrpcManager.ChatGrpcManagerClient chatGrpcClient)
     {
         _roomRedis = roomRedis;
+        _chatGrpcClient = chatGrpcClient;
     }
     //방 만들기
     public async Task<RoomInfoResponse> CreateRoom(CreateRoomRequest request)
@@ -68,9 +72,32 @@ public class RoomServiceImpl : RoomService
         return updatedroom.ToInfoResponse();
     }
     //플레이어 추가
-    public Task<bool> AddPlayerToRoom(long roomIdx, UpdateSetRequest request)
+    public async Task<bool> AddPlayerToRoom(long roomIdx, UpdateSetRequest request)
     {
-        return _roomRedis.AddPlayerToRoomAsync(roomIdx, request.playerIdx);
+        //레디스에 플레이어 추가
+        bool isSuccess = await _roomRedis.AddPlayerToRoomAsync(roomIdx, request.playerIdx);
+        if (!isSuccess)
+        {
+            return false;
+        }
+
+        //레디스 추가 성공 시 Chat 서버로 예약 요청
+        var reserveRequest = new GrpcReserveRoomRequest
+        {
+            RoomId = roomIdx.ToString(),
+            UserIdx = request.playerIdx.ToString()
+        };
+
+        try
+        {
+            var chatResponse = await _chatGrpcClient.ReserveRoomAsync(reserveRequest);
+            return chatResponse.IsSuccess;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Chat gRPC 예약 통신 실패:{ex.Message}");
+            return false;
+        }
     }
     //플레이어 제거
     public Task<bool> RemovePlayerFromRoom(long roomIdx, UpdateSetRequest request)

@@ -1,7 +1,20 @@
 using Chat.ChatControllers;
 using Chat.Service;
 var builder = WebApplication.CreateBuilder(args);
+//일단 테스트용 임시 처방
+//launchSettings.json의 기본 url 덮어쓰기 설정 무력화 및 포트 고정
+builder.WebHost.UseUrls(); //기본 URL 바인딩
+//Kestrel 포트 명시적 분리 (HTTPS 없이 HTTP/2 통과)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    //5062 포트: SignalR 웹소켓 전용 (HTTP/1.1)
+    options.ListenLocalhost(5062, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1);
 
+    //5063 포트: Room -> Chat gRPC 내부 통신 전용 (HTTP/2)
+    options.ListenLocalhost(5063, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
+});
+builder.Services.AddGrpc();
+builder.Services.AddScoped<ChatGrpcService>();
 builder.Services.AddSingleton<ChatService>();
 builder.Services.AddSignalR(); //SignalR 서비스를 컨테이너에 추가
 builder.Services.AddControllers();
@@ -21,6 +34,7 @@ var app = builder.Build();
 
 app.UseRouting();//라우팅 켠다는 소리
 app.UseCors();//이거 안켜면 .net이 다 거부함
+app.MapGrpcService<ChatGrpcService>();
 app.MapControllers();
 app.MapGet("/", () => "Hello World!");
 app.MapHub<ChatHub>("/chat");
