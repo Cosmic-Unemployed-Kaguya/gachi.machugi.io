@@ -1,0 +1,26 @@
+syntax = "proto3";
+package machugi.room;
+
+import "google/protobuf/empty.proto";
+
+// chat > Room
+service RoomGrpcService {
+  // rpc IsUserInRoom(IsUserInRoomRequest) returns (IsUserInRoomResponse) {}
+  rpc ExitUser(ExitUserRequest) returns (google.protobuf.Empty) {}
+  rpc DeleteRoom(DeleteRoomRequest) returns (google.protobuf.Empty) {}
+}
+
+// message IsUserInRoomRequest {
+//   uint64 room_idx = 1;
+//   uint64 user_idx = 2;
+// }
+// message IsUserInRoomResponse {
+//   bool is_user = 1;
+// }
+message ExitUserRequest {
+  uint64 room_idx = 1;
+  uint64 user_idx = 2;
+}
+message DeleteRoomRequest {
+  uint64 room_idx = 1;
+}
