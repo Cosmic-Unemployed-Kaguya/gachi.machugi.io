@@ -1,6 +1,7 @@
 package kaguya.user.domain.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kaguya.user.domain.auth.service.AuthService;
 import kaguya.user.domain.common.model.enums.Gender;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
@@ -35,6 +36,9 @@ class UserControllerTest {
     MockMvc mockMvc;
     @Autowired
     ObjectMapper objectMapper;
+
+    @MockitoBean
+    private AuthService authService;
 
     @MockitoBean
     UserService userService;

@@ -1,6 +1,7 @@
 package kaguya.user.domain.user.service;
 
 import kaguya.user.domain.common.model.enums.Gender;
+import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.user.mapper.UserMapper;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
@@ -37,6 +38,8 @@ class UserServiceTest {
 
     @Mock
     UserRepository userRepository;
+    @Mock
+    RedisRepository redisRepository;
     @Mock
     PasswordEncoder passwordEncoder;
 
@@ -107,6 +110,7 @@ class UserServiceTest {
         // then
         verify(passwordEncoder).matches(request.currentPassword(), "encodedPassword123");
         verify(passwordEncoder).encode(request.newPassword());
+        verify(redisRepository).delete("RT:" + user.getUsername());
         assertThat(user.getPassword()).isEqualTo("encryptedNewPassword");
     }
 

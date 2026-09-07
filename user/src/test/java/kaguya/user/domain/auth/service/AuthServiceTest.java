@@ -193,13 +193,13 @@ class AuthServiceTest {
 
         // then
         verify(redisRepository).save(
-                startsWith("GUSET:"),
-                eq(request.nickname()),
+                startsWith("GUEST:"),
+                eq("GUEST-" + request.nickname()),
                 eq(5L),
                 eq(TimeUnit.HOURS)
         );
         assertThat(result.guestId()).isNotBlank();
-        assertThat(result.nickname()).isEqualTo(request.nickname());
+        assertThat(result.nickname()).isEqualTo("GUEST-" + request.nickname());
     }
 
 
