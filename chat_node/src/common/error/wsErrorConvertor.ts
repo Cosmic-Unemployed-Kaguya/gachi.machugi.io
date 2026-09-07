@@ -48,7 +48,6 @@ export const wsErrorConverter = (err: any): WsError => {
     // 임시!!
     const message: string = '내부 에러 발생';
 
-    // 메시지가 있으면 사용, 없으면 http 상태 코드에 따른 표준 출력
     const internalMessage = error.message;
 
     error = WsError.custom(

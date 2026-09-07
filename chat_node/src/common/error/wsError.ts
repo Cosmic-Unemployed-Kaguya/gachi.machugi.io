@@ -42,7 +42,7 @@ export class WsError extends Error{
         level: ErrorLevel = ErrorLevel.WARN
     ): WsError {
         const { code, message } = WsErrorCode[type];
-        return new WsError(code, message, true, level, internalMessage);
+        return new WsError(code, message, true, level, undefined, internalMessage );
     }
 
     public static custom(
@@ -53,7 +53,7 @@ export class WsError extends Error{
         stack?: string,
         internalMessage?: string,
     ): WsError {
-        return new WsError(code, message, true, level, stack, internalMessage);
+        return new WsError(code, message, isOperational, level, stack, internalMessage);
     }
     
     public static fatal(
@@ -61,12 +61,21 @@ export class WsError extends Error{
         error?: unknown
     ): WsError {
         const { code, message } = WsErrorCode.INTERNAL_SERVER_ERROR;
+
+        // 에러를 받으면 해당 에러의 stack 사용, 없음 말고~
+        const stack = error instanceof Error ? error.stack : undefined
+
+        // 마찬가지로 에러를 받을 경우에는 해당 에러의 메세지를 내부메세지에 붙여둠.
+        const errorDetail = error instanceof Error ? error.message : undefined;
+        const finalInternalMessage = errorDetail? `${internalMessage} - ${errorDetail}`:  internalMessage;
+
         return new WsError(
             code, 
             message, 
             false, 
             ErrorLevel.ERROR, 
-            `${internalMessage} - ${error instanceof Error ? error.message : String(error)}`
+            stack,
+            finalInternalMessage
         );
     }
 }
@@ -109,7 +118,7 @@ export const WsErrorCode = {
     SERVER_EVENT_LOAD_ERROR: {code: "SERVER_EVENT_LOAD_ERROR", message: "서버 이벤트 로드 중 에러가 발생했습니다."},
     SOCKET_EVENT_LOAD_ERROR: {code: "SOCKET_EVENT_LOAD_ERROR", message: "소켓 이벤트 로드 중 에러가 발생했습니다."},
     MESSAGE_EVENT_LOAD_ERROR: {code: "MESSAGE_EVENT_LOAD_ERROR", message:'메세지 이벤트 로드 중 에러가 발생했습니다.'},
-    REDIS_ERROR:{code: 'MESSAGE_EVENT_LOAD_ERROR', message:'Redis와 통신 중 에러 발생'}
+    REDIS_ERROR:{code: 'REDIS_ERROR', message:'Redis와 통신 중 에러 발생'}
 
 } as const;
 
