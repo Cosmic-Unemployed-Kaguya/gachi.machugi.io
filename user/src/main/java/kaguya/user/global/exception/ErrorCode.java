@@ -15,10 +15,12 @@ public enum ErrorCode {
     EXPIRED_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "401_EXPIRED_ACCESS_TOKEN", "접근 토큰이 만료되었습니다."),  // (Front) 갱신토큰으로 재시도
     EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "401_EXPIRED_REFRESH_TOKEN", "갱신 토큰이 만료되었습니다."),  // (Front) 로그인 페이지로
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "401_INVALID_CREDENTIALS", "아이디 또는 비밀번호가 일치하지 않습니다."),
+    INVALID_AUTH_CODE(HttpStatus.UNAUTHORIZED, "401_INVALID_AUTH_CODE", "인증코드가 만료되었거나 올바르지 않습니다."),
 
     // 403 Forbidden
     DENIED_PERMISSION(HttpStatus.FORBIDDEN, "403_DENIED_PERMISSION", "접근 권한이 없습니다."),
     ADMIN_ONLY(HttpStatus.FORBIDDEN, "403_ADMIN_ONLY", "접근 권한이 없습니다. (관리자 전용)"),
+    AUTH_LOCKED(HttpStatus.FORBIDDEN, "403_AUTH_LOCKED", "인증횟수 초과로 인증이 취소되었습니다."),
 
     // 404 Not Found
     PAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "404_PAGE_NOT_FOUND", "페이지를 찾을 수 없습니다."),
@@ -28,6 +30,9 @@ public enum ErrorCode {
     EXISTS_USERNAME(HttpStatus.CONFLICT, "409_EXISTS_USERNAME", "이미 사용 중인 아이디입니다."),
     EXISTS_EMAIL(HttpStatus.CONFLICT, "409_EXISTS_EMAIL", "이미 사용 중인 이메일입니다."),
     EXISTS_NICKNAME(HttpStatus.CONFLICT, "409_EXISTS_NICKNAME", "이미 사용 중인 닉네임입니다."),
+
+    // 429 Too Many Requests
+    EXCEED_REQUEST_LIMIT(HttpStatus.TOO_MANY_REQUESTS, "429_EXCEED_REQUEST_LIMIT", "요청 횟수를 초과했습니다."),
 
     // 500 Internal Server Error
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "500_INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.");

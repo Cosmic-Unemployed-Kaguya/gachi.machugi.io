@@ -1,7 +1,7 @@
 package kaguya.user.domain.user.mapper;
 
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
-import kaguya.user.domain.user.model.dto.response.ProfileReq;
+import kaguya.user.domain.user.model.dto.response.ProfileRes;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import org.springframework.stereotype.Component;
 
@@ -18,8 +18,8 @@ public class UserMapper {
     }
 
     // Entity -> ProfileReq
-    public ProfileReq entityToUserReq(UserEntity entity) {
-        return new ProfileReq(
+    public ProfileRes entityToUserReq(UserEntity entity) {
+        return new ProfileRes(
                 entity.getName(),
                 entity.getBirth(),
                 entity.getPhone(),

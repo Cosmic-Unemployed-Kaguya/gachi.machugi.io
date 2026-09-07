@@ -5,9 +5,9 @@ import kaguya.user.domain.auth.model.dto.request.GuestReq;
 import kaguya.user.domain.auth.model.dto.request.LoginReq;
 import kaguya.user.domain.auth.model.dto.request.RegisterReq;
 import kaguya.user.domain.auth.model.dto.response.GuestRes;
-import kaguya.user.domain.common.model.dto.BaseRes;
 import kaguya.user.domain.auth.model.dto.response.LoginRes;
 import kaguya.user.domain.auth.service.AuthService;
+import kaguya.user.domain.common.model.dto.BaseRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -138,6 +138,10 @@ public class AuthController {
                 .body(new BaseRes<>("200", "토큰 갱신", null));
     }
 
+    /**
+     * 게스트 로그인
+     * @param request: 닉네임
+     */
     @PostMapping("/guests")
     public ResponseEntity<BaseRes<String>> guest(
             @RequestBody @Valid GuestReq request

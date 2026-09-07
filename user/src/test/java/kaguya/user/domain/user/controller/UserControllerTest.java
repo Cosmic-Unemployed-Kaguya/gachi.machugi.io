@@ -1,11 +1,12 @@
 package kaguya.user.domain.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kaguya.user.domain.auth.service.AuthService;
 import kaguya.user.domain.common.model.enums.Gender;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
-import kaguya.user.domain.user.model.dto.response.ProfileReq;
+import kaguya.user.domain.user.model.dto.response.ProfileRes;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.service.UserService;
 import kaguya.user.global.exception.BusinessException;
@@ -35,6 +36,9 @@ class UserControllerTest {
     MockMvc mockMvc;
     @Autowired
     ObjectMapper objectMapper;
+
+    @MockitoBean
+    private AuthService authService;
 
     @MockitoBean
     UserService userService;
@@ -75,7 +79,7 @@ class UserControllerTest {
     void 프로필_성공() throws Exception {
 
         UserEntity user = createUser();
-        ProfileReq response = new ProfileReq(
+        ProfileRes response = new ProfileRes(
                 user.getName(),
                 user.getBirth(),
                 user.getPhone(),

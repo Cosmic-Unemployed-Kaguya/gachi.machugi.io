@@ -3,10 +3,13 @@ package kaguya.user.domain.user.controller;
 import jakarta.validation.Valid;
 import kaguya.user.domain.common.model.dto.BaseRes;
 import kaguya.user.domain.common.model.enums.Role;
+import kaguya.user.domain.user.model.dto.request.FindUsernameReq;
+import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
+import kaguya.user.domain.user.model.dto.response.FindUsernameRes;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
-import kaguya.user.domain.user.model.dto.response.ProfileReq;
+import kaguya.user.domain.user.model.dto.response.ProfileRes;
 import kaguya.user.domain.user.service.UserService;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
@@ -20,6 +23,10 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+
+    /**
+     *  마이페이지
+     */
 
     @GetMapping("/my")
     public ResponseEntity<BaseRes<MyPageRes>> getMyPage(
@@ -38,7 +45,7 @@ public class UserController {
     }
 
     @GetMapping("/my/profile")
-    public ResponseEntity<BaseRes<ProfileReq>> getProfile(
+    public ResponseEntity<BaseRes<ProfileRes>> getProfile(
             @RequestHeader(value = "x-user-id", required = false) String username,
             @RequestHeader(value = "x-user-role", required = false) String role
     ) {
@@ -47,9 +54,9 @@ public class UserController {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        ProfileReq data = userService.getProfile(username);
+        ProfileRes data = userService.getProfile(username);
 
-        BaseRes<ProfileReq> response = new BaseRes<>("200", "프로필 조회", data);
+        BaseRes<ProfileRes> response = new BaseRes<>("200", "프로필 조회", data);
         return ResponseEntity.ok(response);
     }
 
@@ -101,5 +108,33 @@ public class UserController {
 
         BaseRes<Void> response = new BaseRes<>("200", "회원 탈퇴", null);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 아이디 찾기 / 비밀번호 초기화
+     */
+
+    @PostMapping("/find/id")
+    public ResponseEntity<BaseRes<FindUsernameRes>> findUsername (
+            @RequestBody @Valid FindUsernameReq request
+    ) {
+
+        FindUsernameRes data = userService.findUsername(request.oneTimeAuthCode());
+
+        return ResponseEntity.ok(
+                new BaseRes<>("200", "찾은 아이디", data)
+        );
+    }
+
+    @PatchMapping("/reset/password")
+    public ResponseEntity<BaseRes<Void>> resetPassword (
+            @RequestBody @Valid ResetPasswordReq request
+    ) {
+
+        userService.resetPassword(request);
+
+        return ResponseEntity.ok(
+                new BaseRes<>("200", "비밀번호 수정 완료", null)
+        );
     }
 }

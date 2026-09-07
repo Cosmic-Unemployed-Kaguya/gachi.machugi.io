@@ -1,11 +1,12 @@
 package kaguya.user.domain.user.service;
 
 import kaguya.user.domain.common.model.enums.Gender;
+import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.user.mapper.UserMapper;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
-import kaguya.user.domain.user.model.dto.response.ProfileReq;
+import kaguya.user.domain.user.model.dto.response.ProfileRes;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.repository.UserRepository;
 import kaguya.user.global.exception.BusinessException;
@@ -37,6 +38,8 @@ class UserServiceTest {
 
     @Mock
     UserRepository userRepository;
+    @Mock
+    RedisRepository redisRepository;
     @Mock
     PasswordEncoder passwordEncoder;
 
@@ -74,7 +77,7 @@ class UserServiceTest {
         given(userRepository.findByUsername(username)).willReturn(Optional.of(user));
 
         // when
-        ProfileReq result = userService.getProfile(username);
+        ProfileRes result = userService.getProfile(username);
 
         // then
         assertThat(result.name()).isEqualTo("홍길동");
@@ -107,6 +110,7 @@ class UserServiceTest {
         // then
         verify(passwordEncoder).matches(request.currentPassword(), "encodedPassword123");
         verify(passwordEncoder).encode(request.newPassword());
+        verify(redisRepository).delete("RT:" + user.getUsername());
         assertThat(user.getPassword()).isEqualTo("encryptedNewPassword");
     }
 

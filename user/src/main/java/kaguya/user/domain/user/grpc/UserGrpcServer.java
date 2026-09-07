@@ -5,10 +5,12 @@ import io.grpc.stub.StreamObserver;
 import kaguya.grpc.user.*;
 import kaguya.user.domain.common.model.enums.Role;
 import kaguya.user.domain.user.grpc.interceptor.GrpcContextKeys;
+import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
+import kaguya.user.domain.user.model.dto.response.FindUsernameRes;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
-import kaguya.user.domain.user.model.dto.response.ProfileReq;
+import kaguya.user.domain.user.model.dto.response.ProfileRes;
 import kaguya.user.domain.user.service.UserService;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
@@ -40,12 +42,12 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
-        MyPageRes data = userService.getMyPage(username);
+        MyPageRes resData = userService.getMyPage(username);
 
         MyPageResponse response = MyPageResponse.newBuilder()
-                .setUsername(data.username())
-                .setEmail(data.email())
-                .setNickname(data.nickname())
+                .setUsername(resData.username())
+                .setEmail(resData.email())
+                .setNickname(resData.nickname())
                 .build();
 
         responseObserver.onNext(response);
@@ -64,13 +66,13 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
-        ProfileReq data = userService.getProfile(username);
+        ProfileRes resData = userService.getProfile(username);
 
         ProfileResponse response = ProfileResponse.newBuilder()
-                .setName(data.name())
-                .setBirth(data.birth().toString())
-                .setPhone(data.phone())
-                .setGender(data.gender())
+                .setName(resData.name())
+                .setBirth(resData.birth().toString())
+                .setPhone(resData.phone())
+                .setGender(resData.gender())
                 .build();
 
         responseObserver.onNext(response);
@@ -127,7 +129,6 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
         responseObserver.onCompleted();
     }
 
-
     @Override
     public void withdraw(
             Empty request,
@@ -141,6 +142,40 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
         }
 
         userService.withdraw(username);
+
+        responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void findUsername (
+            FindUsernameRequest request,
+            StreamObserver<FindUsernameResponse> responseObserver
+    ) {
+
+        String oneTimeAuthCode = request.getOneTimeAuthCode();
+
+        FindUsernameRes resData = userService.findUsername(oneTimeAuthCode);
+        FindUsernameResponse response = FindUsernameResponse.newBuilder()
+                .setMaskedUsername(resData.maskedUsername())
+                .build();
+
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void resetPassword (
+            ResetPasswordRequest request,
+            StreamObserver<Empty> responseObserver
+    ) {
+
+        ResetPasswordReq reqData = new ResetPasswordReq(
+                request.getOneTimeAuthCode(),
+                request.getNewPassword()
+        );
+
+        userService.resetPassword(reqData);
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
