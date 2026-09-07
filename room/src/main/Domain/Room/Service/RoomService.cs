@@ -18,3 +18,4 @@ public interface RoomService
     public Task<bool> RemovePlayerFromRoom(long roomIdx, UpdateSetRequest request);
     public Task<bool> DeleteRoom(long roomIdx);
 }
+
