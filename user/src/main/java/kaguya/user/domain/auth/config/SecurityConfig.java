@@ -1,8 +1,8 @@
 package kaguya.user.domain.auth.config;
 
 import kaguya.user.domain.auth.config.filter.ExtAuthzFilter;
-import kaguya.user.domain.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,7 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final AuthService authService;
+    private final ExtAuthzFilter extAuthzFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -36,8 +36,17 @@ public class SecurityConfig {
 
                 // ExtAuthzFilter(): Envoy의 ext_authz 필터 설정
                 // UsernamePasswordAuthenticationFilter: 실행 위치(순서)를 잡기 위한 앵커 용도 (실제 필터가 적용되진 않음)
-                .addFilterBefore(new ExtAuthzFilter(authService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(extAuthzFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    // ExtAuthzFilter가 서블릿 글로벌 필터로 자동 등록되는 것을 방지
+    @Bean
+    public FilterRegistrationBean<ExtAuthzFilter> registration(ExtAuthzFilter filter) {
+        FilterRegistrationBean<ExtAuthzFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+
+        return registration;
     }
 }

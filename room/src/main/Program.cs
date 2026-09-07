@@ -3,7 +3,8 @@ using Room.Service;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
-
+//grpc 엔진 추가
+builder.Services.AddGrpc();
 //redis 설정 일단 appsettings에서 설정 불러오기
 var redisSection = builder.Configuration.GetSection("Redis:ConnectionString").Value;
 //설정했는지 확인

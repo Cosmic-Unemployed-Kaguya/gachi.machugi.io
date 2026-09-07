@@ -90,4 +90,13 @@ public class UserService {
 
         userRepository.delete(userEntity);
     }
+
+    @Transactional(readOnly = true)
+    public String getNicknameByUsername(String username) {
+
+        UserEntity userEntity = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return userEntity.getNickname();
+    }
 }

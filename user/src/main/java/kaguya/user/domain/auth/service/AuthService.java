@@ -187,11 +187,12 @@ public class AuthService {
     public GuestRes guest(GuestReq guestData) {
 
         String guestId = UUID.randomUUID().toString();
-        String key = "GUSET:" + guestId;
+        String key = "GUEST:" + guestId;
+        String guestNickname = "GUEST-" + guestData.nickname();
 
         // 게스트 유저 정보는 5시간 관리
-        redisRepository.save(key, guestData.nickname(), 5, TimeUnit.HOURS);
+        redisRepository.save(key, guestNickname, 5, TimeUnit.HOURS);
 
-        return new GuestRes(guestId, guestData.nickname());
+        return new GuestRes(guestId, guestNickname);
     }
 }

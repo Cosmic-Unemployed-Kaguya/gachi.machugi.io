@@ -18,6 +18,10 @@ static_resources:
           "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
           stat_prefix: ingress_http
 
+          # 웹소켓 업그레이드 허용
+          upgrade_configs:
+            - upgrade_type: "websocket"
+
           # 로그
           access_log:
             - name: envoy.access_loggers.stdout
@@ -54,6 +58,16 @@ static_resources:
                   envoy.filters.http.ext_authz:
                     "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
                     disabled: true
+
+              # 웹소켓
+              - match: 
+                  prefix: "/ws-chat"
+                route: 
+                  cluster: chat_cluster
+                  timeout: 0s
+                  idle_timeout: 0s
+                  upgrade_configs:
+                    - upgrade_type: "websocket"
 
               # gRPC 내부 패키지명 라우팅
               - match: { prefix: "/gachi.machugi.grpc.user.UserService" }
@@ -132,6 +146,18 @@ static_resources:
         - endpoint:
             address:
               socket_address: { address: host.docker.internal, port_value: 8081 }
+
+  # 채팅(Chat) 클러스터
+  - name: chat_cluster
+    connect_timeout: 0.25s 
+    type: LOGICAL_DNS
+    load_assignment:
+      cluster_name: chat_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address: { address: host.docker.internal, port_value: 8082 }
 
   # 유저(User) 클러스터
   - name: user_cluster
