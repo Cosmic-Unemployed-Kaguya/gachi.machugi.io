@@ -59,6 +59,30 @@ static_resources:
                     "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
                     disabled: true
 
+              # 인증메일 기능 (인증 패스)
+              - match: { prefix: "/verifications" }
+                route: { cluster: user_cluster }
+                typed_per_filter_config:
+                  envoy.filters.http.ext_authz:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                    disabled: true
+
+              # 아이디 찾기 (인증 패스)
+              - match: { prefix: "/users/find/" }
+                route: { cluster: user_cluster }
+                typed_per_filter_config:
+                  envoy.filters.http.ext_authz:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                    disabled: true
+
+              # 비밀번호 초기화 (인증 패스)
+              - match: { prefix: "/users/reset/" }
+                route: { cluster: user_cluster }
+                typed_per_filter_config:
+                  envoy.filters.http.ext_authz:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                    disabled: true
+
               # 웹소켓
               - match: 
                   prefix: "/ws-chat"
@@ -70,7 +94,9 @@ static_resources:
                     - upgrade_type: "websocket"
 
               # gRPC 내부 패키지명 라우팅
-              - match: { prefix: "/gachi.machugi.grpc.user.UserService" }
+              - match: { prefix: "/machugi.user.UserService" }
+                route: { cluster: user_cluster }
+              - match: { prefix: "/machugi.verification.VerificationService" }
                 route: { cluster: user_cluster }
 
               # 그 외 경로 매칭
@@ -122,7 +148,8 @@ static_resources:
               "@type": type.googleapis.com/envoy.extensions.filters.http.grpc_json_transcoder.v3.GrpcJsonTranscoder
               proto_descriptor: "/tmp/descriptor.pb"
               services: 
-                - "gachi.machugi.grpc.user.UserService"
+                - "machugi.user.UserService"
+                - "machugi.verification.VerificationService"
               print_options:
                 add_whitespace: true
                 always_print_primitive_fields: true

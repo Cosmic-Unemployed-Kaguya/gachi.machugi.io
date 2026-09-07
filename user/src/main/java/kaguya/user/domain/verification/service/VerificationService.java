@@ -1,8 +1,10 @@
-package kaguya.user.domain.common.service;
+package kaguya.user.domain.verification.service;
 
-import kaguya.user.domain.common.model.dto.request.CheckVerificationCodeReq;
-import kaguya.user.domain.common.model.dto.request.SendVerificationCodeReq;
+import kaguya.user.domain.verification.model.dto.request.CheckVerificationCodeReq;
+import kaguya.user.domain.verification.model.dto.request.SendVerificationCodeReq;
 import kaguya.user.domain.common.repository.RedisRepository;
+import kaguya.user.domain.common.service.MailService;
+import kaguya.user.domain.verification.model.dto.response.CheckVerificationCodeRes;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +51,7 @@ public class VerificationService {
         mailService.sendHtmlMail(email, subject, content);
     }
 
-    public String checkVerificationCode(CheckVerificationCodeReq request) {
+    public CheckVerificationCodeRes checkVerificationCode(CheckVerificationCodeReq request) {
 
         String type = request.verificationType().name();
         String userCode = request.verificationCode();
@@ -90,7 +92,7 @@ public class VerificationService {
         redisRepository.save(oneTimeKey, email, 10, TimeUnit.MINUTES);
 
         // 일회용 인증코드 반환
-        return oneTimeAuthCode;
+        return new CheckVerificationCodeRes(oneTimeAuthCode);
     }
 
     // 영문·숫자 조합의 6자리 인증코드 생성

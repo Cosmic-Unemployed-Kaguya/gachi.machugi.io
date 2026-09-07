@@ -1,10 +1,11 @@
-package kaguya.user.domain.common.controller;
+package kaguya.user.domain.verification.controller;
 
 import jakarta.validation.Valid;
 import kaguya.user.domain.common.model.dto.BaseRes;
-import kaguya.user.domain.common.model.dto.request.CheckVerificationCodeReq;
-import kaguya.user.domain.common.model.dto.request.SendVerificationCodeReq;
-import kaguya.user.domain.common.service.VerificationService;
+import kaguya.user.domain.verification.model.dto.request.CheckVerificationCodeReq;
+import kaguya.user.domain.verification.model.dto.request.SendVerificationCodeReq;
+import kaguya.user.domain.verification.model.dto.response.CheckVerificationCodeRes;
+import kaguya.user.domain.verification.service.VerificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,13 +40,13 @@ public class VerificationController {
      * @param request: 이메일, 인증 코드
      */
     @PostMapping("/check")
-    public ResponseEntity<BaseRes<String>> checkVerificationCode(
+    public ResponseEntity<BaseRes<CheckVerificationCodeRes>> checkVerificationCode(
             @RequestBody @Valid CheckVerificationCodeReq request
     ) {
-        String oneTimeAuthCode = verificationService.checkVerificationCode(request);
+        CheckVerificationCodeRes data = verificationService.checkVerificationCode(request);
 
         return ResponseEntity.ok(
-                new BaseRes<>("200", "인증 완료", oneTimeAuthCode)
+                new BaseRes<>("200", "인증 완료", data)
         );
     }
 

@@ -1,13 +1,14 @@
 package kaguya.user.domain.user.service;
 
-import kaguya.user.domain.common.model.enums.VerificationType;
+import kaguya.user.domain.verification.model.enums.VerificationType;
 import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.user.mapper.UserMapper;
 import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
+import kaguya.user.domain.user.model.dto.response.FindUsernameRes;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
-import kaguya.user.domain.user.model.dto.response.ProfileReq;
+import kaguya.user.domain.user.model.dto.response.ProfileRes;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.repository.UserRepository;
 import kaguya.user.global.exception.BusinessException;
@@ -46,7 +47,7 @@ public class UserService {
 
     // 사용자 정보 조회
     @Transactional(readOnly = true)
-    public ProfileReq getProfile(String username) {
+    public ProfileRes getProfile(String username) {
 
         UserEntity userEntity = userRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
@@ -113,7 +114,7 @@ public class UserService {
 
     // 아이디 찾기
     @Transactional(readOnly = true)
-    public String findUsername(String oneTimeAuthCode) {
+    public FindUsernameRes findUsername(String oneTimeAuthCode) {
 
         // 일회용 인증번호 조회 및 저장된 이메일 가져오기
         String oneTimeKey = "verification:oneTimeAuthCode:" + VerificationType.FIND_ID.name() + ":" + oneTimeAuthCode;
@@ -129,7 +130,9 @@ public class UserService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // username 마스킹 처리 후 반환
-        return masking(userEntity.getUsername());
+        return new FindUsernameRes(
+                masking(userEntity.getUsername())
+        );
     }
 
     // 비밀번호 초기화

@@ -3,13 +3,14 @@ package kaguya.user.domain.common.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-// todo. 비동기 동작으로 변경
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MailService {
@@ -19,6 +20,7 @@ public class MailService {
     @Value("${spring.mail.username}")
     private String FROM_ADDRESS;
 
+    @Async("mailSendExecutor")
     public void sendHtmlMail(String to, String subject, String content) {
 
         MimeMessage message = javaMailSender.createMimeMessage();
@@ -34,8 +36,8 @@ public class MailService {
             javaMailSender.send(message);
 
         } catch (MessagingException e) {
-            // todo. 커스텀 Exception으로 변경
-            throw new RuntimeException("메일 생성에 실패했습니다.", e);
+            // 로그 기록 (Async는 Exception 처리 안됨)
+            log.error("[MailSend Error] 메일 발송에 실패했습니다. 대상 이메일: {}, 원인: {}", to, e.getMessage(), e);
         }
     }
 }

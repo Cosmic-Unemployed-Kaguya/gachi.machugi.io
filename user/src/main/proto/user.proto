@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package gachi.machugi.grpc.user;
+package machugi.user;
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
@@ -41,7 +41,22 @@ service UserService {
       delete: "/users/my/withdraw"
     };
   }
+
+  rpc FindUsername (FindUsernameRequest) returns (FindUsernameResponse) {
+    option (google.api.http) = {
+      post: "/users/find/id"
+      body: "*"
+    };
+  }
+
+  rpc ResetPassword (ResetPasswordRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      patch: "/users/reset/password"
+      body: "*"
+    };
+  }
 }
+
 
 // --- Request Messages ---
 message UpdatePasswordRequest {
@@ -68,6 +83,21 @@ message UpdateNicknameRequest {
   }];
 }
 
+message FindUsernameRequest {
+  string oneTimeAuthCode = 1 [(validate.rules).string = {
+    min_len: 1,
+    uuid: true  // uuid 검증
+  }];
+}
+
+message ResetPasswordRequest {
+  string oneTimeAuthCode = 1;
+  string newPassword = 2 [(validate.rules).string = {
+    min_len: 1,
+    pattern: "^.*\\S.*$"
+  }];
+}
+
 // --- Response Messages ---
 message MyPageResponse {
   string username = 1;
@@ -80,4 +110,8 @@ message ProfileResponse {
   string birth = 2;
   string phone = 3;
   string gender = 4;
+}
+
+message FindUsernameResponse {
+  string maskedUsername = 1;
 }

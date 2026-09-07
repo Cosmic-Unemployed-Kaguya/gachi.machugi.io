@@ -5,7 +5,7 @@ import kaguya.user.domain.user.mapper.UserMapper;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
-import kaguya.user.domain.user.model.dto.response.ProfileReq;
+import kaguya.user.domain.user.model.dto.response.ProfileRes;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.repository.UserRepository;
 import kaguya.user.global.exception.BusinessException;
@@ -74,7 +74,7 @@ class UserServiceTest {
         given(userRepository.findByUsername(username)).willReturn(Optional.of(user));
 
         // when
-        ProfileReq result = userService.getProfile(username);
+        ProfileRes result = userService.getProfile(username);
 
         // then
         assertThat(result.name()).isEqualTo("홍길동");

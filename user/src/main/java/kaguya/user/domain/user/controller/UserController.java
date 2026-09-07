@@ -7,8 +7,9 @@ import kaguya.user.domain.user.model.dto.request.FindUsernameReq;
 import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
+import kaguya.user.domain.user.model.dto.response.FindUsernameRes;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
-import kaguya.user.domain.user.model.dto.response.ProfileReq;
+import kaguya.user.domain.user.model.dto.response.ProfileRes;
 import kaguya.user.domain.user.service.UserService;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
@@ -44,7 +45,7 @@ public class UserController {
     }
 
     @GetMapping("/my/profile")
-    public ResponseEntity<BaseRes<ProfileReq>> getProfile(
+    public ResponseEntity<BaseRes<ProfileRes>> getProfile(
             @RequestHeader(value = "x-user-id", required = false) String username,
             @RequestHeader(value = "x-user-role", required = false) String role
     ) {
@@ -53,9 +54,9 @@ public class UserController {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        ProfileReq data = userService.getProfile(username);
+        ProfileRes data = userService.getProfile(username);
 
-        BaseRes<ProfileReq> response = new BaseRes<>("200", "프로필 조회", data);
+        BaseRes<ProfileRes> response = new BaseRes<>("200", "프로필 조회", data);
         return ResponseEntity.ok(response);
     }
 
@@ -114,14 +115,14 @@ public class UserController {
      */
 
     @PostMapping("/find/id")
-    public ResponseEntity<BaseRes<String>> findUsername (
+    public ResponseEntity<BaseRes<FindUsernameRes>> findUsername (
             @RequestBody @Valid FindUsernameReq request
     ) {
 
-        String maskedUsername = userService.findUsername(request.oneTimeAuthCode());
+        FindUsernameRes data = userService.findUsername(request.oneTimeAuthCode());
 
         return ResponseEntity.ok(
-                new BaseRes<>("200", "찾은 아이디", maskedUsername)
+                new BaseRes<>("200", "찾은 아이디", data)
         );
     }
 
