@@ -2,125 +2,134 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>실시간 채팅 아키텍처 테스트 클라이언트</title>
-    <!-- CDN으로 SignalR 자바스크립트 라이브러리 로드 -->
+    <title>통합 방 입장 및 실시간 채팅 테스트</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <style>
         body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; }
         .box { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         input, button { padding: 8px; margin: 4px; border-radius: 4px; border: 1px solid #ccc; }
-        button { background-color: #007bff; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        #chatBox { height: 200px; border: 1px solid #ddd; overflow-y: scroll; padding: 10px; background: #fafafa; }
+        button { background-color: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #218838; }
+        #chatBox { height: 250px; border: 1px solid #ddd; overflow-y: scroll; padding: 10px; background: #fafafa; }
+        .status-log { color: #d9534f; font-size: 0.95em; margin-top: 5px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h2>⚡ 실시간 채팅 아키텍처 검증 테라스</h2>
+    <h2>🎮 Room & Chat 통합 테스트 클라이언트</h2>
 
-    <!-- 1단계: 컨트롤러에 입장 예약 찌르기 -->
     <div class="box">
-        <h3>1단계: 방 입장 예약 (Controller 호출)</h3>
-        <label>방 ID: <input type="text" id="roomId" value="Room_777"></label>
-        <label>유저 IDX: <input type="text" id="userIdx" value="User_Alpha"></label>
-        <button onclick="reserveRoom()">1. 예약하기 (POST)</button>
-        <p id="reserveStatus" style="color: blue; font-weight: bold;"></p>
+        <h3>1. 방 접속 설정</h3>
+        <label>방 ID (roomIdx): <input type="number" id="roomIdx" value="777"></label>
+        <label>유저 ID (playerIdx): <input type="number" id="playerIdx" value="1001"></label>
+        
+        <button onclick="oneClickJoin()">🚀 방 입장하기 (원클릭 자동 진행)</button>
+        
+        <div id="statusLog" class="status-log">대기 중...</div>
     </div>
 
-    <!-- 2단계: 웹소켓 꼽아서 진짜 매핑하기 -->
     <div class="box">
-        <h3>2단계: 소켓 연결 (Hub 도킹)</h3>
-        <button onclick="connectSocket()">2. 소켓 연결하기 (WebSocket)</button>
-        <p id="socketStatus" style="color: green; font-weight: bold;">연결 대기 중...</p>
-    </div>
-
-    <!-- 3단계: 채팅 브로드캐스팅 테스트 -->
-    <div class="box">
-        <h3>3단계: 실시간 채팅 핑퐁</h3>
+        <h3>2. 실시간 채팅</h3>
         <div id="chatBox"></div>
-        <input type="text" id="messageInput" placeholder="메시지를 입력하세요..." style="width: 300px;">
-        <button onclick="sendMessage()">보내기</button>
-        <button onclick="sendPing()">PING 테스트</button>
+        <input type="text" id="messageInput" placeholder="메시지 입력..." style="width: 300px;" onkeydown="if(event.key==='Enter') sendMessage()">
+        <button onclick="sendMessage()" style="background-color: #007bff;">전송</button>
     </div>
 
     <script>
-        const serverUrl = "http://localhost:5062"; // .NET 서버 주소 (포트가 다르다면 본인 환경에 맞게 수정)
+        const roomServerUrl = "http://localhost:8000"; 
+        const chatServerUrl = "http://localhost:5062"; 
+
         let connection = null;
 
-        // [1단계] Controller에 HTTP POST로 예약 장부 쓰기
-        async function reserveRoom() {
-            const roomId = document.getElementById("roomId").value;
-            const userIdx = document.getElementById("userIdx").value;
+        function log(message, isError = false) {
+            const statusDiv = document.getElementById("statusLog");
+            const color = isError ? "red" : "green";
+            statusDiv.innerHTML += `<br><span style="color:${color}">👉 ${message}</span>`;
+            console.log(message);
+        }
+
+        async function oneClickJoin() {
+            const roomIdx = parseInt(document.getElementById("roomIdx").value);
+            const playerIdx = parseInt(document.getElementById("playerIdx").value);
+            document.getElementById("statusLog").innerHTML = "⏳ 방 입장 프로세스 시작...";
 
             try {
-                const response = await fetch(`${serverUrl}/chat/reserve`, {
+                log(`1단계: Room 서버(${roomServerUrl}/api/room/set/add/${roomIdx}) 호출 시도...`);
+                
+                const roomResponse = await fetch(`${roomServerUrl}/api/room/set/add/${roomIdx}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ roomId: roomId, userIdx: userIdx })
+                    body: JSON.stringify({
+                        roomIdx: roomIdx,
+                        playerIdx: playerIdx
+                    })
                 });
 
-                if (response.ok) {
-                    document.getElementById("reserveStatus").innerText = `🎉 예약 완료! 어서 소켓을 연결하세요.`;
-                } else {
-                    document.getElementById("reserveStatus").innerText = `❌ 예약 실패 (상태코드: ${response.status})`;
+                if (!roomResponse.ok) {
+                    const errorText = await roomResponse.text();
+                    log(`❌ Room 서비스 응답 실패! (HTTP ${roomResponse.status} ${roomResponse.statusText})`, true);
+                    log(`상세 에러 내용: ${errorText || "내용 없음 (CORS 차단 또는 라우팅 없음)"}`, true);
+                    return;
                 }
+
+                const result = await roomResponse.json();
+                log(`✅ Room 등록 성공! 응답 데이터: ${JSON.stringify(result)}`);
+
+                log(`2단계: Chat 서버(${chatServerUrl}) 소켓 연결 중...`);
+                await connectSignalR(playerIdx.toString());
+
             } catch (error) {
-                console.error(error);
-                document.getElementById("reserveStatus").innerText = `❌ 서버가 꺼져있거나 주소가 틀립니다.`;
+                log(`❌ 네트워크/CORS 예외 발생: ${error.message}`, true);
             }
         }
 
-        // [2단계] SignalR Hub에 쿼리스트링 태워서 소켓 꼽기
-        async function connectSocket() {
-            const roomId = document.getElementById("roomId").value;
-            const userIdx = document.getElementById("userIdx").value;
+        async function connectSignalR(userIdx) {
+            if (connection) {
+                try {
+                    await connection.stop();
+                } catch (e) {
+                    console.warn("기존 연결 종료 중 경고:", e);
+                }
+            }
 
-            // 주소창 뒤에 ?userIdx=값 을 붙여서 핸드셰이크 요청
             connection = new signalR.HubConnectionBuilder()
-                .withUrl(`${serverUrl}/chat?userIdx=${userIdx}`)
+                .withUrl(`${chatServerUrl}/chat?userIdx=${userIdx}`)
                 .withAutomaticReconnect()
                 .build();
 
-            // 서버(Hub)에서 보내는 "Notice" 센서 수신 리스너 등록
-            connection.on("Notice", function (message) {
-                appendLog(`[공지] ${message}`);
-            });
+            connection.on("Notice", (msg) => appendChat(`[공지] ${msg}`));
+            connection.on("BroadcastMessage", (user, msg) => appendChat(`[${user}]: ${msg}`));
 
-            // 서버(Hub)에서 보내는 "BroadcastMessage" 채팅 리스너 등록
-            connection.on("BroadcastMessage", function (user, message) {
-                appendLog(`[${user}]: ${message}`);
-            });
+            await connection.start();
+            log(`🎉 Chat 소켓 연결 완료! (State: ${connection.state}, ConnectionId: ${connection.connectionId})`);
+        }
+
+        async function sendMessage() {
+            if (!connection) {
+                alert("채팅 연결 객체가 없습니다. [🚀 방 입장하기]를 먼저 눌러주세요!");
+                return;
+            }
+
+            if (connection.state !== "Connected" && connection.state !== signalR.HubConnectionState.Connected) {
+                alert(`채팅방 연결 상태가 아닙니다. (현재 상태: ${connection.state})`);
+                return;
+            }
+
+            const roomIdx = document.getElementById("roomIdx").value;
+            const playerIdx = document.getElementById("playerIdx").value;
+            const input = document.getElementById("messageInput");
+
+            if (!input.value.trim()) return;
 
             try {
-                await connection.start();
-                document.getElementById("socketStatus").innerText = `🟢 소켓 연결 및 방 매핑 완료! (ConnectionId: ${connection.connectionId})`;
+                await connection.invoke("SendMessage", roomIdx.toString(), playerIdx.toString(), input.value);
+                input.value = "";
             } catch (err) {
-                console.error(err);
-                document.getElementById("socketStatus").innerText = `🔴 연결 거부됨! (예약 장부에 없거나 불법 유저인 경우 Abort 처리됨)`;
+                log(`❌ 메시지 전송 실패: ${err.message}`, true);
             }
         }
 
-        // [3단계] 일반 메시지 송신
-        async function sendMessage() {
-            if (!connection) return alert("소켓 연결을 먼저 하세요!");
-            const roomId = document.getElementById("roomId").value;
-            const userIdx = document.getElementById("userIdx").value;
-            const message = document.getElementById("messageInput").value;
-
-            // Hub에 정의된 SendMessage(roomId, userId, message) 호출
-            await connection.invoke("SendMessage", roomId, userIdx, message);
-            document.getElementById("messageInput").value = "";
-        }
-
-        // PING 핑퐁 테스트
-        async function sendPing() {
-            if (!connection) return alert("소켓 연결을 먼저 하세요!");
-            const roomId = document.getElementById("roomId").value;
-            const userIdx = document.getElementById("userIdx").value;
-            await connection.invoke("SendMessage", roomId, userIdx, "PING");
-        }
-
-        function appendLog(text) {
+        function appendChat(text) {
             const chatBox = document.getElementById("chatBox");
             chatBox.innerHTML += `<div>${text}</div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
