@@ -7,11 +7,7 @@ import NoticeGrpcServer from "./board/noticeServer";
 import quiz from "./quiz-comment/quizCommentRoutes";
 import QuizCommentGrpcServer from "./quiz-comment/quizCommentServer";
 
-export const grpcServers: any[] = [
-  NoticeGrpcServer,
-  QuizCommentGrpcServer,
-  BoardCommentGrpcServer,
-];
+export const grpcServers: any[] = [NoticeGrpcServer, QuizCommentGrpcServer, BoardCommentGrpcServer];
 
 export const router = Router();
 
@@ -19,6 +15,6 @@ export const router = Router();
 // 이곳에서 notice, quizComment 등 하위 라우터들을 총합해서 외부 loader로 보내줄것임
 
 router.use("/notice", notice);
-router.use("/notice", boardComment)
+router.use("/notice", boardComment);
 router.use("/quiz", quiz);
 // 이하 라우터 추가~~

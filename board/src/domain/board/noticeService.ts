@@ -8,8 +8,8 @@ import { toNoticeDetail, toNoticeListRes } from "@common/mapper/noticeMapper";
 import { toPageDTO } from "@common/mapper/pageMapper";
 import { BoardType } from "@common/model/enum/boardType";
 
-import { BoardCommentEntity } from "@domain/board-comment/boardCommentEntity";
-import { BoardEntity } from "@domain/board/boardEntity";
+import { BoardCommentEntity } from "@common/model/entity/boardCommentEntity";
+import { BoardEntity } from "@common/model/entity/boardEntity";
 
 import { BoardIdxParamReqType } from "@dto/idxParamReq";
 import { NoticeDetailRes } from "@dto/noticeDetailDTO";
@@ -29,22 +29,16 @@ export default class NoticeService {
    * @param pagingDTO
    * @returns
    */
-  public async getNoticeList(
-    pagingReq: PagingReqType,
-  ): Promise<Page<NoticeListRes>> {
+  public async getNoticeList(pagingReq: PagingReqType): Promise<Page<NoticeListRes>> {
     // DB에서 조회한 Entity Page
-    const pagingEntity: Page<BoardEntity> =
-      await this.boardRepository.findNoticeByPaging(pagingReq);
+    const pagingEntity: Page<BoardEntity> = await this.boardRepository.findNoticeByPaging(pagingReq);
 
     // // Page<Entity>  -> Page<DTO>
     // const pagingRes : Page<NoticeListRes> = createDTO(pagingEntity, ['idx','title','state','viewCount','isPinned','updatedAt'])
 
     // return pagingRes;
 
-    const pagingDtoRes: Page<NoticeListRes> = toPageDTO(
-      pagingEntity,
-      toNoticeListRes,
-    );
+    const pagingDtoRes: Page<NoticeListRes> = toPageDTO(pagingEntity, toNoticeListRes);
 
     return pagingDtoRes;
   }
@@ -55,10 +49,7 @@ export default class NoticeService {
    * @param upsertNoticeReq
    * @returns NoticeDetailRes
    */
-  public async addNotice(
-    userIdx: number,
-    upsertNoticeReq: UpsertNoticeType,
-  ): Promise<NoticeDetailRes> {
+  public async addNotice(userIdx: number, upsertNoticeReq: UpsertNoticeType): Promise<NoticeDetailRes> {
     // 1. Board
     // 1.1 Entity Set  > entity 객체를 만들 때, 비어있는 값(idx, createdAt 등 )이 존재하게 만드려면
     //                   repository의 create 메서드 사용
@@ -86,9 +77,7 @@ export default class NoticeService {
    * @param noticeIdxParam
    * @returns NoticeDetailRes
    */
-  public async getNoticeDetail(
-    noticeIdxParam: BoardIdxParamReqType,
-  ): Promise<NoticeDetailRes> {
+  public async getNoticeDetail(noticeIdxParam: BoardIdxParamReqType): Promise<NoticeDetailRes> {
     const board: BoardEntity = await this.boardRepository.findOneByOrFail({
       idx: noticeIdxParam.boardIdx,
     });
@@ -102,22 +91,14 @@ export default class NoticeService {
    * @param upsertNoticeReq
    * @returns NoticeDetailRes
    */
-  public async updateNotice(
-    noticeIdxParam: BoardIdxParamReqType,
-    upsertNoticeReq: UpsertNoticeType,
-  ): Promise<NoticeDetailRes> {
+  public async updateNotice(noticeIdxParam: BoardIdxParamReqType, upsertNoticeReq: UpsertNoticeType): Promise<NoticeDetailRes> {
     // 1. board 조회 , 없을시 에러
     const board: BoardEntity = await this.boardRepository.findOneByOrFail({
       idx: noticeIdxParam.boardIdx,
     });
 
     // 2. board entity 수정
-    board.update(
-      upsertNoticeReq.title,
-      upsertNoticeReq.state,
-      upsertNoticeReq.isPinned,
-      upsertNoticeReq.content,
-    );
+    board.update(upsertNoticeReq.title, upsertNoticeReq.state, upsertNoticeReq.isPinned, upsertNoticeReq.content);
 
     // 3. 수정 된 entity 저장(업데이트)
     const savedBoard = await this.boardRepository.save(board);
@@ -132,17 +113,14 @@ export default class NoticeService {
    * @returns Page<NoticeListRes>
    */
   @Transactional()
-  public async deleteNotice(
-    noticeIdxParam: BoardIdxParamReqType,
-  ): Promise<Page<NoticeListRes>> {
+  public async deleteNotice(noticeIdxParam: BoardIdxParamReqType): Promise<Page<NoticeListRes>> {
     // 1. board 조회, 없을 시 에러
     const board: BoardEntity = await this.boardRepository.findOneByOrFail({
       idx: noticeIdxParam.boardIdx,
     });
 
     // 1.1 comment 조회
-    const boardComment: BoardCommentEntity[] =
-      await this.boardCommentRepository.findBy({ board: board });
+    const boardComment: BoardCommentEntity[] = await this.boardCommentRepository.findBy({ board: board });
 
     // 2. board delete 시도
     await this.boardRepository.softRemove(board);
@@ -152,14 +130,10 @@ export default class NoticeService {
 
     // 3. 반환 용 데이터 생성
     // DB에서 조회한 Entity Page
-    const pagingData: Page<BoardEntity> =
-      await this.boardRepository.findNoticeByPaging({ page: 1, size: 20 });
+    const pagingData: Page<BoardEntity> = await this.boardRepository.findNoticeByPaging({ page: 1, size: 20 });
 
     // Page<Entity>  -> Page<DTO>
-    const pagingDtoRes: Page<NoticeListRes> = toPageDTO(
-      pagingData,
-      toNoticeDetail,
-    );
+    const pagingDtoRes: Page<NoticeListRes> = toPageDTO(pagingData, toNoticeDetail);
 
     return pagingDtoRes;
   }

@@ -1,6 +1,4 @@
-import { Timestamp } from "typeorm";
 
-import { BoardEntity } from "../entity/boardEntity";
 import { BoardState } from "../enum/boardState";
 
 // 전체 공지 목록

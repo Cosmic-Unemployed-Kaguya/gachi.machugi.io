@@ -1,14 +1,15 @@
+import { loadService, startServer } from "@cosmic-unemployed-kaguya/grpc-express";
 import express from "express";
-import {
-  addTransactionalDataSource,
-  initializeTransactionalContext,
-} from "typeorm-transactional";
+import { addTransactionalDataSource, initializeTransactionalContext } from "typeorm-transactional";
 
 import logger from "../utils/logger";
 import dependencyInjector from "./dependencyInjector";
 import expressLoader from "./express";
-import { loadService, startServer } from "./grpcServerLoader";
 import { AppDataSource } from "./settingTypeORM";
+
+import config from "@common/config";
+
+import { grpcServers } from "@domain/index";
 
 /**
  * 웹 실행 과정을 여기서 통재.
@@ -40,14 +41,14 @@ export default async ({ expressApp }: { expressApp: express.Application }) => {
   await dependencyInjector(appDataSource);
   logger.info("DI 컨테이너 로드 완료");
 
-  // 3. gRPC service 등록
+  // 3. gRPC service 로드
   logger.info("grpc 서비스 로드 시작");
-  await loadService();
+  await loadService(grpcServers, logger);
   logger.info("grpc 서비스 로드 완료");
 
   // 4. gRPC 서버 시작
   logger.info("grpc 서버 로드 시작");
-  await startServer();
+  await startServer(config.grpcServerAddress, logger);
   logger.info("grpc 서버 로드 완료");
 
   // 5. router 로드

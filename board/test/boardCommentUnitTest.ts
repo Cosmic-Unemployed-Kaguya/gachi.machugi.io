@@ -6,7 +6,7 @@ import { UserData } from "@common/middlewares/appRequest";
 import { UpsertCommentReqType } from "@common/model/dto/commentUpsertReq";
 import { PagingReqType } from "@common/model/dto/paging";
 
-import { BoardCommentEntity } from "@domain/board-comment/boardCommentEntity";
+import { BoardCommentEntity } from "@common/model/entity/boardCommentEntity";
 import { BoardCommentRepository } from "@domain/board-comment/boardCommentRepository";
 import BoardCommentService from "@domain/board-comment/boardCommentService";
 

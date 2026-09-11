@@ -1,10 +1,4 @@
-import {
-  CreateDateColumn,
-  DeleteDateColumn,
-  PrimaryGeneratedColumn,
-  Timestamp,
-  UpdateDateColumn,
-} from "typeorm";
+import { CreateDateColumn, DeleteDateColumn, PrimaryGeneratedColumn, Timestamp, UpdateDateColumn } from "typeorm";
 
 export abstract class DefaultEntity {
   @PrimaryGeneratedColumn({

@@ -1,6 +1,4 @@
-import { Timestamp } from "typeorm";
 
-import { BoardEntity } from "../entity/boardEntity";
 import { BoardState } from "../enum/boardState";
 
 // 댓글 하나만 반환 (추가 ,수정 시 )

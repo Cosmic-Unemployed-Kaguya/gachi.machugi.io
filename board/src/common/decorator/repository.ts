@@ -19,8 +19,7 @@ export function Repository(entity: EntityTarget<any>): ClassDecorator {
     Service({
       factory: () => {
         // 컨테이너에서 'AppDataSource'로 등록 된 객체를 가져옴
-        const dataSource: DataSource =
-          Container.get<DataSource>("AppDataSource");
+        const dataSource: DataSource = Container.get<DataSource>("AppDataSource");
 
         // 해당 클래스를 생성하면서 인자 넣어줌
         return new (constructor as any)(dataSource, entity);

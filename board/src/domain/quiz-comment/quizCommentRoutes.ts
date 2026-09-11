@@ -1,12 +1,6 @@
 import { Router } from "express";
 
-import {
-  addQuizComment,
-  deleteQuizComment,
-  getQuizComment,
-  getQuizCommentReplies,
-  updateQuizComment,
-} from "./quizCommentController";
+import { addQuizComment, deleteQuizComment, getQuizComment, getQuizCommentReplies, updateQuizComment } from "./quizCommentController";
 
 import { getUserIdx, getUserInfo } from "@common/middlewares/userCheck";
 import { validate } from "@common/middlewares/validate";
@@ -24,11 +18,7 @@ route
   .route("/:quizIdx/comment")
   // 로그인 확인 x
   .get(validate({ params: QuizIdxParamReq, query: PagingReq }), getQuizComment)
-  .post(
-    validate({ params: QuizIdxParamReq, body: UpsertCommentReq }),
-    getUserInfo,
-    addQuizComment,
-  );
+  .post(validate({ params: QuizIdxParamReq, body: UpsertCommentReq }), getUserInfo, addQuizComment);
 
 /**
  * 댓글 수정, 삭제
@@ -36,20 +26,9 @@ route
 route
   .route("/comment/:commentIdx")
   // 대댓글~ 조회
-  .get(
-    validate({ params: CommentIdxParamReq, query: PagingReq }),
-    getQuizCommentReplies,
-  )
+  .get(validate({ params: CommentIdxParamReq, query: PagingReq }), getQuizCommentReplies)
   // 본인 확인은 db 조회가 필요하기에 서비스 내에서
-  .put(
-    validate({ params: CommentIdxParamReq, body: UpsertCommentReq }),
-    getUserInfo,
-    updateQuizComment,
-  )
-  .delete(
-    validate({ params: CommentIdxParamReq }),
-    getUserIdx,
-    deleteQuizComment,
-  );
+  .put(validate({ params: CommentIdxParamReq, body: UpsertCommentReq }), getUserInfo, updateQuizComment)
+  .delete(validate({ params: CommentIdxParamReq }), getUserIdx, deleteQuizComment);
 
 export default route;

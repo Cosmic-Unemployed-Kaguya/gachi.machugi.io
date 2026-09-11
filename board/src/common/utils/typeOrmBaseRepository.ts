@@ -1,9 +1,4 @@
-import {
-  DataSource,
-  EntityTarget,
-  Repository,
-  SelectQueryBuilder,
-} from "typeorm";
+import { DataSource, EntityTarget, Repository, SelectQueryBuilder } from "typeorm";
 
 import { Page, PagingReqType } from "@dto/paging";
 
@@ -12,9 +7,7 @@ import { Page, PagingReqType } from "@dto/paging";
  * TypeOrmRepository를 상속받는 클래스는 무조건 Repository이며 아래의 db 조회 메서드를 모두 사용할 수 있는것을 원했음
  * DataSource와 entity를 주입받아 Repository를 구현
  */
-export abstract class TypeOrmRepository<
-  T extends Object,
-> extends Repository<T> {
+export abstract class TypeOrmRepository<T extends Object> extends Repository<T> {
   constructor(
     appDataSource: DataSource,
 
@@ -36,10 +29,7 @@ export abstract class TypeOrmRepository<
    * @param pagingDTO
    * @returns
    */
-  protected async paginate(
-    qb: SelectQueryBuilder<T>,
-    pagingDTO: PagingReqType,
-  ): Promise<Page<T>> {
+  protected async paginate(qb: SelectQueryBuilder<T>, pagingDTO: PagingReqType): Promise<Page<T>> {
     const { page, size, sort } = pagingDTO;
 
     if (sort) {

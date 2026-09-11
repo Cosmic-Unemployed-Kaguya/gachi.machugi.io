@@ -1,10 +1,7 @@
 import express from "express";
 
 import { router } from "../../domain";
-import {
-  errorHandler,
-  restErrorConverter,
-} from "../error-handler/restErrorHandler";
+import { errorHandler, restErrorConverter } from "../error-handler/restErrorHandler";
 
 /** ({app} : {app: express.Application})
  * 특정 개체 app: express.Application 에서 app만 가져다 쓰겠다

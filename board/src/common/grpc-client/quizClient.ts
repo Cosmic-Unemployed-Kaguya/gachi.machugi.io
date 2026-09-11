@@ -1,12 +1,8 @@
+import { GrpcClient, GrpcClientProperty } from "@cosmic-unemployed-kaguya/grpc-express";
+
 import config from "../config";
 
-import { GrpcClient, GrpcClientProperty } from "@decorator/grpcClient";
-
-import {
-  IsQuizRespons,
-  QuizIdxRequest,
-  QuizServiceClient,
-} from "@generated/machugi/board/quiz";
+import { IsQuizRespons, QuizIdxRequest, QuizServiceClient } from "@generated/machugi/board/quiz";
 
 @GrpcClient(QuizServiceClient, config.quizService)
 export default class QuizGrpcClient {

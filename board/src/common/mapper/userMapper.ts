@@ -1,10 +1,7 @@
 import { UserData } from "../middlewares/appRequest";
 import { UserRole as AppRole } from "../model/enum/userRole";
 
-import {
-  UserRole as GrpcRole,
-  UserInfoResponse,
-} from "@generated/machugi/board/user";
+import { UserRole as GrpcRole, UserInfoResponse } from "@generated/machugi/board/user";
 
 // 앱 내에서는 기본적으로 내가 지정한 Enum 사용
 // gRPC 통신 시에만 mapper를 통해 변환해서 생성된 enum 사용

@@ -49,21 +49,19 @@ export const getUserAndRoleCheck = (allowedRoles: AppRole[]) =>
  * @param res
  * @param next
  */
-export const getUserInfo = catchAsync(
-  async (req: AppRequest, res: Response, next: NextFunction) => {
-    const userIdx: number = await getUserIdxFromHeader(req);
+export const getUserInfo = catchAsync(async (req: AppRequest, res: Response, next: NextFunction) => {
+  const userIdx: number = await getUserIdxFromHeader(req);
 
-    const userData: UserInfoResponse = await getUserInfoToService(userIdx);
+  const userData: UserInfoResponse = await getUserInfoToService(userIdx);
 
-    req.userData = {
-      userIdx: userIdx,
-      userNickName: userData.nickName,
-      userRole: toAppRole(userData.role),
-    };
+  req.userData = {
+    userIdx: userIdx,
+    userNickName: userData.nickName,
+    userRole: toAppRole(userData.role),
+  };
 
-    next();
-  },
-);
+  next();
+});
 
 /**
  * userIdx 확인
@@ -71,21 +69,17 @@ export const getUserInfo = catchAsync(
  * @param res
  * @param next
  */
-export const getUserIdx = catchAsync(
-  async (req: AppRequest, res: Response, next: NextFunction) => {
-    const userIdx: number = await getUserIdxFromHeader(req);
-    req.userData = { userIdx: userIdx };
-    next();
-  },
-);
+export const getUserIdx = catchAsync(async (req: AppRequest, res: Response, next: NextFunction) => {
+  const userIdx: number = await getUserIdxFromHeader(req);
+  req.userData = { userIdx: userIdx };
+  next();
+});
 
 //--------------------------------------------------
 // 아래로는 해당 middle ware에서 사용 할 공통 함수
 //--------------------------------------------------
 
-const getUserInfoToService = async (
-  userIdx: number,
-): Promise<UserInfoResponse> => {
+const getUserInfoToService = async (userIdx: number): Promise<UserInfoResponse> => {
   const userClient = Container.get(UserClient);
 
   return await userClient.getUserInfo({ userIdx: userIdx });
