@@ -5,6 +5,7 @@ package machugi.verification;
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "validate/validate.proto";
+import "google/rpc/error_details.proto";  // 에러 처리용
 
 option java_multiple_files = true;
 option java_package = "kaguya.grpc.verification";
