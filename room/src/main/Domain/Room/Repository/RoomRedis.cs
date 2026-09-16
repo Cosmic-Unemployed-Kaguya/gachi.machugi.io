@@ -1,6 +1,7 @@
 using StackExchange.Redis;
 using Room.Model.Entity;
 using Room.Util;
+using System.Text.Json;
 namespace Room.Repository;
 
 public class RoomRedis
@@ -154,5 +155,17 @@ public class RoomRedis
         //삭제
         _ = tran.SetRemoveAsync(playerSetKey, playerIdx);
         return await tran.ExecuteAsync();
+    }
+    public async Task<bool> CreateEnterTicketAsync(string ticketUuid, long roomIdx, long playerIdx)
+    {
+        string ticketKey = $"ticket:{ticketUuid}";
+        
+        var ticketData = new { userIdx = playerIdx, roomIdx = roomIdx };
+        
+        // 객체를 JSON 문자열로 직렬화
+        string jsonValue = JsonSerializer.Serialize(ticketData);
+
+        // Redis에 5초 동안만 유지되도록 저장
+        return await _db.StringSetAsync(ticketKey, jsonValue, TimeSpan.FromSeconds(5));
     }
 }

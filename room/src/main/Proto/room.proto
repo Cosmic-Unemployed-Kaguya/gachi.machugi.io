@@ -35,6 +35,12 @@ service RoomGrpcManager {
       body: "*"
     };
   }
+  rpc AddPlayerToRoomWithTicket(GrpcUpdateSetRequest) returns (GrpcTicketUuidResponse) {
+    option (google.api.http) = {
+      post: "/api/room/set/add/{room_idx}/ticket"
+      body: "*"
+    };
+  }
   rpc RemovePlayerFromRoom(GrpcUpdateSetRequest) returns (GrpcBoolResponse) {
     option (google.api.http) = {
       post: "/api/room/set/remove/{room_idx}"
