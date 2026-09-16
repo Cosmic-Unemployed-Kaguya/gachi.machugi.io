@@ -5,6 +5,7 @@ import logger from "@common/util/logger";
 import Redis from "ioredis";
 import { Inject, Service } from "typedi";
 import { RoomManager } from "../room/roomManager";
+import { RedisKvClient } from "./redisKvClient";
 
 @Service()
 export class RedisSubClient {
@@ -13,6 +14,8 @@ export class RedisSubClient {
 
     @Inject(() => RoomManager)
     private roomManager: RoomManager;
+    @Inject(() => RedisKvClient)
+    private redisKvClient: RedisKvClient;
 
     constructor(
         // @Inject(() => RoomManager) private roomManager : RoomManager,
@@ -99,8 +102,17 @@ export class RedisSubClient {
 
                     // room에 저장되어있는 정답 수정
                     room.setAnswer(quizData.answer);
+                    
+                    // 정답자 lock 해제
+                    await this.redisKvClient.releaseLock(roomIdx);
 
                     break;
+
+                // 게임 종료시
+                case('game_over'):
+                    await this.roomManager.sendMessage(roomIdx, payload);
+                    break;
+
                 
             }
         }catch(error){
