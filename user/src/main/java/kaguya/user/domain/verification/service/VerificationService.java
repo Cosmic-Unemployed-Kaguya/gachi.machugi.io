@@ -1,9 +1,10 @@
 package kaguya.user.domain.verification.service;
 
-import kaguya.user.domain.verification.model.dto.request.CheckVerificationCodeReq;
-import kaguya.user.domain.verification.model.dto.request.SendVerificationCodeReq;
 import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.common.service.MailService;
+import kaguya.user.domain.user.repository.UserRepository;
+import kaguya.user.domain.verification.model.dto.request.CheckVerificationCodeReq;
+import kaguya.user.domain.verification.model.dto.request.SendVerificationCodeReq;
 import kaguya.user.domain.verification.model.dto.response.CheckVerificationCodeRes;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
@@ -18,6 +19,9 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class VerificationService {
 
+    // 일단 같은 바운더리라 바로 UserRepository 호출
+    private final UserRepository userRepository;
+
     private final RedisRepository redisRepository;
     private final MailService mailService;
 
@@ -26,6 +30,11 @@ public class VerificationService {
     private static final int CODE_LENGTH = 6;
 
     public void sendVerificationCode(SendVerificationCodeReq request) {
+
+        // email이 DB에 존재하는지 확인
+        if (!userRepository.existsByEmail(request.email())) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
 
         String type = request.verificationType().name();
         String email = request.email();
