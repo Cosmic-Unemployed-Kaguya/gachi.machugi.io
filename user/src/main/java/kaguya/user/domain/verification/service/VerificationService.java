@@ -6,6 +6,7 @@ import kaguya.user.domain.user.repository.UserRepository;
 import kaguya.user.domain.verification.model.dto.request.CheckVerificationCodeReq;
 import kaguya.user.domain.verification.model.dto.request.SendVerificationCodeReq;
 import kaguya.user.domain.verification.model.dto.response.CheckVerificationCodeRes;
+import kaguya.user.domain.verification.model.enums.VerificationType;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -31,20 +32,17 @@ public class VerificationService {
 
     public void sendVerificationCode(SendVerificationCodeReq request) {
 
-        // email이 DB에 존재하는지 확인
-        if (!userRepository.existsByEmail(request.email())) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
-
-        String type = request.verificationType().name();
+        VerificationType type = request.verificationType();
         String email = request.email();
 
-        // 카운트 증가 후 시도횟수 확인
-        String limitKey = "verification:send_limit:" + type + ":" + email;
-        Long currentCount = redisRepository.increment(limitKey, 2, TimeUnit.HOURS);
-
-        if (currentCount > 5) {
-            throw new BusinessException(ErrorCode.EXCEED_REQUEST_LIMIT);
+        boolean isExists = userRepository.existsByEmail(email);
+        // 회원가입이면 DB에 이메일 중복 확인
+        if (type == VerificationType.REGISTER && isExists) {
+            throw new BusinessException(ErrorCode.EXISTS_EMAIL);
+        }
+        // 그 외는 입력한 이메일이 DB에 존재하는지 확인
+        else if (type != VerificationType.REGISTER && !isExists) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
         // 인증코드 생성

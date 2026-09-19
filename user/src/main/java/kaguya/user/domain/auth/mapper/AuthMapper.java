@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component;
 public class AuthMapper {
 
     // DTO -> UserEntity
-    public UserEntity userDtoToUserEntity(RegisterReq request, String encodedPassword) {
+    public UserEntity userDtoToUserEntity(String verifiedEmail, String encodedPassword, RegisterReq request) {
         return UserEntity.builder()
 //                .username(request.account().username())
-                .email(request.account().email())
+                .email(verifiedEmail)
                 .password(encodedPassword)
                 .nickname(request.account().nickname())
                 .point(0L)
@@ -22,7 +22,7 @@ public class AuthMapper {
     }
 
     // DTO -> UserProfileEntity
-    public UserProfileEntity userDtoToUserProfileEntity(RegisterReq request, Long userIdx) {
+    public UserProfileEntity userDtoToUserProfileEntity(Long userIdx, RegisterReq request) {
         return UserProfileEntity.builder()
                 .userIdx(userIdx)
                 .name(request.user().name())

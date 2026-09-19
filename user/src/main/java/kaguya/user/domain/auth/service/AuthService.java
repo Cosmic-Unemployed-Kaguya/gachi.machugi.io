@@ -12,6 +12,7 @@ import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.model.entity.UserProfileEntity;
 import kaguya.user.domain.user.repository.UserProfileRepository;
 import kaguya.user.domain.user.repository.UserRepository;
+import kaguya.user.domain.verification.model.enums.VerificationType;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -53,9 +54,19 @@ public class AuthService {
 //            throw new BusinessException(ErrorCode.EXISTS_USERNAME);
 //        }
 
-        // 사용된 이메일인지 확인
-        if(userRepository.existsByEmail(registerData.account().email())) {
-            throw new BusinessException(ErrorCode.EXISTS_EMAIL);
+//        if(userRepository.existsByEmail(registerData.account().email())) {
+//            throw new BusinessException(ErrorCode.EXISTS_EMAIL);
+//        }
+
+        String oneTimeAuthCode = registerData.oneTimeAuthCode();
+
+        // 일회용 인증번호 조회 및 저장된 이메일 가져오기
+        String oneTimeKey = "verification:oneTimeAuthCode:" + VerificationType.REGISTER.name() + ":" + oneTimeAuthCode;
+        String verifiedEmail = redisRepository.get(oneTimeKey);
+
+        // 인증코드 확인
+        if (verifiedEmail == null) {
+            throw new BusinessException(ErrorCode.INVALID_AUTH_CODE);
         }
 
         // 사용된 닉네임인지 확인
@@ -68,10 +79,13 @@ public class AuthService {
         String encodedPassword = passwordEncoder.encode(rawPassword);  // 암호화
 
         // 저장
-        UserEntity userEntity = authMapper.userDtoToUserEntity(registerData, encodedPassword);
+        UserEntity userEntity = authMapper.userDtoToUserEntity(verifiedEmail, encodedPassword, registerData);
         userRepository.save(userEntity);
-        UserProfileEntity userProfileEntity = authMapper.userDtoToUserProfileEntity(registerData, userEntity.getIdx());
+        UserProfileEntity userProfileEntity = authMapper.userDtoToUserProfileEntity(userEntity.getIdx(), registerData);
         userProfileRepository.save(userProfileEntity);
+
+        // 마지막에 redis 키 삭제
+        redisRepository.delete(oneTimeKey);
     }
 
     /**
