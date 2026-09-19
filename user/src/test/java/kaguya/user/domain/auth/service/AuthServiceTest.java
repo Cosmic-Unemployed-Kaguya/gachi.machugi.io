@@ -121,7 +121,7 @@ class AuthServiceTest {
         String username = "testID";
 
         willDoNothing().given(jwtProvider).validateRefreshToken(refreshToken);
-        given(jwtProvider.getUsername(refreshToken)).willReturn(username);
+        given(jwtProvider.getSubject(refreshToken)).willReturn(username);
 
         // when
         authService.logout(accessToken, refreshToken);
@@ -146,7 +146,7 @@ class AuthServiceTest {
         UserEntity mockEntity = createDefaultUser();
 
         willDoNothing().given(jwtProvider).validateRefreshToken(refreshToken);
-        given(jwtProvider.getUsername(refreshToken)).willReturn(username);
+        given(jwtProvider.getSubject(refreshToken)).willReturn(username);
         given(redisRepository.get("RT:" + username)).willReturn(refreshToken);
         given(userRepository.findByUsername(username)).willReturn((Optional.of(mockEntity)));
         given(jwtProvider.createAccessToken(mockEntity.getUsername(), mockEntity.getRole().toString())).willReturn(accessToken);
@@ -169,7 +169,7 @@ class AuthServiceTest {
 
         willDoNothing().given(jwtProvider).validateAccessToken(accessToken);
         given(redisRepository.exist("BL:" + accessToken)).willReturn(false);
-        given(jwtProvider.getUsername(accessToken)).willReturn(username);
+        given(jwtProvider.getSubject(accessToken)).willReturn(username);
         given(jwtProvider.getRole(accessToken)).willReturn(role);
 
         // when
@@ -368,7 +368,7 @@ class AuthServiceTest {
                 .isEqualTo(ErrorCode.INVALID_TOKEN);
         verifyNoInteractions(redisRepository, userRepository);
         // 그 외 jwtProvider 동작(getUsername, createAccessToken) 안했는지 검증
-        verify(jwtProvider, never()).getUsername(anyString());
+        verify(jwtProvider, never()).getSubject(anyString());
         verify(jwtProvider, never()).createAccessToken(anyString(), anyString());
     }
 
@@ -382,7 +382,7 @@ class AuthServiceTest {
 
         willDoNothing().given(jwtProvider).validateRefreshToken(refreshToken);
         // null 반환 (아이디 찾을 수 없음)
-        given(jwtProvider.getUsername(refreshToken)).willReturn(username);
+        given(jwtProvider.getSubject(refreshToken)).willReturn(username);
         // "RT:null" 이름으로 검색
         given(redisRepository.get("RT:" + username)).willReturn(null);
         // (service 로직) 실제 저장된 refreshToken이 null 이므로 에러 던짐
@@ -408,7 +408,7 @@ class AuthServiceTest {
 
         // 토큰 유효하고, username 까지는 정상적으로 조회가 됨
         willDoNothing().given(jwtProvider).validateRefreshToken(oldRefreshToken);
-        given(jwtProvider.getUsername(oldRefreshToken)).willReturn(username);
+        given(jwtProvider.getSubject(oldRefreshToken)).willReturn(username);
         // 가장 최신 Refresh Token 가져옴
         given(redisRepository.get("RT:" + username)).willReturn(currentRefreshToken);
         // (service 로직) oldRefreshToken != currentRefreshToken 이므로 에러 던짐

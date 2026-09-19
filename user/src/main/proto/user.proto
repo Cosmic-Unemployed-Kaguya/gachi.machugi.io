@@ -101,9 +101,10 @@ message ResetPasswordRequest {
 
 // --- Response Messages ---
 message MyPageResponse {
-  string username = 1;
-  string email = 2;
-  string nickname = 3;
+//  string username = 1;
+  string email = 1;
+  string nickname = 2;
+  string join_date = 3;
 }
 
 message ProfileResponse {

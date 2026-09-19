@@ -3,11 +3,9 @@ package kaguya.user.domain.user.controller;
 import jakarta.validation.Valid;
 import kaguya.user.domain.common.model.dto.BaseRes;
 import kaguya.user.domain.common.model.enums.Role;
-import kaguya.user.domain.user.model.dto.request.FindUsernameReq;
 import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
-import kaguya.user.domain.user.model.dto.response.FindUsernameRes;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
 import kaguya.user.domain.user.model.dto.response.ProfileRes;
 import kaguya.user.domain.user.service.UserService;
@@ -30,15 +28,15 @@ public class UserController {
 
     @GetMapping("/my")
     public ResponseEntity<BaseRes<MyPageRes>> getMyPage(
-            @RequestHeader(value = "x-user-id", required = false) String username,
+            @RequestHeader(value = "x-user-id", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role
     ) {
 
-        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        MyPageRes data = userService.getMyPage(username);
+        MyPageRes data = userService.getMyPage(idx);
 
         BaseRes<MyPageRes> response = new BaseRes<>("200", "마이페이지 조회", data);
         return ResponseEntity.ok(response);
@@ -46,15 +44,15 @@ public class UserController {
 
     @GetMapping("/my/profile")
     public ResponseEntity<BaseRes<ProfileRes>> getProfile(
-            @RequestHeader(value = "x-user-id", required = false) String username,
+            @RequestHeader(value = "x-user-id", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role
     ) {
 
-        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        ProfileRes data = userService.getProfile(username);
+        ProfileRes data = userService.getProfile(idx);
 
         BaseRes<ProfileRes> response = new BaseRes<>("200", "프로필 조회", data);
         return ResponseEntity.ok(response);
@@ -62,16 +60,16 @@ public class UserController {
 
     @PatchMapping("/my/password")
     public ResponseEntity<BaseRes<Void>> updatePasswords(
-            @RequestHeader(value = "x-user-id", required = false) String username,
+            @RequestHeader(value = "x-user-id", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role,
             @RequestBody @Valid UpdatePasswordReq request
     ) {
 
-        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        userService.updatePassword(username, request);
+        userService.updatePassword(idx, request);
 
         BaseRes<Void> response = new BaseRes<>("200", "비밀번호 수정 완료", null);
         return ResponseEntity.ok(response);
@@ -79,16 +77,16 @@ public class UserController {
 
     @PatchMapping("/my/nickname")
     public ResponseEntity<BaseRes<Void>> updateNickname(
-            @RequestHeader(value = "x-user-id", required = false) String username,
+            @RequestHeader(value = "x-user-id", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role,
             @RequestBody @Valid UpdateNicknameReq request
     ) {
 
-        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        userService.updateNickname(username, request);
+        userService.updateNickname(idx, request);
 
         BaseRes<Void> response = new BaseRes<>("200", "닉네임 수정 완료", null);
         return ResponseEntity.ok(response);
@@ -96,15 +94,15 @@ public class UserController {
 
     @DeleteMapping("/my/withdraw")
     public ResponseEntity<BaseRes<Void>> withdraw(
-            @RequestHeader(value = "x-user-id", required = false) String username,
+            @RequestHeader(value = "x-user-id", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role
     ) {
 
-        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        userService.withdraw(username);
+        userService.withdraw(idx);
 
         BaseRes<Void> response = new BaseRes<>("200", "회원 탈퇴", null);
         return ResponseEntity.ok(response);
@@ -114,6 +112,7 @@ public class UserController {
      * 아이디 찾기 / 비밀번호 초기화
      */
 
+/*
     @PostMapping("/find/id")
     public ResponseEntity<BaseRes<FindUsernameRes>> findUsername (
             @RequestBody @Valid FindUsernameReq request
@@ -125,6 +124,7 @@ public class UserController {
                 new BaseRes<>("200", "찾은 아이디", data)
         );
     }
+ */
 
     @PatchMapping("/reset/password")
     public ResponseEntity<BaseRes<Void>> resetPassword (

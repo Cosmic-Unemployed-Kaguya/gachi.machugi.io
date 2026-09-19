@@ -8,7 +8,6 @@ import kaguya.user.domain.user.grpc.interceptor.GrpcContextKeys;
 import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
-import kaguya.user.domain.user.model.dto.response.FindUsernameRes;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
 import kaguya.user.domain.user.model.dto.response.ProfileRes;
 import kaguya.user.domain.user.service.UserService;
@@ -35,19 +34,20 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             StreamObserver<MyPageResponse> responseObserver
     ) {
 
-        String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
+        Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
         String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
-        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
             // 예외를 던지면 GlobalGrpcExceptionHandler가 가로채어 표준 gRPC 에러 응답으로 변환
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
-        MyPageRes resData = userService.getMyPage(username);
+        MyPageRes resData = userService.getMyPage(idx);
 
         MyPageResponse response = MyPageResponse.newBuilder()
-                .setUsername(resData.username())
+//                .setUsername(resData.username())
                 .setEmail(resData.email())
                 .setNickname(resData.nickname())
+                .setJoinDate(resData.joinDate().toString())
                 .build();
 
         responseObserver.onNext(response);
@@ -60,13 +60,13 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             StreamObserver<ProfileResponse> responseObserver
     ) {
 
-        String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
+        Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
         String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
-        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
-        ProfileRes resData = userService.getProfile(username);
+        ProfileRes resData = userService.getProfile(idx);
 
         ProfileResponse response = ProfileResponse.newBuilder()
                 .setName(resData.name())
@@ -85,9 +85,9 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             StreamObserver<Empty> responseObserver
     ) {
 
-        String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
+        Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
         String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
-        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
@@ -101,7 +101,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
                 request.getNewPassword()
         );
 
-        userService.updatePassword(username, reqData);
+        userService.updatePassword(idx, reqData);
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
@@ -113,9 +113,9 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             StreamObserver<Empty> responseObserver
     ) {
 
-        String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
+        Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
         String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
-        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
@@ -123,7 +123,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
                 request.getNickname()
         );
 
-        userService.updateNickname(username, reqData);
+        userService.updateNickname(idx, reqData);
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
@@ -135,18 +135,19 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             StreamObserver<Empty> responseObserver
     ) {
 
-        String username = GrpcContextKeys.USER_ID_CTX_KEY.get();
+        Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
         String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
-        if (role == null || Role.GUEST.name().equals(role) || username == null || username.isBlank()) {
+        if (role == null || Role.GUEST.name().equals(role) || idx == null) {
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
-        userService.withdraw(username);
+        userService.withdraw(idx);
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();
     }
 
+/*
     @Override
     public void findUsername (
             FindUsernameRequest request,
@@ -163,6 +164,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+ */
 
     @Override
     public void resetPassword (

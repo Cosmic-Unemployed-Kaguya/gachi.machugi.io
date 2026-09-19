@@ -20,9 +20,8 @@ public class UserInternalServer extends UserInternalServiceGrpc.UserInternalServ
             StreamObserver<GetNicknameResponse> responseObserver)
     {
 
-        String username = request.getUserId();
-
-        String nickname = userService.getNicknameByUsername(username);
+        Long idx = request.getIdx();
+        String nickname = userService.getNicknameByUsername(idx);
 
         GetNicknameResponse response = GetNicknameResponse.newBuilder()
                 .setNickname(nickname)

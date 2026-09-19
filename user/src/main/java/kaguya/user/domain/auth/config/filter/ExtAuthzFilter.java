@@ -67,7 +67,7 @@ public class ExtAuthzFilter extends OncePerRequestFilter {
                 CheckTokenRes checkRes = authService.checkToken(accessToken);  // 서비스 로직
 
                 // 유저 정보 헤더에 세팅
-                response.setHeader("X-User-Id", checkRes.username());  // 아이디
+                response.setHeader("X-User-Id", checkRes.idx());  // 식별자
                 response.setHeader("X-User-Role", checkRes.role());  // 권한
 
                 response.setStatus(HttpServletResponse.SC_OK);

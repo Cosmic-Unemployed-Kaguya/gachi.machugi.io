@@ -1,16 +1,17 @@
 package kaguya.user.domain.user.service;
 
-import kaguya.user.domain.verification.model.enums.VerificationType;
 import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.user.mapper.UserMapper;
 import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
-import kaguya.user.domain.user.model.dto.response.FindUsernameRes;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
 import kaguya.user.domain.user.model.dto.response.ProfileRes;
 import kaguya.user.domain.user.model.entity.UserEntity;
+import kaguya.user.domain.user.model.entity.UserProfileEntity;
+import kaguya.user.domain.user.repository.UserProfileRepository;
 import kaguya.user.domain.user.repository.UserRepository;
+import kaguya.user.domain.verification.model.enums.VerificationType;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final RedisRepository redisRepository;
 
     private final UserMapper userMapper;
@@ -37,9 +39,9 @@ public class UserService {
 
     // 계정 정보 조회 (마이페이지)
     @Transactional(readOnly = true)
-    public MyPageRes getMyPage(String username) {
+    public MyPageRes getMyPage(Long idx) {
 
-        UserEntity userEntity = userRepository.findByUsername(username)
+        UserEntity userEntity = userRepository.findById(idx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         return userMapper.entityToMyPageReq(userEntity);
@@ -47,19 +49,19 @@ public class UserService {
 
     // 사용자 정보 조회
     @Transactional(readOnly = true)
-    public ProfileRes getProfile(String username) {
+    public ProfileRes getProfile(Long idx) {
 
-        UserEntity userEntity = userRepository.findByUsername(username)
+        UserProfileEntity userProfileEntity = userProfileRepository.findById(idx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        return userMapper.entityToUserReq(userEntity);
+        return userMapper.entityToUserReq(userProfileEntity);
     }
 
     // 닉네임 변경
     @Transactional
-    public void updateNickname(String username, UpdateNicknameReq updateNicknameData) {
+    public void updateNickname(Long idx, UpdateNicknameReq updateNicknameData) {
 
-        UserEntity userEntity = userRepository.findByUsername(username)
+        UserEntity userEntity = userRepository.findById(idx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 기존 닉네임과 완전히 동일한 경우 400 에러 처리
@@ -77,9 +79,9 @@ public class UserService {
 
     // 비밀번호 변경
     @Transactional
-    public void updatePassword(String username, UpdatePasswordReq updatePasswordData) {
+    public void updatePassword(Long idx, UpdatePasswordReq updatePasswordData) {
 
-        UserEntity userEntity = userRepository.findByUsername(username)
+        UserEntity userEntity = userRepository.findById(idx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(updatePasswordData.currentPassword(), userEntity.getPassword())) {
@@ -94,16 +96,17 @@ public class UserService {
         userEntity.changePassword(encodedPassword);
 
         // 갱신토큰 삭제
-        redisRepository.delete("RT:" + userEntity.getUsername());
+        redisRepository.delete("RT:" + idx);
     }
 
     // 회원탈퇴
     @Transactional
-    public void withdraw(String username) {
+    public void withdraw(Long idx) {
 
-        UserEntity userEntity = userRepository.findByUsername(username)
+        UserEntity userEntity = userRepository.findById(idx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        // todo. entity 삭제가 아니고, active 를 false로, withdraw에 타임스탬프 찍기
         userRepository.delete(userEntity);
     }
 
@@ -112,6 +115,7 @@ public class UserService {
      * 아이디 찾기 / 비밀번호 초기화
      */
 
+/*
     // 아이디 찾기
     @Transactional(readOnly = true)
     public FindUsernameRes findUsername(String oneTimeAuthCode) {
@@ -134,6 +138,7 @@ public class UserService {
                 masking(userEntity.getUsername())
         );
     }
+*/
 
     // 비밀번호 초기화
     @Transactional
@@ -165,7 +170,7 @@ public class UserService {
         userEntity.changePassword(encodedPassword);
 
         // 갱신토큰 삭제
-        redisRepository.delete("RT:" + userEntity.getUsername());
+        redisRepository.delete("RT:" + userEntity.getIdx());
     }
 
     private String masking(String username) {
@@ -197,9 +202,9 @@ public class UserService {
 
     // username -> nickname
     @Transactional(readOnly = true)
-    public String getNicknameByUsername(String username) {
+    public String getNicknameByUsername(Long idx) {
 
-        UserEntity userEntity = userRepository.findByUsername(username)
+        UserEntity userEntity = userRepository.findById(idx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         return userEntity.getNickname();

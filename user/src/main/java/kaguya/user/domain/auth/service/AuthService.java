@@ -9,6 +9,8 @@ import kaguya.user.domain.auth.model.dto.response.GuestRes;
 import kaguya.user.domain.auth.model.dto.response.LoginRes;
 import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.user.model.entity.UserEntity;
+import kaguya.user.domain.user.model.entity.UserProfileEntity;
+import kaguya.user.domain.user.repository.UserProfileRepository;
 import kaguya.user.domain.user.repository.UserRepository;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
@@ -25,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final RedisRepository redisRepository;
 
     private final AuthMapper authMapper;
@@ -46,10 +49,9 @@ public class AuthService {
     @Transactional
     public void register(RegisterReq registerData) {
 
-        // 사용된 아이디인지 확인
-        if(userRepository.existsByUsername(registerData.account().username())) {
-            throw new BusinessException(ErrorCode.EXISTS_USERNAME);
-        }
+//        if(userRepository.existsByUsername(registerData.account().username())) {
+//            throw new BusinessException(ErrorCode.EXISTS_USERNAME);
+//        }
 
         // 사용된 이메일인지 확인
         if(userRepository.existsByEmail(registerData.account().email())) {
@@ -65,8 +67,11 @@ public class AuthService {
         String rawPassword = registerData.account().password();  // 암호화 전
         String encodedPassword = passwordEncoder.encode(rawPassword);  // 암호화
 
-        UserEntity entity = authMapper.userDtoToEntity(registerData, encodedPassword);
-        userRepository.save(entity);
+        // 저장
+        UserEntity userEntity = authMapper.userDtoToUserEntity(registerData, encodedPassword);
+        userRepository.save(userEntity);
+        UserProfileEntity userProfileEntity = authMapper.userDtoToUserProfileEntity(registerData, userEntity.getIdx());
+        userProfileRepository.save(userProfileEntity);
     }
 
     /**
@@ -76,8 +81,8 @@ public class AuthService {
     @Transactional
     public LoginRes login(LoginReq loginData) {
 
-        // 아이디 존재하는지 확인
-        UserEntity entity = userRepository.findByUsername(loginData.username())
+        // 회원 데이터 있는지 확인
+        UserEntity entity = userRepository.findByEmail(loginData.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         // 아이디와 비밀번호 맞는지 검증
@@ -85,12 +90,17 @@ public class AuthService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
+        // todo. 탈퇴한 회원인지 확인
+
         // Access/Refresh 토큰
-        String accessToken = jwtProvider.createAccessToken(entity.getUsername(), entity.getRole().toString());
-        String refreshToken = jwtProvider.createRefreshToken(entity.getUsername());
+        String subject = String.valueOf(entity.getIdx());
+        String role = entity.getRole().name();
+
+        String accessToken = jwtProvider.createAccessToken(subject, role);
+        String refreshToken = jwtProvider.createRefreshToken(subject);
 
         // 갱신 토큰 Redis 저장 (14일)
-        redisRepository.save("RT:" + entity.getUsername(), refreshToken, 14, TimeUnit.DAYS);
+        redisRepository.save("RT:" + subject, refreshToken, 14, TimeUnit.DAYS);
 
         return authMapper.entityToLoginRes(accessToken, refreshToken, entity);
     }
@@ -114,8 +124,8 @@ public class AuthService {
                 jwtProvider.validateRefreshToken(refreshToken);
 
                 // 검증을 통과했다면 갱신 토큰 삭제
-                String username = jwtProvider.getUsername(refreshToken);
-                redisRepository.delete("RT:" + username);
+                String subject = jwtProvider.getSubject(refreshToken);
+                redisRepository.delete("RT:" + subject);
 
             } catch (BusinessException e) {
                 // 토큰이 이미 만료되었거나 손상된 경우
@@ -143,18 +153,21 @@ public class AuthService {
         jwtProvider.validateRefreshToken(refreshToken);
 
         // 아이디 조회 (jwt)
-        String username = jwtProvider.getUsername(refreshToken);
+        String subject = jwtProvider.getSubject(refreshToken);
+        Long userIdx = Long.valueOf(subject);
 
         // redis에 갱신 토큰이 있는지 확인
-        String savedRefreshToken = redisRepository.get("RT:" + username);
+        String savedRefreshToken = redisRepository.get("RT:" + subject);
         if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
 
-        UserEntity entity = userRepository.findByUsername(username)
+        UserEntity entity = userRepository.findById(userIdx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        return jwtProvider.createAccessToken(username, entity.getRole().toString());
+        String role = entity.getRole().name();
+
+        return jwtProvider.createAccessToken(subject, role);
     }
 
     /**
@@ -178,10 +191,10 @@ public class AuthService {
         }
 
         // 아이디 및 권한 조회 (jwt)
-        String username = jwtProvider.getUsername(accessToken);
+        String subject = jwtProvider.getSubject(accessToken);
         String role = jwtProvider.getRole(accessToken);
 
-        return new CheckTokenRes(username, role);
+        return new CheckTokenRes(subject, role);
     }
 
     public GuestRes guest(GuestReq guestData) {
