@@ -115,5 +115,5 @@ message ProfileResponse {
 }
 
 message FindUsernameResponse {
-  string maskedUsername = 1;
+  string masked_username = 1;
 }

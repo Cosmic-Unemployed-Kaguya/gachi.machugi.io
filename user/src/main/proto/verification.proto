@@ -57,5 +57,5 @@ message CheckVerificationCodeRequest {
 
 // --- Response Messages ---
 message CheckVerificationCodeResponse {
-    string oneTimeAuthCode = 1;
+    string one_time_auth_code = 1;
 }

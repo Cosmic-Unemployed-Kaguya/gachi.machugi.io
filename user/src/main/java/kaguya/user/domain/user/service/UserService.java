@@ -106,8 +106,7 @@ public class UserService {
         UserEntity userEntity = userRepository.findById(idx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // todo. entity 삭제가 아니고, active 를 false로, withdraw에 타임스탬프 찍기
-        userRepository.delete(userEntity);
+        userEntity.withdraw();
     }
 
 
@@ -199,6 +198,16 @@ public class UserService {
     /**
      * 외부 서비스(gRPC) 요청 데이터
      */
+
+    // idx -> nickname
+    @Transactional(readOnly = true)
+    public String getNicknameByIdx(Long idx) {
+
+        UserEntity userEntity = userRepository.findById(idx)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        return userEntity.getNickname();
+    }
 
     // username -> nickname
     @Transactional(readOnly = true)

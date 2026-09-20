@@ -2,11 +2,13 @@ package kaguya.user.domain.auth.service;
 
 import kaguya.user.domain.auth.mapper.AuthMapper;
 import kaguya.user.domain.auth.model.dto.request.GuestReq;
+import kaguya.user.domain.auth.model.dto.request.LoginDormancyReq;
 import kaguya.user.domain.auth.model.dto.request.LoginReq;
 import kaguya.user.domain.auth.model.dto.request.RegisterReq;
 import kaguya.user.domain.auth.model.dto.response.CheckTokenRes;
 import kaguya.user.domain.auth.model.dto.response.GuestRes;
 import kaguya.user.domain.auth.model.dto.response.LoginRes;
+import kaguya.user.domain.common.model.enums.Status;
 import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.model.entity.UserProfileEntity;
@@ -42,7 +44,7 @@ public class AuthService {
      */
 
     /**
-     * 회원가입 로직
+     * 회원가입
      * @param registerData: 회원가입 정보
      * - AccountDTO: username, password, nickname, email
      * - UserDTO: name, birth, phone, gender
@@ -89,7 +91,7 @@ public class AuthService {
     }
 
     /**
-     * 로그인 로직
+     * 로그인
      * @param loginData: Id, Password
      */
     @Transactional
@@ -104,23 +106,57 @@ public class AuthService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        // todo. 탈퇴한 회원인지 확인
+        // 유저 상태 체크
+        if (entity.getStatus() != Status.ACTIVE) {
+            switch (entity.getStatus()) {
+                case DORMANT -> throw new BusinessException(ErrorCode.USER_DORMANT);
+                case SUSPENDED -> throw new BusinessException(ErrorCode.USER_SUSPENDED);
+                case BANNED -> throw new BusinessException(ErrorCode.USER_BANNED);
+                case WITHDRAWAL -> throw new BusinessException(ErrorCode.USER_WITHDRAWN);
+                default -> throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            }
+        }
 
-        // Access/Refresh 토큰
-        String subject = String.valueOf(entity.getIdx());
-        String role = entity.getRole().name();
-
-        String accessToken = jwtProvider.createAccessToken(subject, role);
-        String refreshToken = jwtProvider.createRefreshToken(subject);
-
-        // 갱신 토큰 Redis 저장 (14일)
-        redisRepository.save("RT:" + subject, refreshToken, 14, TimeUnit.DAYS);
-
-        return authMapper.entityToLoginRes(accessToken, refreshToken, entity);
+        return processLoginSuccess(entity);
     }
 
     /**
-     * 로그아웃 로직
+     * 휴면상태 로그인
+     * @param loginDormancyData: 휴면 로그인 정보
+     */
+    @Transactional
+    public LoginRes loginDormancy(LoginDormancyReq loginDormancyData) {
+
+        String oneTimeAuthCode = loginDormancyData.oneTimeAuthCode();
+
+        // 일회용 인증번호 조회 및 저장된 이메일 가져오기
+        String oneTimeKey = "verification:oneTimeAuthCode:" + VerificationType.RELEASE_DORMANCY.name() + ":" + oneTimeAuthCode;
+        String verifiedEmail = redisRepository.get(oneTimeKey);
+
+        // 인증코드 확인
+        if (verifiedEmail == null) {
+            throw new BusinessException(ErrorCode.INVALID_AUTH_CODE);
+        }
+
+        UserEntity entity = userRepository.findByEmail(verifiedEmail)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 아이디와 비밀번호 맞는지 검증
+        if (!passwordEncoder.matches(loginDormancyData.password(), entity.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
+        }
+
+        // 유저 상태 Active(활성화)로 변경
+        entity.changeStatus(Status.ACTIVE);
+
+        // 마지막에 redis 키 삭제
+        redisRepository.delete(oneTimeKey);
+
+        return processLoginSuccess(entity);
+    }
+
+    /**
+     * 로그아웃
      * @param accessToken: 접근 토큰
      * @param refreshToken: 갱신 토큰
      */
@@ -211,6 +247,10 @@ public class AuthService {
         return new CheckTokenRes(subject, role);
     }
 
+    /**
+     * 게스트 로그인
+     * @param guestData: 게스트 로그인 정보
+     */
     public GuestRes guest(GuestReq guestData) {
 
         String guestId = UUID.randomUUID().toString();
@@ -221,5 +261,23 @@ public class AuthService {
         redisRepository.save(key, guestNickname, 5, TimeUnit.HOURS);
 
         return new GuestRes(guestId, guestNickname);
+    }
+
+    // 로그인 성공 후처리 로직 (JWT 토큰 생성)
+    private LoginRes processLoginSuccess(UserEntity entity) {
+        // todo. 로그인 로그 기록
+        //  - 현재는 로그인 하면 바로 DB에 현재시각 기록
+        //  - 여기서 비용을 최소화한다면, redis에 로그인시간 기록 하고 특정 시간(ex. 04:00)에 DB로 옮기는 방식으로
+        entity.recordLogin();
+
+        String subject = String.valueOf(entity.getIdx());
+        String role = entity.getRole().name();
+
+        String accessToken = jwtProvider.createAccessToken(subject, role);
+        String refreshToken = jwtProvider.createRefreshToken(subject);
+
+        redisRepository.save("RT:" + subject, refreshToken, 14, TimeUnit.DAYS);
+
+        return authMapper.entityToLoginRes(accessToken, refreshToken, entity);
     }
 }

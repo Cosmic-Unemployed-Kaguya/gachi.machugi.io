@@ -63,10 +63,17 @@ public class UserEntity {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
-        this.point = point;
+        this.point = (point != null) ? point : 0L;
     }
 
     // User
+    public void withdraw() {
+        this.status = Status.WITHDRAWAL;
+        this.withdrawalDate = LocalDateTime.now();
+    }
+    public void recordLogin() {
+        this.lastLoginDate = LocalDateTime.now();
+    }
     public void changePassword(String password) {this.password = password;}
     public void changeNickname(String nickname) {this.nickname = nickname;}
 
