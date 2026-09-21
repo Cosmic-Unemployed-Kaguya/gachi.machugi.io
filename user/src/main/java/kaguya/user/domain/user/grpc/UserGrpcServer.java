@@ -3,13 +3,12 @@ package kaguya.user.domain.user.grpc;
 import com.google.protobuf.Empty;
 import io.grpc.stub.StreamObserver;
 import kaguya.grpc.user.*;
-import kaguya.user.domain.common.model.enums.Role;
 import kaguya.user.domain.user.grpc.interceptor.GrpcContextKeys;
 import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
-import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
 import kaguya.user.domain.user.model.dto.response.ProfileRes;
+import kaguya.user.domain.user.model.enums.Role;
 import kaguya.user.domain.user.service.UserService;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
@@ -119,11 +118,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
             throw new BusinessException(ErrorCode.MISSING_TOKEN);
         }
 
-        UpdateNicknameReq reqData = new UpdateNicknameReq(
-                request.getNickname()
-        );
-
-        userService.updateNickname(idx, reqData);
+        userService.updateNickname(idx, request.getNickname());
 
         responseObserver.onNext(Empty.getDefaultInstance());
         responseObserver.onCompleted();

@@ -6,7 +6,7 @@ import kaguya.user.domain.auth.model.dto.request.*;
 import kaguya.user.domain.auth.model.dto.response.GuestRes;
 import kaguya.user.domain.auth.model.dto.response.LoginRes;
 import kaguya.user.domain.auth.service.AuthService;
-import kaguya.user.domain.common.model.enums.Gender;
+import kaguya.user.domain.user.model.enums.Gender;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;

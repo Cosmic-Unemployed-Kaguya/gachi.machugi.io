@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import kaguya.user.domain.auth.model.dto.response.CheckTokenRes;
 import kaguya.user.domain.auth.service.AuthService;
-import kaguya.user.domain.common.model.enums.Role;
+import kaguya.user.domain.user.model.enums.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;

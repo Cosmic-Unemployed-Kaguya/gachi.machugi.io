@@ -1,4 +1,4 @@
-package kaguya.user.domain.common.model.enums;
+package kaguya.user.domain.user.model.enums;
 
 import lombok.Getter;
 

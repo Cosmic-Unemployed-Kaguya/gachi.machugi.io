@@ -3,7 +3,6 @@ package kaguya.user.domain.user.service;
 import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.user.mapper.UserMapper;
 import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
-import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
 import kaguya.user.domain.user.model.dto.response.ProfileRes;
@@ -59,22 +58,22 @@ public class UserService {
 
     // 닉네임 변경
     @Transactional
-    public void updateNickname(Long idx, UpdateNicknameReq updateNicknameData) {
+    public void updateNickname(Long idx, String nickname) {
 
         UserEntity userEntity = userRepository.findById(idx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 기존 닉네임과 완전히 동일한 경우 400 에러 처리
-        if (userEntity.getNickname().equals(updateNicknameData.nickname())) {
+        if (userEntity.getNickname().equals(nickname)) {
             throw new BusinessException(ErrorCode.SAME_AS_OLD_NICKNAME);
         }
 
         // 닉네임 중복인지 확인
-        if (userRepository.existsByNickname(updateNicknameData.nickname())) {
+        if (userRepository.existsByNickname(nickname)) {
             throw new BusinessException(ErrorCode.EXISTS_NICKNAME);
         }
 
-        userEntity.changeNickname(updateNicknameData.nickname());
+        userEntity.changeNickname(nickname);
     }
 
     // 비밀번호 변경

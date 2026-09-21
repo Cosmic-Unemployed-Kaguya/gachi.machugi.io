@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UserMapper {
-
     // Entity -> MyPageReq
     public MyPageRes entityToMyPageReq(UserEntity entity) {
         return new MyPageRes(

@@ -1,0 +1,83 @@
+package kaguya.user.domain.user.controller;
+
+import jakarta.validation.Valid;
+import kaguya.user.domain.common.model.dto.BaseRes;
+import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
+import kaguya.user.domain.user.model.dto.response.GetUserDetailsReq;
+import kaguya.user.domain.user.model.dto.response.GetUsersInfoReq;
+import kaguya.user.domain.user.model.enums.Role;
+import kaguya.user.domain.user.service.AdminService;
+import kaguya.user.global.exception.BusinessException;
+import kaguya.user.global.exception.ErrorCode;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/admin")
+public class AdminController {
+
+    private final AdminService adminService;
+
+    // todo. 페이징 처리
+    @GetMapping("/users/info")
+    public ResponseEntity<BaseRes<GetUsersInfoReq>> getUserList(
+            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-role", required = false) String role
+    ) {
+
+        if (!Role.ADMIN.name().equals(role) || idx == null) {
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
+
+        GetUsersInfoReq data = adminService.getUserList();
+
+        return ResponseEntity.ok(
+                new BaseRes<>("200", "유저 리스트 조회", data)
+        );
+    }
+
+    @GetMapping("/users/{idx}")
+    public ResponseEntity<BaseRes<GetUserDetailsReq>> getUserDetails(
+            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-role", required = false) String role,
+            @RequestParam("idx") Long userIdx
+    ) {
+
+        if (!Role.ADMIN.name().equals(role) || idx == null) {
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
+
+        GetUserDetailsReq data = adminService.getUserDetails(userIdx);
+
+        return ResponseEntity.ok(
+                new BaseRes<>("200", "유저 정보 조회", data)
+        );
+    }
+
+    @PatchMapping("/users/{idx}/nickname")
+    public ResponseEntity<BaseRes<Void>> updateNickname(
+            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-role", required = false) String role,
+            @RequestParam("idx") Long userIdx,
+            @RequestBody @Valid UpdateNicknameReq request
+    ) {
+
+        if (!Role.ADMIN.name().equals(role) || idx == null) {
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
+
+        adminService.updateNickname(userIdx, request.nickname());
+
+        BaseRes<Void> response = new BaseRes<>("200", "닉네임 수정 완료", null);
+        return ResponseEntity.ok(response);
+    }
+
+
+    /**
+     * todo.
+     *  - 악의적 유저 경고, 임차 및 활동정지
+     *  - gRPC 추가
+     */
+}

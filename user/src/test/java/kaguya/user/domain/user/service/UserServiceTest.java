@@ -1,6 +1,6 @@
 package kaguya.user.domain.user.service;
 
-import kaguya.user.domain.common.model.enums.Gender;
+import kaguya.user.domain.user.model.enums.Gender;
 import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.user.mapper.UserMapper;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;

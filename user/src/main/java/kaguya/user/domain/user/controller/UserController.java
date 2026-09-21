@@ -2,7 +2,7 @@ package kaguya.user.domain.user.controller;
 
 import jakarta.validation.Valid;
 import kaguya.user.domain.common.model.dto.BaseRes;
-import kaguya.user.domain.common.model.enums.Role;
+import kaguya.user.domain.user.model.enums.Role;
 import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
@@ -86,7 +86,7 @@ public class UserController {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        userService.updateNickname(idx, request);
+        userService.updateNickname(idx, request.nickname());
 
         BaseRes<Void> response = new BaseRes<>("200", "닉네임 수정 완료", null);
         return ResponseEntity.ok(response);

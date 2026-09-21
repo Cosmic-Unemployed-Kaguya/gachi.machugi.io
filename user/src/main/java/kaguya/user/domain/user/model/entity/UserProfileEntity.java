@@ -1,7 +1,7 @@
 package kaguya.user.domain.user.model.entity;
 
 import jakarta.persistence.*;
-import kaguya.user.domain.common.model.enums.Gender;
+import kaguya.user.domain.user.model.enums.Gender;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
