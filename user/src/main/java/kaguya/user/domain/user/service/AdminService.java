@@ -1,9 +1,12 @@
 package kaguya.user.domain.user.service;
 
 import kaguya.user.domain.user.mapper.AdminMapper;
+import kaguya.user.domain.user.model.dto.request.BlockReq;
 import kaguya.user.domain.user.model.dto.response.GetUserDetailsReq;
 import kaguya.user.domain.user.model.dto.response.GetUsersInfoReq;
 import kaguya.user.domain.user.model.entity.UserEntity;
+import kaguya.user.domain.user.model.entity.UserManagementEntity;
+import kaguya.user.domain.user.model.enums.Role;
 import kaguya.user.domain.user.repository.UserManagementRepository;
 import kaguya.user.domain.user.repository.UserRepository;
 import kaguya.user.global.exception.BusinessException;
@@ -58,6 +61,30 @@ public class AdminService {
 
         userEntity.changeNickname(nickname);
 
-        // 어드민이 바꿨다는것에 처리가 있다면 내용 추가 (ex. 바꿨다는 로그 등)
+        // 어드민이 닉네임을 바꿨다는것에 추가 처리가 있다면 내용 추가 (ex. 바꿨다는 로그 등)
+    }
+
+    @Transactional
+    public void updateRole(Long idx, Role role) {
+
+        UserEntity userEntity = userRepository.findById(idx)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        userEntity.changeRole(role);
+    }
+
+    @Transactional
+    public void blockUser(Long userIdx, Long adminIdx, BlockReq blockData) {
+
+        UserEntity userEntity = userRepository.findById(userIdx)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        UserEntity adminEntity = userRepository.findById(adminIdx)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        UserManagementEntity managementEntity = adminMapper.blockReqToUserManagementEntity(userEntity, adminEntity, blockData);
+        userManagementRepository.save(managementEntity);
+
+        userEntity.changeStatus(blockData.managementType().getMappedStatus());
     }
 }

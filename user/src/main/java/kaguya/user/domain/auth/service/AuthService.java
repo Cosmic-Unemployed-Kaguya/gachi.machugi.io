@@ -263,11 +263,11 @@ public class AuthService {
         return new GuestRes(guestId, guestNickname);
     }
 
-    // 로그인 성공 후처리 로직 (JWT 토큰 생성)
+    // 로그인 성공 후처리 로직 (로그인 시각 기록, JWT 토큰 생성)
     private LoginRes processLoginSuccess(UserEntity entity) {
         // todo. 로그인 로그 기록
         //  - 현재는 로그인 하면 바로 DB에 현재시각 기록
-        //  - 여기서 비용을 최소화한다면, redis에 로그인시간 기록 하고 특정 시간(ex. 04:00)에 DB로 옮기는 방식으로
+        //  - 여기서 통신 비용을 최소화한다면, redis에 로그인시간 기록 하고 특정 시간(ex. 04:00)에 DB로 옮기는 방식으로
         entity.recordLogin();
 
         String subject = String.valueOf(entity.getIdx());

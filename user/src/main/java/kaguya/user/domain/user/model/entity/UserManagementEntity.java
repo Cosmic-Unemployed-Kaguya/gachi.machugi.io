@@ -22,7 +22,6 @@ public class UserManagementEntity {
     @JoinColumn(name = "user_idx",  nullable = false)
     private UserEntity user;
 
-    // 제재를 가한 관리자 (admin_idx 대체)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admin_idx",  nullable = false)
     private UserEntity admin;
@@ -46,10 +45,12 @@ public class UserManagementEntity {
 
 
     @Builder
-    public UserManagementEntity(ManagementType managementType, String reason, LocalDateTime startDate, LocalDateTime endDate) {
+    public UserManagementEntity(UserEntity user, UserEntity admin, ManagementType managementType, String reason, LocalDateTime endDate) {
+        this.user = user;
+        this.admin = admin;
         this.managementType = managementType;
         this.reason = reason;
-        this.startDate = startDate;
+        this.startDate = LocalDateTime.now();
         this.endDate = endDate;
     }
 

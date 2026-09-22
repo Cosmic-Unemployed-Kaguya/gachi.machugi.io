@@ -2,7 +2,9 @@ package kaguya.user.domain.user.controller;
 
 import jakarta.validation.Valid;
 import kaguya.user.domain.common.model.dto.BaseRes;
+import kaguya.user.domain.user.model.dto.request.BlockReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
+import kaguya.user.domain.user.model.dto.request.UpdateRoleReq;
 import kaguya.user.domain.user.model.dto.response.GetUserDetailsReq;
 import kaguya.user.domain.user.model.dto.response.GetUsersInfoReq;
 import kaguya.user.domain.user.model.enums.Role;
@@ -10,6 +12,7 @@ import kaguya.user.domain.user.service.AdminService;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,11 +41,11 @@ public class AdminController {
         );
     }
 
-    @GetMapping("/users/{idx}")
+    @GetMapping("/users/{userIdx}")
     public ResponseEntity<BaseRes<GetUserDetailsReq>> getUserDetails(
             @RequestHeader(value = "x-user-id", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role,
-            @RequestParam("idx") Long userIdx
+            @RequestParam("userIdx") Long userIdx
     ) {
 
         if (!Role.ADMIN.name().equals(role) || idx == null) {
@@ -56,11 +59,11 @@ public class AdminController {
         );
     }
 
-    @PatchMapping("/users/{idx}/nickname")
+    @PatchMapping("/users/{userIdx}/nickname")
     public ResponseEntity<BaseRes<Void>> updateNickname(
             @RequestHeader(value = "x-user-id", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role,
-            @RequestParam("idx") Long userIdx,
+            @RequestParam("userIdx") Long userIdx,
             @RequestBody @Valid UpdateNicknameReq request
     ) {
 
@@ -74,10 +77,40 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    @PatchMapping("/users/{userIdx}/role")
+    public ResponseEntity<BaseRes<Void>> updateStatus(
+            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-role", required = false) String role,
+            @RequestParam("userIdx") Long userIdx,
+            @RequestBody @Valid UpdateRoleReq request
+    ) {
 
-    /**
-     * todo.
-     *  - 악의적 유저 경고, 임차 및 활동정지
-     *  - gRPC 추가
-     */
+        if (!Role.ADMIN.name().equals(role) || idx == null) {
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
+
+        adminService.updateRole(userIdx, request.role());
+
+        BaseRes<Void> response = new BaseRes<>("200", "권한 수정 완료", null);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/users/{userIdx}/block")
+    public ResponseEntity<BaseRes<Void>> blockUser(
+            @RequestHeader(value = "x-user-id", required = false) Long adminIdx,
+            @RequestHeader(value = "x-user-role", required = false) String role,
+            @RequestParam("userIdx") Long userIdx,
+            @RequestBody @Valid BlockReq request
+    ) {
+
+        if (!Role.ADMIN.name().equals(role) || adminIdx == null) {
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
+
+        adminService.blockUser(userIdx, adminIdx, request);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new BaseRes<>("201", "유저 차단", null)
+        );
+    }
 }

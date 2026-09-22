@@ -1,8 +1,10 @@
 package kaguya.user.domain.user.mapper;
 
+import kaguya.user.domain.user.model.dto.request.BlockReq;
 import kaguya.user.domain.user.model.dto.response.GetUserDetailsReq;
 import kaguya.user.domain.user.model.dto.response.GetUsersInfoReq;
 import kaguya.user.domain.user.model.entity.UserEntity;
+import kaguya.user.domain.user.model.entity.UserManagementEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -40,5 +42,14 @@ public class AdminMapper {
         );
     }
 
-
+    // BlockReq -> UserManagementEntity
+    public UserManagementEntity blockReqToUserManagementEntity(UserEntity userEntity, UserEntity adminEntity, BlockReq request) {
+        return new UserManagementEntity(
+                userEntity,
+                adminEntity,
+                request.managementType(),
+                request.reason(),
+                request.endDate()
+        );
+    }
 }
