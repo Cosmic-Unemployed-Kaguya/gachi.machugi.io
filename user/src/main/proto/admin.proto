@@ -14,34 +14,40 @@ service AdminService {
 
   rpc GetUserList (GetUsersInfoRequest) returns (GetUsersInfoResponse) {
     option (google.api.http) = {
-      get: "/users/info"
+      get: "/admin/users/info"
     };
   }
 
   rpc GetUserDetails (GetUserDetailsRequest) returns (GetUserDetailsResponse) {
     option (google.api.http) = {
-      get: "/users/{user_idx}"
+      get: "/admin/users/{user_idx}"
     };
   }
 
   rpc UpdateNickname (UpdateNicknameRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      patch: "/users/{user_idx}/nickname"
+      patch: "/admin/users/{user_idx}/nickname"
       body: "*"
     };
   }
 
   rpc UpdateRole (UpdateRoleRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      patch: "/users/{user_idx}/role"
+      patch: "/admin/users/{user_idx}/role"
       body: "*"
     };
   }
 
   rpc BlockUser (BlockRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post: "/users/{user_idx}/role"
+      post: "/admin/users/{user_idx}/block"
       body: "*"
+    };
+  }
+
+  rpc GetBlockList (GetBlockListRequest) returns (GetBlocksInfoResponse) {
+    option (google.api.http) = {
+      get: "/admin/users/block/list"
     };
   }
 }
@@ -101,6 +107,10 @@ message BlockRequest {
   string end_date = 4;
 }
 
+message GetBlockListRequest {
+  // todo. 페이징
+}
+
 
 // --- Response Messages ---
 message GetUsersInfoResponse {
@@ -117,4 +127,19 @@ message GetUserDetailsResponse {
   string join_date = 7;
   string last_login_date = 8;
   string withdrawal_date = 9;
+}
+
+message GetBlocksInfoResponse {
+    repeated GetBlockDetailsResponse block_list = 1;
+}
+
+message GetBlockDetailsResponse {
+  int64 idx = 1;
+  string userEmail = 2;
+  string userNickname = 3;
+  string managementType = 4;
+  string reason = 5;
+  string startDate = 6;
+  string endDate = 7;
+  string adminNickname = 8;
 }

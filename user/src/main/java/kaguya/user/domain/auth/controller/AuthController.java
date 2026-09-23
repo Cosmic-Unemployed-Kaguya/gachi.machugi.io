@@ -34,9 +34,10 @@ public class AuthController {
     ) {
 
         authService.register(request);
-        BaseRes<Void> response = new BaseRes<>("201", "회원가입 성공", null);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new BaseRes<>("201", "회원가입 성공", null)
+        );
     }
 
     /**

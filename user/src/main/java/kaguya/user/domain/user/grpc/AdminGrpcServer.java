@@ -5,6 +5,7 @@ import io.grpc.stub.StreamObserver;
 import kaguya.grpc.admin.*;
 import kaguya.user.domain.user.grpc.interceptor.GrpcContextKeys;
 import kaguya.user.domain.user.model.dto.request.BlockReq;
+import kaguya.user.domain.user.model.dto.response.GetBlocksInfoRes;
 import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
 import kaguya.user.domain.user.model.dto.response.GetUsersInfoRes;
 import kaguya.user.domain.user.model.enums.ManagementType;
@@ -50,8 +51,8 @@ public class AdminGrpcServer extends AdminServiceGrpc.AdminServiceImplBase {
                         .setRole(userDto.role())
                         .setStatus(userDto.status())
                         .setJoinDate(userDto.joinDate().toString())
-                        .setLastLoginDate(userDto.lastLoginDate().toString())
-                        .setWithdrawalDate(userDto.withdrawalDate().toString())
+                        .setLastLoginDate(userDto.lastLoginDate() != null ? userDto.lastLoginDate().toString() : "")  // null -> 빈 문자열
+                        .setWithdrawalDate(userDto.withdrawalDate() != null ? userDto.withdrawalDate().toString() : "")
                         .build()
                 )
                 .toList();
@@ -86,8 +87,8 @@ public class AdminGrpcServer extends AdminServiceGrpc.AdminServiceImplBase {
                 .setRole(resData.role())
                 .setStatus(resData.status())
                 .setJoinDate(resData.joinDate().toString())
-                .setLastLoginDate(resData.lastLoginDate().toString())
-                .setWithdrawalDate(resData.withdrawalDate().toString())
+                .setLastLoginDate(resData.lastLoginDate() != null ? resData.lastLoginDate().toString() : "")
+                .setWithdrawalDate(resData.withdrawalDate() != null ? resData.withdrawalDate().toString() : "")
                 .build();
 
         responseObserver.onNext(response);
@@ -143,16 +144,57 @@ public class AdminGrpcServer extends AdminServiceGrpc.AdminServiceImplBase {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
+        // endDate가 비어있다면 null로 처리 (영구 정지는 종료일 불필요)
+        LocalDateTime endDate = request.getEndDate().isBlank() ? null : LocalDateTime.parse(request.getEndDate());
+        // Proto Enum(통신 계층) -> Domain Enum(비즈니스 계층) 변환
         ManagementType managementType = ManagementType.valueOf(request.getManagementType().name());
         BlockReq reqData = new BlockReq(
                 managementType,
                 request.getReason(),
-                LocalDateTime.parse(request.getEndDate())
+                endDate
         );
 
         adminService.blockUser(request.getUserIdx(), adminIdx, reqData);
 
         responseObserver.onNext(Empty.getDefaultInstance());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void getBlockList(
+            GetBlockListRequest request,
+            StreamObserver<GetBlocksInfoResponse> responseObserver
+    ) {
+
+        Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
+        String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
+        if (!Role.ADMIN.name().equals(role) || idx == null) {
+            // 예외를 던지면 GlobalGrpcExceptionHandler가 가로채어 표준 gRPC 에러 응답으로 변환
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
+
+        GetBlocksInfoRes resData = adminService.getBlockList();
+
+        // todo. 페이징 처리
+        List<GetBlockDetailsResponse> protoBlockList = resData.blockList().stream()
+                .map(blockDto -> GetBlockDetailsResponse.newBuilder()
+                        .setIdx(blockDto.idx())
+                        .setUserEmail(blockDto.userEmail())
+                        .setUserNickname(blockDto.userNickname())
+                        .setManagementType(blockDto.managementType())
+                        .setReason(blockDto.reason())
+                        .setStartDate(blockDto.startDate().toString())
+                        .setEndDate(blockDto.endDate() != null ? blockDto.endDate().toString() : "")
+                        .setAdminNickname(blockDto.adminNickname())
+                        .build()
+                )
+                .toList();
+
+        GetBlocksInfoResponse response = GetBlocksInfoResponse.newBuilder()
+                .addAllBlockList(protoBlockList)
+                .build();
+
+        responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
 }

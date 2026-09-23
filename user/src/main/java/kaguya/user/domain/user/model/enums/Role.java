@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum Role {
     ADMIN(1, "관리자"),
     USER(2, "유저"),
-    GUEST(3, "게스트");
+    GUEST(3, "게스트");  // 사실 의미없음 (게스트는 redis로 관리)
 
     private final int code;
     private final String label;

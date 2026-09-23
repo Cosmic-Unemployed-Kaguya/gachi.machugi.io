@@ -5,6 +5,7 @@ import kaguya.user.domain.common.model.dto.BaseRes;
 import kaguya.user.domain.user.model.dto.request.BlockReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdateRoleReq;
+import kaguya.user.domain.user.model.dto.response.GetBlocksInfoRes;
 import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
 import kaguya.user.domain.user.model.dto.response.GetUsersInfoRes;
 import kaguya.user.domain.user.model.enums.Role;
@@ -113,6 +114,23 @@ public class AdminController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new BaseRes<>("201", "유저 차단", null)
+        );
+    }
+
+    @GetMapping("/users/block/list")
+    public ResponseEntity<BaseRes<GetBlocksInfoRes>> getBlockList(
+            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-role", required = false) String role
+    ) {
+
+        if (!Role.ADMIN.name().equals(role) || idx == null) {
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
+        }
+
+        GetBlocksInfoRes data = adminService.getBlockList();
+
+        return ResponseEntity.ok(
+                new BaseRes<>("200", "유저 제제 리스트 조회", data)
         );
     }
 }

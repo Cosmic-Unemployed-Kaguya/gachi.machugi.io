@@ -2,10 +2,12 @@ package kaguya.user.domain.user.service;
 
 import kaguya.user.domain.user.mapper.AdminMapper;
 import kaguya.user.domain.user.model.dto.request.BlockReq;
+import kaguya.user.domain.user.model.dto.response.GetBlocksInfoRes;
 import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
 import kaguya.user.domain.user.model.dto.response.GetUsersInfoRes;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.model.entity.UserManagementEntity;
+import kaguya.user.domain.user.model.enums.ManagementType;
 import kaguya.user.domain.user.model.enums.Role;
 import kaguya.user.domain.user.repository.UserManagementRepository;
 import kaguya.user.domain.user.repository.UserRepository;
@@ -76,6 +78,11 @@ public class AdminService {
     @Transactional
     public void blockUser(Long userIdx, Long adminIdx, BlockReq blockData) {
 
+        // 임시차단에 종료 날자가 없을 경우
+        if (blockData.managementType() == ManagementType.TEMP_BAN && blockData.endDate() == null) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
         UserEntity userEntity = userRepository.findById(userIdx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -86,5 +93,13 @@ public class AdminService {
         userManagementRepository.save(managementEntity);
 
         userEntity.changeStatus(blockData.managementType().getMappedStatus());
+    }
+
+    @Transactional(readOnly = true)
+    public GetBlocksInfoRes getBlockList() {
+
+        List<UserManagementEntity> blockList = userManagementRepository.findAll();
+
+        return adminMapper.userManagementListToGetBlocksInfoRes(blockList);
     }
 }
