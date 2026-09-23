@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 public class UserManagementEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idx;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -53,16 +54,4 @@ public class UserManagementEntity {
         this.startDate = LocalDateTime.now();
         this.endDate = endDate;
     }
-
-    /*
-    idx (PK)
-    user_idx (FK)
-    admin_idx (제제를 가한 관리자 idx)
-    management_type (제제 종류 - 임시차단, 영구차단)
-    reason (제제 이유)
-    start_date
-    end_date
-    created_at
-*/
-
 }

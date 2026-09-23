@@ -2,7 +2,6 @@ package kaguya.user.domain.auth.mapper;
 
 import kaguya.user.domain.auth.model.dto.request.RegisterReq;
 import kaguya.user.domain.auth.model.dto.response.LoginRes;
-import kaguya.user.domain.user.model.enums.Gender;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.model.entity.UserProfileEntity;
 import org.springframework.stereotype.Component;
@@ -28,7 +27,7 @@ public class AuthMapper {
                 .name(request.user().name())
                 .birth(request.user().birth())
                 .phone(request.user().phone())
-                .gender(Gender.fromString(request.user().gender()))
+                .gender(request.user().gender())
                 .build();
     }
 

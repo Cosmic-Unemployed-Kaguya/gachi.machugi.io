@@ -37,7 +37,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
         String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
         if (role == null || Role.GUEST.name().equals(role) || idx == null) {
             // 예외를 던지면 GlobalGrpcExceptionHandler가 가로채어 표준 gRPC 에러 응답으로 변환
-            throw new BusinessException(ErrorCode.MISSING_TOKEN);
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
         MyPageRes resData = userService.getMyPage(idx);
@@ -62,7 +62,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
         Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
         String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
         if (role == null || Role.GUEST.name().equals(role) || idx == null) {
-            throw new BusinessException(ErrorCode.MISSING_TOKEN);
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
         ProfileRes resData = userService.getProfile(idx);
@@ -87,7 +87,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
         Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
         String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
         if (role == null || Role.GUEST.name().equals(role) || idx == null) {
-            throw new BusinessException(ErrorCode.MISSING_TOKEN);
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
         String newPassword = request.getNewPassword();
@@ -115,7 +115,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
         Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
         String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
         if (role == null || Role.GUEST.name().equals(role) || idx == null) {
-            throw new BusinessException(ErrorCode.MISSING_TOKEN);
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
         userService.updateNickname(idx, request.getNickname());
@@ -133,7 +133,7 @@ public class UserGrpcServer extends UserServiceGrpc.UserServiceImplBase {
         Long idx = GrpcContextKeys.USER_IDX_CTX_KEY.get();
         String role = GrpcContextKeys.USER_ROLE_CTX_KEY.get();
         if (role == null || Role.GUEST.name().equals(role) || idx == null) {
-            throw new BusinessException(ErrorCode.MISSING_TOKEN);
+            throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
         userService.withdraw(idx);

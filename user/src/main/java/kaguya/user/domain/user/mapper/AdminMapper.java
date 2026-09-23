@@ -1,8 +1,8 @@
 package kaguya.user.domain.user.mapper;
 
 import kaguya.user.domain.user.model.dto.request.BlockReq;
-import kaguya.user.domain.user.model.dto.response.GetUserDetailsReq;
-import kaguya.user.domain.user.model.dto.response.GetUsersInfoReq;
+import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
+import kaguya.user.domain.user.model.dto.response.GetUsersInfoRes;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.model.entity.UserManagementEntity;
 import org.springframework.stereotype.Component;
@@ -15,21 +15,21 @@ public class AdminMapper {
 
     // todo. findAll 말고 페이징/검색으로 변경
     // List<userEntity> -> GetUsersInfoReq
-    public GetUsersInfoReq userListToGetUsersInfoReq(List<UserEntity> list) {
+    public GetUsersInfoRes userListToGetUsersInfoReq(List<UserEntity> list) {
 
         // 임시 방편 (findAll)
-        List<GetUserDetailsReq> userList = new ArrayList<>();
+        List<GetUserDetailsRes> userList = new ArrayList<>();
         for (UserEntity userEntity : list) {
-            GetUserDetailsReq userInfo = userEntityToGetUserDetailsReq(userEntity);
+            GetUserDetailsRes userInfo = userEntityToGetUserDetailsReq(userEntity);
             userList.add(userInfo);
         }
 
-        return new GetUsersInfoReq(userList);
+        return new GetUsersInfoRes(userList);
     }
 
     // UserEntity -> GetUserDetailsReq
-    public GetUserDetailsReq userEntityToGetUserDetailsReq(UserEntity entity) {
-        return new GetUserDetailsReq(
+    public GetUserDetailsRes userEntityToGetUserDetailsReq(UserEntity entity) {
+        return new GetUserDetailsRes(
                 entity.getIdx(),
                 entity.getEmail(),
                 entity.getNickname(),

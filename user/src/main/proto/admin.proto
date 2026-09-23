@@ -1,0 +1,120 @@
+syntax = "proto3";
+
+package machugi.admin;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "validate/validate.proto";
+import "google/rpc/error_details.proto";
+
+option java_multiple_files = true;
+option java_package = "kaguya.grpc.admin";
+
+service AdminService {
+
+  rpc GetUserList (GetUsersInfoRequest) returns (GetUsersInfoResponse) {
+    option (google.api.http) = {
+      get: "/users/info"
+    };
+  }
+
+  rpc GetUserDetails (GetUserDetailsRequest) returns (GetUserDetailsResponse) {
+    option (google.api.http) = {
+      get: "/users/{user_idx}"
+    };
+  }
+
+  rpc UpdateNickname (UpdateNicknameRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      patch: "/users/{user_idx}/nickname"
+      body: "*"
+    };
+  }
+
+  rpc UpdateRole (UpdateRoleRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      patch: "/users/{user_idx}/role"
+      body: "*"
+    };
+  }
+
+  rpc BlockUser (BlockRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/users/{user_idx}/role"
+      body: "*"
+    };
+  }
+}
+
+
+// --- Enums ---
+enum GrpcRole {
+  ROLE_UNSPECIFIED = 0;
+  USER = 1;
+  ADMIN = 2;
+}
+
+enum GrpcManagementType {
+  MANAGEMENT_TYPE_UNSPECIFIED = 0;
+  WARNING = 1;
+  TEMP_BAN = 2;
+  PERM_BAN = 3;
+}
+
+
+// --- Request Messages ---
+message GetUsersInfoRequest {
+  // todo. 페이징
+}
+
+message GetUserDetailsRequest {
+  int64 user_idx = 1 [(validate.rules).int64 = { gt: 0 }];
+}
+
+message UpdateNicknameRequest {
+  int64 user_idx = 1 [(validate.rules).int64 = { gt: 0 }];
+  string nickname = 2 [(validate.rules).string = {
+    min_len: 1,
+    pattern: "^.*\\S.*$"
+  }];
+}
+
+message UpdateRoleRequest {
+  int64 user_idx = 1 [(validate.rules).int64 = { gt: 0 }];
+
+  GrpcRole role = 2 [(validate.rules).enum = {
+    defined_only: true,
+    not_in: [0]  // UNSPECIFIED(0) 값 허용 안 함 (@NotNull 역할)
+  }];
+}
+
+message BlockRequest {
+  int64 user_idx = 1 [(validate.rules).int64 = { gt: 0 }];
+  GrpcManagementType management_type = 2 [(validate.rules).enum = {
+    defined_only: true,
+    not_in: [0]
+  }];
+  string reason = 3 [(validate.rules).string = {
+    min_len: 1,
+    pattern: "^.*\\S.*$"
+  }];
+  string end_date = 4;
+}
+
+
+// --- Response Messages ---
+message GetUsersInfoResponse {
+  repeated GetUserDetailsResponse user_list = 1;
+}
+
+message GetUserDetailsResponse {
+  int64 idx = 1;
+  string email = 2;
+  string nickname = 3;
+  int64 point = 4;
+  string role = 5;
+  string status = 6;
+  string join_date = 7;
+  string last_login_date = 8;
+  string withdrawal_date = 9;
+}

@@ -5,8 +5,8 @@ import kaguya.user.domain.common.model.dto.BaseRes;
 import kaguya.user.domain.user.model.dto.request.BlockReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdateRoleReq;
-import kaguya.user.domain.user.model.dto.response.GetUserDetailsReq;
-import kaguya.user.domain.user.model.dto.response.GetUsersInfoReq;
+import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
+import kaguya.user.domain.user.model.dto.response.GetUsersInfoRes;
 import kaguya.user.domain.user.model.enums.Role;
 import kaguya.user.domain.user.service.AdminService;
 import kaguya.user.global.exception.BusinessException;
@@ -25,7 +25,7 @@ public class AdminController {
 
     // todo. 페이징 처리
     @GetMapping("/users/info")
-    public ResponseEntity<BaseRes<GetUsersInfoReq>> getUserList(
+    public ResponseEntity<BaseRes<GetUsersInfoRes>> getUserList(
             @RequestHeader(value = "x-user-id", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role
     ) {
@@ -34,7 +34,7 @@ public class AdminController {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        GetUsersInfoReq data = adminService.getUserList();
+        GetUsersInfoRes data = adminService.getUserList();
 
         return ResponseEntity.ok(
                 new BaseRes<>("200", "유저 리스트 조회", data)
@@ -42,7 +42,7 @@ public class AdminController {
     }
 
     @GetMapping("/users/{userIdx}")
-    public ResponseEntity<BaseRes<GetUserDetailsReq>> getUserDetails(
+    public ResponseEntity<BaseRes<GetUserDetailsRes>> getUserDetails(
             @RequestHeader(value = "x-user-id", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role,
             @RequestParam("userIdx") Long userIdx
@@ -52,7 +52,7 @@ public class AdminController {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        GetUserDetailsReq data = adminService.getUserDetails(userIdx);
+        GetUserDetailsRes data = adminService.getUserDetails(userIdx);
 
         return ResponseEntity.ok(
                 new BaseRes<>("200", "유저 정보 조회", data)
@@ -73,12 +73,13 @@ public class AdminController {
 
         adminService.updateNickname(userIdx, request.nickname());
 
-        BaseRes<Void> response = new BaseRes<>("200", "닉네임 수정 완료", null);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                new BaseRes<>("200", "닉네임 수정 완료", null)
+        );
     }
 
     @PatchMapping("/users/{userIdx}/role")
-    public ResponseEntity<BaseRes<Void>> updateStatus(
+    public ResponseEntity<BaseRes<Void>> updateRole(
             @RequestHeader(value = "x-user-id", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role,
             @RequestParam("userIdx") Long userIdx,
@@ -91,8 +92,9 @@ public class AdminController {
 
         adminService.updateRole(userIdx, request.role());
 
-        BaseRes<Void> response = new BaseRes<>("200", "권한 수정 완료", null);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                new BaseRes<>("200", "권한 수정 완료", null)
+        );
     }
 
     @PostMapping("/users/{userIdx}/block")

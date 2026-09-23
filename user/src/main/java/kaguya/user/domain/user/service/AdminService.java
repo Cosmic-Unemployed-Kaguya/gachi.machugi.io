@@ -2,8 +2,8 @@ package kaguya.user.domain.user.service;
 
 import kaguya.user.domain.user.mapper.AdminMapper;
 import kaguya.user.domain.user.model.dto.request.BlockReq;
-import kaguya.user.domain.user.model.dto.response.GetUserDetailsReq;
-import kaguya.user.domain.user.model.dto.response.GetUsersInfoReq;
+import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
+import kaguya.user.domain.user.model.dto.response.GetUsersInfoRes;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.model.entity.UserManagementEntity;
 import kaguya.user.domain.user.model.enums.Role;
@@ -27,7 +27,7 @@ public class AdminService {
     private final AdminMapper adminMapper;
 
     @Transactional(readOnly = true)
-    public GetUsersInfoReq getUserList() {
+    public GetUsersInfoRes getUserList() {
 
         List<UserEntity> userList = userRepository.findAll();
 
@@ -35,7 +35,7 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
-    public GetUserDetailsReq getUserDetails(Long idx) {
+    public GetUserDetailsRes getUserDetails(Long idx) {
 
         UserEntity userEntity = userRepository.findById(idx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

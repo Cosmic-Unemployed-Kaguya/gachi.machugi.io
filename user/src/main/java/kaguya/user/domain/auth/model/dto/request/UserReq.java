@@ -2,6 +2,7 @@ package kaguya.user.domain.auth.model.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import kaguya.user.domain.user.model.enums.Gender;
 
 import java.time.LocalDate;
 
@@ -16,5 +17,5 @@ public record UserReq(
         String phone,
 
         @NotBlank(message = "성별을 선택해주세요. (NONE / MALE / FEMALE)")
-        String gender
+        Gender gender
 ) {}

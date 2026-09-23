@@ -2,7 +2,7 @@ package kaguya.user.domain.user.model.dto.response;
 
 import java.time.LocalDateTime;
 
-public record GetUserDetailsReq(
+public record GetUserDetailsRes(
         Long idx,
         String email,
         String nickname,
