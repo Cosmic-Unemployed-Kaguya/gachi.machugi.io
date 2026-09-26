@@ -12,6 +12,9 @@ public class RedisRepository {
 
     private final RedisTemplate<String, String> redisTemplate;
 
+    /**
+     * Key : Value 저장
+     */
     public void save(String key, String value, long timeout, TimeUnit unit) {
         redisTemplate.opsForValue().set(key, value, timeout, unit);
     }
@@ -26,5 +29,20 @@ public class RedisRepository {
 
     public boolean exist(String key) {
         return redisTemplate.hasKey(key);
+    }
+
+
+    /**
+     * 원자적 증감(INCR) / 차감(DECR)
+     */
+    public Long increment(String key, long timeout, TimeUnit unit) {
+        Long count = redisTemplate.opsForValue().increment(key);
+
+        // TTL 설정 (최초 실행시)
+        if (count != null && count == 1) {
+            redisTemplate.expire(key, timeout, unit);
+        }
+
+        return count;
     }
 }

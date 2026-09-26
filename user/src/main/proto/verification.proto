@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+package machugi.verification;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "validate/validate.proto";
+
+option java_multiple_files = true;
+option java_package = "kaguya.grpc.verification";
+
+service VerificationService {
+
+  rpc SendVerificationCode (SendVerificationCodeRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/verifications/send"
+      body: "*"
+    };
+  }
+
+  rpc CheckVerificationCode (CheckVerificationCodeRequest) returns (CheckVerificationCodeResponse) {
+    option (google.api.http) = {
+      post: "/verifications/check"
+      body: "*"
+    };
+  }
+}
+
+
+// --- Request Messages ---
+message SendVerificationCodeRequest {
+  string verificationType = 1 [(validate.rules).string = {
+    min_len: 1,  // 문자의 최소 길이는 1 이상이어야 함 (@NotEmpty)
+    pattern: "^.*\\S.*$"  // 문자열 내에 공백이 아닌 문자가 최소 1개 있어야 함 (@NotBlank)
+  }];
+  string email = 2 [(validate.rules).string = {
+    min_len: 1,  // 문자의 최소 길이는 1 이상이어야 함 (@NotEmpty)
+    email: true  // 이메일 검증
+  }];
+}
+
+message CheckVerificationCodeRequest {
+  string verificationType = 1 [(validate.rules).string = {
+    min_len: 1,
+    pattern: "^.*\\S.*$"
+  }];
+  string verificationCode = 2 [(validate.rules).string = {
+    pattern: "^[a-zA-Z0-9]{6}$"  // 6자리 영문 대소문자, 숫자 검증
+  }];
+  string email = 3 [(validate.rules).string = {
+    min_len: 1,  // 문자의 최소 길이는 1 이상이어야 함 (@NotEmpty)
+    email: true  // 이메일 검증
+  }];
+}
+
+
+// --- Response Messages ---
+message CheckVerificationCodeResponse {
+    string oneTimeAuthCode = 1;
+}

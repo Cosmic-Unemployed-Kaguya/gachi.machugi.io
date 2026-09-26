@@ -62,6 +62,9 @@ dependencies {
     implementation 'build.buf.protoc-gen-validate:pgv-java-grpc:1.1.0'
     // 구글 공통 proto 파일들을 자동으로 인식 (annotations.proto, http.proto)
     implementation 'com.google.api.grpc:proto-google-common-protos:2.28.0'
+
+    // 메일 전송
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 protobuf {
