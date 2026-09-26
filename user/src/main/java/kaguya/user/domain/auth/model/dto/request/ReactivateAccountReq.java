@@ -4,7 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record LoginDormancyReq(
+public record ReactivateAccountReq(
 
         @NotBlank(message = "인증 토큰이 필요합니다.")
         String oneTimeAuthCode,

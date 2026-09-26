@@ -2,7 +2,7 @@ package kaguya.user.domain.auth.service;
 
 import kaguya.user.domain.auth.mapper.AuthMapper;
 import kaguya.user.domain.auth.model.dto.request.GuestReq;
-import kaguya.user.domain.auth.model.dto.request.LoginDormancyReq;
+import kaguya.user.domain.auth.model.dto.request.ReactivateAccountReq;
 import kaguya.user.domain.auth.model.dto.request.LoginReq;
 import kaguya.user.domain.auth.model.dto.request.RegisterReq;
 import kaguya.user.domain.auth.model.dto.response.CheckTokenRes;
@@ -56,10 +56,6 @@ public class AuthService {
 //            throw new BusinessException(ErrorCode.EXISTS_USERNAME);
 //        }
 
-//        if(userRepository.existsByEmail(registerData.account().email())) {
-//            throw new BusinessException(ErrorCode.EXISTS_EMAIL);
-//        }
-
         String oneTimeAuthCode = registerData.oneTimeAuthCode();
 
         // 일회용 인증번호 조회 및 저장된 이메일 가져오기
@@ -70,6 +66,11 @@ public class AuthService {
         if (verifiedEmail == null) {
             throw new BusinessException(ErrorCode.INVALID_AUTH_CODE);
         }
+
+//        인증코드 보낼 때 확인했으므로 한번 더 확인할 필요 없음
+//        if(userRepository.existsByEmail(verifiedEmail)) {
+//            throw new BusinessException(ErrorCode.EXISTS_EMAIL);
+//        }
 
         // 사용된 닉네임인지 확인
         if(userRepository.existsByNickname(registerData.account().nickname())) {
@@ -122,15 +123,15 @@ public class AuthService {
 
     /**
      * 휴면상태 로그인
-     * @param loginDormancyData: 휴면 로그인 정보
+     * @param reactivateAccountData: 휴면 로그인 정보
      */
     @Transactional
-    public LoginRes loginDormancy(LoginDormancyReq loginDormancyData) {
+    public LoginRes reactivateAccount(ReactivateAccountReq reactivateAccountData) {
 
-        String oneTimeAuthCode = loginDormancyData.oneTimeAuthCode();
+        String oneTimeAuthCode = reactivateAccountData.oneTimeAuthCode();
 
         // 일회용 인증번호 조회 및 저장된 이메일 가져오기
-        String oneTimeKey = "verification:oneTimeAuthCode:" + VerificationType.RELEASE_DORMANCY.name() + ":" + oneTimeAuthCode;
+        String oneTimeKey = "verification:oneTimeAuthCode:" + VerificationType.REACTIVATE_ACCOUNT.name() + ":" + oneTimeAuthCode;
         String verifiedEmail = redisRepository.get(oneTimeKey);
 
         // 인증코드 확인
@@ -142,7 +143,7 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 아이디와 비밀번호 맞는지 검증
-        if (!passwordEncoder.matches(loginDormancyData.password(), entity.getPassword())) {
+        if (!passwordEncoder.matches(reactivateAccountData.password(), entity.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
