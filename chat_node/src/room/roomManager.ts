@@ -111,7 +111,7 @@ export class RoomManager{
         this.rooms.delete(roomIdx);
 
         // 구독 해지
-        this.redisSubClient.unSubscribe('room:'+ roomIdx);
+        this.redisSubClient.unSubscribeRoom(roomIdx);
         
     }
 
@@ -129,7 +129,7 @@ export class RoomManager{
         const newRoom = new Room();
         this.rooms.set(roomIdx, newRoom);
         // 해당 방 구독
-        this.redisSubClient.onSubscribe('room:'+ roomIdx);
+        this.redisSubClient.onSubscribeRoom(roomIdx);
 
         return newRoom;
     }

@@ -56,15 +56,23 @@ export class RedisKvClient{
      * SET + NX + EX
      * > 가장 먼저 저장한 놈만 저장되고 그 이후는 저장이 안되는 방식
      */
-    public async setWithExpiration(roomIdx: number , userIdx: number){
+    public async setWithExpiration(roomIdx: number , userIdx: number):Promise<boolean>{
         const key = "room:" + roomIdx + ":lock";
         const value = userIdx;
-        const ttl = 5;
+        const ttl = 10;
 
         // NX : 해당 키가 존재하지 않을때에만 저장
         // EX : ttl을 ms가 아닌 sec 단위로 설정 
         const result = await this.kvClient.set(key, value, 'EX', ttl, 'NX');
 
-        if(result === null) throw WsError.fromType('REDIS_ERROR');
+        return (result === "OK");
+    }
+
+    public async releaseLock(roomIdx: number) :Promise<boolean>{
+        const key = "room:" + roomIdx + ":lock";
+
+        const deletedCount = await this.kvClient.del(key);
+
+        return deletedCount > 0;
     }
 }

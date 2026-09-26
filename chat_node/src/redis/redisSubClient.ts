@@ -5,6 +5,7 @@ import logger from "@common/util/logger";
 import Redis from "ioredis";
 import { Inject, Service } from "typedi";
 import { RoomManager } from "../room/roomManager";
+import { RedisKvClient } from "./redisKvClient";
 
 @Service()
 export class RedisSubClient {
@@ -13,27 +14,28 @@ export class RedisSubClient {
 
     @Inject(() => RoomManager)
     private roomManager: RoomManager;
+    @Inject(() => RedisKvClient)
+    private redisKvClient: RedisKvClient;
 
-    constructor(
-        // @Inject(() => RoomManager) private roomManager : RoomManager,
-    ){
+    private EVENT_TYPE = ['base', 'correct'] as const;
+
+    constructor(){
 
         this.subClient =  new Redis(config.redisSubServer);
         this.subClient.on('message', this.onMessage.bind(this))
     
     }
 
-    // // 특정 채널 구독
-    // public async onSubscribe(channels : string[]) : Promise<void>{
-    //     this.subClient.subscribe(...channels);
-    // }
-    public async onSubscribe(channel : string) : Promise<void>{
-        await this.subClient.subscribe(channel);
+    // 방 구독
+    public async onSubscribeRoom(roomIdx: number) {
+        const channels = this.EVENT_TYPE.map(type => `room:${roomIdx}:${type}`)  
+        await this.subClient.subscribe(...channels)
     }
 
-    // 구독 해지
-    public async unSubscribe(channel : string) : Promise<void>{
-        await this.subClient.unsubscribe(channel);
+    // 방 구독 해지
+    public async unSubscribeRoom(roomIdx: number) : Promise<void>{
+        const channels = this.EVENT_TYPE.map(type => `room:${roomIdx}:${type}`)  
+        await this.subClient.unsubscribe(...channels);
     }
 
 
@@ -99,45 +101,22 @@ export class RedisSubClient {
 
                     // room에 저장되어있는 정답 수정
                     room.setAnswer(quizData.answer);
+                    
+                    // 정답자 lock 해제
+                    await this.redisKvClient.releaseLock(roomIdx);
 
                     break;
+
+                // 게임 종료시
+                case('game_over'):
+                    await this.roomManager.sendMessage(roomIdx, payload);
+                    break;
+
                 
             }
         }catch(error){
             logger.error('redis Sub 처리 실패 : ' ,error);
         }
-
-        // try{
-        //     switch(channel){
-        //         case('global_chat_channel'):
-            //             const messageDto : PublishMessageDto = JSON.parse(message);
-            //             await this.roomManager.sendMessage(messageDto.roomIdx, messageDto.data);
-        //             break;
-
-
-        //         case('game_start'):
-        //             const gameStartReq : GameStartReq = JSON.parse(message);
-        //             await this.roomManager.sendMessage(gameStartReq.roomIdx, {event : 'game_start'});
-        //             break;
-
-
-        //         case('next_quiz'):
-                    
-        //             break;
-                
-        //         case('correct'):
-        //             break;
-
-        //         // case('kick_user_channel'):
-        //         //     const kickUserDto : KickUserRequest = JSON.parse(message);
-        //         //     await this.roomManager.kickUser(kickUserDto.roomIdx, kickUserDto.userIdx);
-        //         //     break;
-
-        //     }
-        // }catch(error){
-        //     logger.error('redis Sub 처리 실패 : ' ,error);
-        // }
-
 
     }
 
