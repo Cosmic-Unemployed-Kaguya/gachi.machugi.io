@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package Proto.game;
+
+import "google/api/annotations.proto";
+
+option csharp_namespace = "Game.Service.Proto";
+
+service GameGrpcManager {
+  // 게임 시작
+  rpc GameStart(GrpcGameStartRequest) returns (GrpcGameStartResponse) {
+    option (google.api.http) = {
+      post: "/api/game/start/{room_idx}"
+      body: "*"
+    };
+  }
+}
+
+message GrpcGameStartRequest {
+  // int32 room_idx = 1;
+  int64 room_idx = 2;
+}
+
+message GrpcGameStartResponse {
+  // 반환값은..딱히 없다!
+  bool is_success = 1;
+}
