@@ -1,20 +1,10 @@
 using System.Collections.Concurrent;
 using Common;
 using Game.Model.Dto.Request;
-using Game.Model.Vo;
+using Game.Model.Entity;
 using Game.Util;
 using Quiz.Service.Proto;
 
-public class GameRoomState
-{
-    // quizIdx, TimeLimit, TotalQuizCount는 고민 좀 해봐야할듯
-    public long QuizIdx{get;set;}
-    public long TimeLimit{get;set;}
-    public int TotalQuizCount{get;set;}
-    public Queue<QuizData> QuizQueue {get; } = new();
-    public int Progress  {get;set;} = 0;
-    public CancellationTokenSource? Timer {get;set;} 
-}
 
 public class GameManager
 {
