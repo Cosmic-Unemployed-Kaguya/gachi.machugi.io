@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import kaguya.user.domain.auth.model.dto.response.CheckTokenRes;
 import kaguya.user.domain.auth.service.AuthService;
-import kaguya.user.domain.common.model.enums.Role;
+import kaguya.user.domain.user.model.enums.Role;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -67,7 +67,7 @@ public class ExtAuthzFilter extends OncePerRequestFilter {
                 CheckTokenRes checkRes = authService.checkToken(accessToken);  // 서비스 로직
 
                 // 유저 정보 헤더에 세팅
-                response.setHeader("X-User-Id", checkRes.username());  // 아이디
+                response.setHeader("X-User-Id", checkRes.idx());  // 식별자
                 response.setHeader("X-User-Role", checkRes.role());  // 권한
 
                 response.setStatus(HttpServletResponse.SC_OK);

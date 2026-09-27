@@ -1,16 +1,13 @@
 package kaguya.user.domain.user.model.entity;
 
 import jakarta.persistence.*;
-import kaguya.user.domain.common.model.enums.Gender;
-import kaguya.user.domain.common.model.enums.Role;
-import kaguya.user.domain.common.model.enums.Status;
+import kaguya.user.domain.user.model.enums.Role;
+import kaguya.user.domain.user.model.enums.Status;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -20,28 +17,23 @@ import java.time.LocalDateTime;
 public class UserEntity {
 
     @Id
-    @Column(name = "idx")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userIdx;
+    private Long idx;
 
-    @Column(name = "id", nullable = false)
-    private String username;
-
-    @Column(nullable = false)
-    private String password;
+//    @Column(name = "id", nullable = false)
+//    private String username;
 
     @Column(nullable = false)
     private String email;
 
     @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
     private String nickname;
 
-    private String name;
-    private LocalDate birth;
-    private String phone;
-
-    @Enumerated(EnumType.STRING)
-    private Gender gender;
+    @Column(nullable = false)
+    private Long point;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -51,30 +43,32 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     private Status status = Status.ACTIVE;
 
-    @Column(name = "withdrawal_date")
-    private LocalDateTime withdrawalDate;
+    @Column(name = "last_login_date")
+    private LocalDateTime lastLoginDate;
 
     @CreationTimestamp
     @Column(name = "join_date", nullable = false, updatable = false)
     private LocalDateTime joinDate;
 
-    @UpdateTimestamp
-    @Column(name = "update_date", nullable = false)
-    private LocalDateTime updateDate;
+    @Column(name = "withdrawal_date")
+    private LocalDateTime withdrawalDate;
 
     @Builder
-    public UserEntity(String username, String password, String email, String nickname, String name, LocalDate birth, String phone, Gender gender) {
-        this.username = username;
-        this.password = password;
+    public UserEntity(String email, String password, String nickname, Long point) {
         this.email = email;
+        this.password = password;
         this.nickname = nickname;
-        this.name = name;
-        this.birth = birth;
-        this.phone = phone;
-        this.gender = gender;
+        this.point = (point != null) ? point : 0L;
     }
 
     // User
+    public void withdraw() {
+        this.status = Status.WITHDRAWAL;
+        this.withdrawalDate = LocalDateTime.now();
+    }
+    public void recordLogin() {
+        this.lastLoginDate = LocalDateTime.now();
+    }
     public void changePassword(String password) {this.password = password;}
     public void changeNickname(String nickname) {this.nickname = nickname;}
 
