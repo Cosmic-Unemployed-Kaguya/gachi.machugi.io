@@ -74,7 +74,7 @@ message GetUsersInfoRequest {
 }
 
 message GetUserDetailsRequest {
-  int64 user_idx = 1 [(validate.rules).int64 = { gt: 0 }];
+  int64 user_idx = 1 [(validate.rules).int64 = { gt: 0 }];  // idx는 1이상의 값
 }
 
 message UpdateNicknameRequest {

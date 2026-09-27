@@ -45,9 +45,11 @@ class AuthControllerTest {
     @Test
     @DisplayName("회원가입 성공")
     void 회원가입_테스트_성공() throws Exception {
-        AccountReq account = new AccountReq("testID", "testPassword12!@", "aaaa@bbbb.com", "user1");
-        UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
-        RegisterReq register = new RegisterReq(account, user);
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        AccountReq account = new AccountReq("password123!@#", "user1");
+        UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE);
+
+        RegisterReq register = new RegisterReq(oneTimeAuthCode, account, user);
 
         // 회원가입 서비스 return이 null이어서 given 의미 없음
 
@@ -64,7 +66,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("로그인 성공 (쿠키 생성)")
     void 로그인_테스트_성공() throws Exception {
-        LoginReq request = new LoginReq("testID", "testPassword");
+        LoginReq request = new LoginReq("testID@test.com", "testPassword");
         LoginRes response = new LoginRes("accessToken-aaabbbccc", "refreshToken-dddeeefff", "user1");
 
         given(authService.login(any(LoginReq.class)))
@@ -169,9 +171,10 @@ class AuthControllerTest {
     @Test
     @DisplayName("존재하지 않는 API 요청")
     void 존재하지_않는_API_요청() throws Exception {
-        AccountReq account = new AccountReq("testID", "testPassword12!@", "aaaa@bbbb.com", "user1");
-        UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
-        RegisterReq register = new RegisterReq(account, user);
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        AccountReq account = new AccountReq("aaaa@bbbb.com", "user1");
+        UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE);
+        RegisterReq register = new RegisterReq(oneTimeAuthCode, account, user);
 
         mockMvc.perform(post("/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -182,30 +185,31 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").value("페이지를 찾을 수 없습니다."));
     }
 
-    @Test
-    @DisplayName("회원가입 - 이메일 형식 다름")
-    void 회원가입_이메일_형식_다름() throws Exception {
-        // 이메일 형식이 아님
-        AccountReq account = new AccountReq("testID", "testPassword12!@", "aaaa123", "user1");
-        UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
-        RegisterReq register = new RegisterReq(account, user);
-
-        mockMvc.perform(post("/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(register)))
-
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("400_INVALID_INPUT_VALUE"))
-                .andExpect(jsonPath("$.message").value("이메일 형식이 올바르지 않습니다."));
-    }
+//    @Test
+//    @DisplayName("회원가입 - 이메일 형식 다름")
+//    void 회원가입_이메일_형식_다름() throws Exception {
+//        // 이메일 형식이 아님
+//        AccountReq account = new AccountReq("testID", "testPassword12!@", "aaaa123", "user1");
+//        UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
+//        RegisterReq register = new RegisterReq(account, user);
+//
+//        mockMvc.perform(post("/auth/register")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(objectMapper.writeValueAsString(register)))
+//
+//                .andExpect(status().isBadRequest())
+//                .andExpect(jsonPath("$.code").value("400_INVALID_INPUT_VALUE"))
+//                .andExpect(jsonPath("$.message").value("이메일 형식이 올바르지 않습니다."));
+//    }
 
     @Test
     @DisplayName("회원가입 - 비밀번호 정규식 위반")
     void 회원가입_비밀번호_정규식_위반() throws Exception{
         // 비밀번호 특수문자(!@#) 안들어가 있음
-        AccountReq account = new AccountReq("testID", "testPassword", "aaaa@bbbb.com", "user1");
-        UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
-        RegisterReq register = new RegisterReq(account, user);
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        AccountReq account = new AccountReq("testPassword", "user1");
+        UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE);
+        RegisterReq register = new RegisterReq(oneTimeAuthCode, account, user);
 
         mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -220,7 +224,7 @@ class AuthControllerTest {
     @DisplayName("로그인 실패 - 비밀번호 불일치 (service에서 커스텀 예외가 잘 throws 되는지 확인)")
     void 로그인_비밀번호_불일치() throws Exception {
         // 아이디와 비밀번호가 비어있는 요청
-        LoginReq request = new LoginReq("testID", "testPassword12!@");
+        LoginReq request = new LoginReq("testID@test.com", "testPassword12!@");
 
         // 커스텀 예외 처리가 정상적으로 동작 되는지
         given(authService.login(any(LoginReq.class)))
