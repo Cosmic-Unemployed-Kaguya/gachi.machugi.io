@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package Proto.quiz;
+
+option csharp_namespace = "Quiz.Service.Proto";
+
+service QuizGrpcManager {
+  // 퀴즈 데이터 가져오기
+  rpc GetAllQuiz(GrpcGetAllQuizRequest) returns (GrpcGetQuizListResponse) {}
+  rpc GetPartQuiz(GrpcGetPartQuizRequest) returns (GrpcGetQuizListResponse) {}
+}
+
+message GrpcGetAllQuizRequest {
+  uint64 quiz_idx = 1;
+}
+
+message GrpcGetPartQuizRequest {
+  uint64 quiz_idx = 1;
+  uint32 count = 2;
+}
+
+message GrpcQuizData {
+  int32 sort_order = 1;
+  string problem_text = 2;
+  string problem_url = 3;
+  string type = 4;
+  repeated string answer = 5;
+}
+
+message GrpcGetQuizListResponse {
+  //repeated GrpcQuizData items = 1;
+  repeated GrpcQuizData quizzes = 1;
+}
