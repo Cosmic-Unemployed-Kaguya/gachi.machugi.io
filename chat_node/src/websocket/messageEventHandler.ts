@@ -1,5 +1,6 @@
 import { WsError } from "@common/error/wsError";
-import { BaseReq, BaseRes } from "@common/model/base";
+import { BaseRes } from "@common/model/base";
+import { CorrectAnswerRes } from "@common/model/correctAnswer";
 import { CustomSocket } from "@common/model/customSocket";
 import { ExitRoomRes } from "@common/model/exitRoom";
 import { JoinRoomReq, JoinSuccessRes } from "@common/model/joinRoom";
@@ -61,39 +62,35 @@ export class MessageEventHandler{
             throw WsError.fromType('NOT_IN_ROOM');
         }
 
-        // // 요청 데이터
-        // const req : MessageReq = await MessageReq.parseAsync(msgReq)  
-
         // 응답 데이터
-        const msgRes : MessageRes = {
-            msg : req.msg,
-            userNickname : socket.userNickname
-        }
-        let res : BaseReq
+        let res : BaseRes
 
         // 정답 확인 로직
         const room = this.roomManager.getRoom(socket.roomIdx);
         
-        if(room.checkAnswer(req.msg)){
-            // 정답일시
-            // redis를 통해 선점(SET + NX + EX)
-            this.redisKvClient.setWithExpiration(socket.roomIdx, socket.userIdx)
-
+        if(room.checkAnswer(req.msg) 
+            // 정답일시 :redis를 통해 선점(SET + NX + EX)
+            && await this.redisKvClient.setWithExpiration(socket.roomIdx, socket.userIdx)){
+            // 선점 성공 시 
             res = {
                 event : "correct",
-                data : msgRes
+                data : {msg: req.msg,
+                        userNickname : socket.userNickname, 
+                        userIdx : socket.userIdx} as CorrectAnswerRes
             }
-
         }else{
-            // 그 외
+            // 그 외(1등 아님, 오답 등)
             res = {
                 event : "chat",
-                data : msgRes
+                data : {
+                    msg : req.msg,
+                    userNickname : socket.userNickname
+                } as MessageRes
             }
         }
 
         // redis로 전파
-        this.redisPubClient.publishMessage(socket.roomIdx, res);
+        await this.redisPubClient.publishMessage(socket.roomIdx, res);
 
         logger.info(`채팅 : ${socket.userNickname}  : ${req.msg}`)
     }

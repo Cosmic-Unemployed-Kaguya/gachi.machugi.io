@@ -1,4 +1,5 @@
 import { BaseRes } from '@common/model/base';
+import { CorrectAnswerRes } from '@common/model/correctAnswer';
 import Redis from 'ioredis';
 import { Service } from 'typedi';
 import config from '../common/config';
@@ -17,13 +18,13 @@ export class RedisPubClient{
     // redis에 메시지 발행
     public async publishMessage(roomIdx : number, data : BaseRes ){
 
-        this.pubClient.publish('room:' + roomIdx, JSON.stringify(data));
+        this.pubClient.publish(`room:${roomIdx}:base`, JSON.stringify(data));
 
     }
 
-    // public async correctMessage( channel : string = 'correct_answer' , data: BaseRes){
-
-    // }
+    public async correctMessage(roomIdx : number, data: CorrectAnswerRes){
+        this.pubClient.publish(`room:${roomIdx}:correct`, JSON.stringify(data));
+    }
     
 
     // public async publishKickUser(roomIdx : number, userIdx : number ,channel : string ='kick_user_channel'){
