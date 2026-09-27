@@ -71,7 +71,7 @@ public class RoomServiceImpl : RoomService
         }
         return updatedroom.ToInfoResponse();
     }
-    //플레이어 추가
+    //플레이어 추가 (chat에 직접 알림)
     public async Task<bool> AddPlayerToRoom(long roomIdx, UpdateSetRequest request)
     {
         //레디스에 플레이어 추가
@@ -98,6 +98,31 @@ public class RoomServiceImpl : RoomService
             Console.WriteLine($"Chat gRPC 예약 통신 실패:{ex.Message}");
             return false;
         }
+    }
+    
+    //플레이어 추가 (티켓 발급 방식)
+    public async Task<string> AddPlayerWithTicket(long roomIdx, UpdateSetRequest request)
+    {
+        // 1. 레디스에 플레이어 추가
+        bool isSuccess = await _roomRedis.AddPlayerToRoomAsync(roomIdx, request.playerIdx);
+        if (!isSuccess)
+        {
+            throw new Exception("redis connect error");
+        }
+        // 2. 티켓용 UUID 생성 
+        string ticketUuid = Guid.NewGuid().ToString();
+
+        // 3. 레디스에 티켓 정보 저장
+        bool isTicketCreated = await _roomRedis.CreateEnterTicketAsync(ticketUuid, roomIdx, request.playerIdx);
+
+        if (!isTicketCreated)
+        {
+            // @TODO 티켓 생성 실패 시 롤백처리 필요
+            throw new Exception("redis connect error");
+        }
+
+        // 4. uuid 반환
+        return ticketUuid;
     }
     //플레이어 제거
     public Task<bool> RemovePlayerFromRoom(long roomIdx, UpdateSetRequest request)
