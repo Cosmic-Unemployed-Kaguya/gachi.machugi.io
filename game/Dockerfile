@@ -21,4 +21,4 @@ EXPOSE 8080
 COPY --from=build /app/publish .
 
 # 컨테이너 실행 시 앱 가동
-ENTRYPOINT ["dotnet", "room.dll"]
+ENTRYPOINT ["dotnet", "game.dll"]
