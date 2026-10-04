@@ -7,7 +7,7 @@ public class GrpcContextKeys {
 
     // [외부 -> 내부] gRPC 통신 시 헤더(Metadata)에서 값을 꺼내기 위한 키
     public static final Metadata.Key<String> USER_IDX_META_KEY =
-            Metadata.Key.of("x-user-id", Metadata.ASCII_STRING_MARSHALLER);
+            Metadata.Key.of("x-user-idx", Metadata.ASCII_STRING_MARSHALLER);
 
     public static final Metadata.Key<String> USER_ROLE_META_KEY =
             Metadata.Key.of("x-user-role", Metadata.ASCII_STRING_MARSHALLER);

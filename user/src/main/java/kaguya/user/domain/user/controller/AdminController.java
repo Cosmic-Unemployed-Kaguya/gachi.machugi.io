@@ -27,7 +27,7 @@ public class AdminController {
     // todo. 페이징 처리
     @GetMapping("/users/info")
     public ResponseEntity<BaseRes<GetUsersInfoRes>> getUserList(
-            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-idx", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role
     ) {
 
@@ -44,7 +44,7 @@ public class AdminController {
 
     @GetMapping("/users/{userIdx}")
     public ResponseEntity<BaseRes<GetUserDetailsRes>> getUserDetails(
-            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-idx", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role,
             @RequestParam("userIdx") Long userIdx
     ) {
@@ -62,7 +62,7 @@ public class AdminController {
 
     @PatchMapping("/users/{userIdx}/nickname")
     public ResponseEntity<BaseRes<Void>> updateNickname(
-            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-idx", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role,
             @RequestParam("userIdx") Long userIdx,
             @RequestBody @Valid UpdateNicknameReq request
@@ -81,7 +81,7 @@ public class AdminController {
 
     @PatchMapping("/users/{userIdx}/role")
     public ResponseEntity<BaseRes<Void>> updateRole(
-            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-idx", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role,
             @RequestParam("userIdx") Long userIdx,
             @RequestBody @Valid UpdateRoleReq request
@@ -100,7 +100,7 @@ public class AdminController {
 
     @PostMapping("/users/{userIdx}/block")
     public ResponseEntity<BaseRes<Void>> blockUser(
-            @RequestHeader(value = "x-user-id", required = false) Long adminIdx,
+            @RequestHeader(value = "x-user-idx", required = false) Long adminIdx,
             @RequestHeader(value = "x-user-role", required = false) String role,
             @RequestParam("userIdx") Long userIdx,
             @RequestBody @Valid BlockReq request

@@ -67,7 +67,7 @@ public class ExtAuthzFilter extends OncePerRequestFilter {
                 CheckTokenRes checkRes = authService.checkToken(accessToken);  // 서비스 로직
 
                 // 유저 정보 헤더에 세팅
-                response.setHeader("X-User-Id", checkRes.idx());  // 식별자
+                response.setHeader("X-User-Idx", checkRes.idx());  // 식별자
                 response.setHeader("X-User-Role", checkRes.role());  // 권한
 
                 response.setStatus(HttpServletResponse.SC_OK);
@@ -91,8 +91,8 @@ public class ExtAuthzFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // X-User-Id에 게스트 UUID 및 권한 세팅
-            response.setHeader("X-User-Id", guestId);
+            // X-User-Idx에 게스트 UUID 및 권한 세팅
+            response.setHeader("X-User-Idx", guestId);
             response.setHeader("X-User-Role", Role.GUEST.name());
 
             response.setStatus(HttpServletResponse.SC_OK);
@@ -103,7 +103,7 @@ public class ExtAuthzFilter extends OncePerRequestFilter {
      * Spring Security Context 구성 (현재 사용 안함)
      * - Controller에서 @AuthenticationPrincipal을 통해 유저 정보(권한)를 주입받을 수 있음
      * - 하지만, 현재 서비스 구조상 Envoy 프록시의 ext_authz 역할만 수행하고,
-     * - 각 서비스는 커스텀 인증 헤더(x-user-id, x-user-role 등)을 보고 인증/인가를 확인하기 때문에 이 기능이 필요 없음
+     * - 각 서비스는 커스텀 인증 헤더(x-user-idx, x-user-role 등)을 보고 인증/인가를 확인하기 때문에 이 기능이 필요 없음
      */
     private void setupSecurityContext(HttpServletRequest request, String username, String role) {
         // 인가(Authorization) 처리에 사용할 권한 리스트

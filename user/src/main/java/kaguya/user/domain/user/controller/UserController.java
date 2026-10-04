@@ -28,7 +28,7 @@ public class UserController {
 
     @GetMapping("/my")
     public ResponseEntity<BaseRes<MyPageRes>> getMyPage(
-            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-idx", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role
     ) {
 
@@ -44,7 +44,7 @@ public class UserController {
 
     @GetMapping("/my/profile")
     public ResponseEntity<BaseRes<ProfileRes>> getProfile(
-            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-idx", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role
     ) {
 
@@ -60,7 +60,7 @@ public class UserController {
 
     @PatchMapping("/my/password")
     public ResponseEntity<BaseRes<Void>> updatePasswords(
-            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-idx", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role,
             @RequestBody @Valid UpdatePasswordReq request
     ) {
@@ -77,7 +77,7 @@ public class UserController {
 
     @PatchMapping("/my/nickname")
     public ResponseEntity<BaseRes<Void>> updateNickname(
-            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-idx", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role,
             @RequestBody @Valid UpdateNicknameReq request
     ) {
@@ -94,7 +94,7 @@ public class UserController {
 
     @DeleteMapping("/my/withdraw")
     public ResponseEntity<BaseRes<Void>> withdraw(
-            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-idx", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role
     ) {
 

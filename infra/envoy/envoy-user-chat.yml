@@ -130,7 +130,7 @@ static_resources:
                   allowed_upstream_headers:
                     patterns:
                     - exact: "set-cookie"
-                    - exact: "x-user-id"
+                    - exact: "x-user-idx"
                     - exact: "x-user-role"
                   allowed_client_headers:
                     patterns:

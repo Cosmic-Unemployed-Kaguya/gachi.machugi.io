@@ -65,7 +65,7 @@ class UserControllerTest {
         given(userService.getMyPage(userIdx)).willReturn(myPage);
 
         mockMvc.perform(get("/users/my")
-                        .header("X-User-Id", userIdx)
+                        .header("X-User-Idx", userIdx)
                         .header("X-User-Role", user.getRole()))
 
                 // 응답 검증
@@ -96,7 +96,7 @@ class UserControllerTest {
         given(userService.getProfile(userIdx)).willReturn(response);
 
         mockMvc.perform(get("/users/my/profile")
-                        .header("X-User-Id", userIdx)
+                        .header("X-User-Idx", userIdx)
                         .header("X-User-Role", user.getRole()))
 
                 // 응답 검증
@@ -125,7 +125,7 @@ class UserControllerTest {
         // 비밀번호 변경 return이 null이어서 given 의미 없음
 
         mockMvc.perform(patch("/users/my/password")
-                        .header("X-User-Id", userIdx)
+                        .header("X-User-Idx", userIdx)
                         .header("X-User-Role", user.getRole())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -150,7 +150,7 @@ class UserControllerTest {
         // 닉네임 변경 return이 null이어서 given 의미 없음
 
         mockMvc.perform(patch("/users/my/nickname")
-                        .header("X-User-Id", userIdx)
+                        .header("X-User-Idx", userIdx)
                         .header("X-User-Role", user.getRole())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -170,7 +170,7 @@ class UserControllerTest {
         Long userIdx = user.getIdx();
 
         mockMvc.perform(delete("/users/my/withdraw")
-                        .header("X-User-Id", userIdx)
+                        .header("X-User-Idx", userIdx)
                         .header("X-User-Role", user.getRole()))
 
                 // 응답 검증
@@ -217,7 +217,7 @@ class UserControllerTest {
         );
 
         mockMvc.perform(patch("/users/my/password")
-                        .header("X-User-Id", userIdx)
+                        .header("X-User-Idx", userIdx)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
 
@@ -243,7 +243,7 @@ class UserControllerTest {
                 .given(userService).updatePassword(userIdx, request);
 
         mockMvc.perform(patch("/users/my/password")
-                        .header("X-User-Id", userIdx)
+                        .header("X-User-Idx", userIdx)
                         .header("X-User-Role", user.getRole())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
