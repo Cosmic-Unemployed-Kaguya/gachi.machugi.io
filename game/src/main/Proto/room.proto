@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package Proto.room;
+
+option csharp_namespace = "Room.Service.Proto";
+
+service RoomGrpcManager {
+  rpc FindRoomInfo(GrpcRoomIdxRequest) returns (GrpcRoomInfoResponse) {}
+}
+
+message GrpcRoomIdxRequest {
+  int64 room_idx = 1;
+}
+
+message GrpcRoomInfoResponse {
+  int64 idx = 1;
+  int64 host_idx = 2;
+  string name = 3;
+  int32 max_occupancy = 4;
+  int64 time_limit = 5;
+  bool is_public = 6;
+  int64 quiz_idx = 7;
+}
