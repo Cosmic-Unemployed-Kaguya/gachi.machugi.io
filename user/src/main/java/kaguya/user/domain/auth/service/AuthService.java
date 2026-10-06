@@ -2,14 +2,19 @@ package kaguya.user.domain.auth.service;
 
 import kaguya.user.domain.auth.mapper.AuthMapper;
 import kaguya.user.domain.auth.model.dto.request.GuestReq;
+import kaguya.user.domain.auth.model.dto.request.ReactivateAccountReq;
 import kaguya.user.domain.auth.model.dto.request.LoginReq;
 import kaguya.user.domain.auth.model.dto.request.RegisterReq;
 import kaguya.user.domain.auth.model.dto.response.CheckTokenRes;
 import kaguya.user.domain.auth.model.dto.response.GuestRes;
 import kaguya.user.domain.auth.model.dto.response.LoginRes;
+import kaguya.user.domain.user.model.enums.Status;
 import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.user.model.entity.UserEntity;
+import kaguya.user.domain.user.model.entity.UserProfileEntity;
+import kaguya.user.domain.user.repository.UserProfileRepository;
 import kaguya.user.domain.user.repository.UserRepository;
+import kaguya.user.domain.verification.model.enums.VerificationType;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final RedisRepository redisRepository;
 
     private final AuthMapper authMapper;
@@ -38,7 +44,7 @@ public class AuthService {
      */
 
     /**
-     * 회원가입 로직
+     * 회원가입
      * @param registerData: 회원가입 정보
      * - AccountDTO: username, password, nickname, email
      * - UserDTO: name, birth, phone, gender
@@ -46,15 +52,25 @@ public class AuthService {
     @Transactional
     public void register(RegisterReq registerData) {
 
-        // 사용된 아이디인지 확인
-        if(userRepository.existsByUsername(registerData.account().username())) {
-            throw new BusinessException(ErrorCode.EXISTS_USERNAME);
+//        if(userRepository.existsByUsername(registerData.account().username())) {
+//            throw new BusinessException(ErrorCode.EXISTS_USERNAME);
+//        }
+
+        String oneTimeAuthCode = registerData.oneTimeAuthCode();
+
+        // 일회용 인증번호 조회 및 저장된 이메일 가져오기
+        String oneTimeKey = "verification:oneTimeAuthCode:" + VerificationType.REGISTER.name() + ":" + oneTimeAuthCode;
+        String verifiedEmail = redisRepository.get(oneTimeKey);
+
+        // 인증코드 확인
+        if (verifiedEmail == null) {
+            throw new BusinessException(ErrorCode.INVALID_AUTH_CODE);
         }
 
-        // 사용된 이메일인지 확인
-        if(userRepository.existsByEmail(registerData.account().email())) {
-            throw new BusinessException(ErrorCode.EXISTS_EMAIL);
-        }
+//        인증코드 보낼 때 확인했으므로 한번 더 확인할 필요 없음
+//        if(userRepository.existsByEmail(verifiedEmail)) {
+//            throw new BusinessException(ErrorCode.EXISTS_EMAIL);
+//        }
 
         // 사용된 닉네임인지 확인
         if(userRepository.existsByNickname(registerData.account().nickname())) {
@@ -65,19 +81,25 @@ public class AuthService {
         String rawPassword = registerData.account().password();  // 암호화 전
         String encodedPassword = passwordEncoder.encode(rawPassword);  // 암호화
 
-        UserEntity entity = authMapper.userDtoToEntity(registerData, encodedPassword);
-        userRepository.save(entity);
+        // 저장
+        UserEntity userEntity = authMapper.userDtoToUserEntity(verifiedEmail, encodedPassword, registerData);
+        userRepository.save(userEntity);
+        UserProfileEntity userProfileEntity = authMapper.userDtoToUserProfileEntity(userEntity.getIdx(), registerData);
+        userProfileRepository.save(userProfileEntity);
+
+        // 마지막에 redis 키 삭제
+        redisRepository.delete(oneTimeKey);
     }
 
     /**
-     * 로그인 로직
+     * 로그인
      * @param loginData: Id, Password
      */
     @Transactional
     public LoginRes login(LoginReq loginData) {
 
-        // 아이디 존재하는지 확인
-        UserEntity entity = userRepository.findByUsername(loginData.username())
+        // 회원 데이터 있는지 확인
+        UserEntity entity = userRepository.findByEmail(loginData.email())
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_CREDENTIALS));
 
         // 아이디와 비밀번호 맞는지 검증
@@ -85,18 +107,57 @@ public class AuthService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        // Access/Refresh 토큰
-        String accessToken = jwtProvider.createAccessToken(entity.getUsername(), entity.getRole().toString());
-        String refreshToken = jwtProvider.createRefreshToken(entity.getUsername());
+        // 유저 상태 체크
+        if (entity.getStatus() != Status.ACTIVE) {
+            switch (entity.getStatus()) {
+                case DORMANT -> throw new BusinessException(ErrorCode.USER_DORMANT);
+                case SUSPENDED -> throw new BusinessException(ErrorCode.USER_SUSPENDED);
+                case BANNED -> throw new BusinessException(ErrorCode.USER_BANNED);
+                case WITHDRAWAL -> throw new BusinessException(ErrorCode.USER_WITHDRAWN);
+                default -> throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            }
+        }
 
-        // 갱신 토큰 Redis 저장 (14일)
-        redisRepository.save("RT:" + entity.getUsername(), refreshToken, 14, TimeUnit.DAYS);
-
-        return authMapper.entityToLoginRes(accessToken, refreshToken, entity);
+        return processLoginSuccess(entity);
     }
 
     /**
-     * 로그아웃 로직
+     * 휴면상태 로그인
+     * @param reactivateAccountData: 휴면 로그인 정보
+     */
+    @Transactional
+    public LoginRes reactivateAccount(ReactivateAccountReq reactivateAccountData) {
+
+        String oneTimeAuthCode = reactivateAccountData.oneTimeAuthCode();
+
+        // 일회용 인증번호 조회 및 저장된 이메일 가져오기
+        String oneTimeKey = "verification:oneTimeAuthCode:" + VerificationType.REACTIVATE_ACCOUNT.name() + ":" + oneTimeAuthCode;
+        String verifiedEmail = redisRepository.get(oneTimeKey);
+
+        // 인증코드 확인
+        if (verifiedEmail == null) {
+            throw new BusinessException(ErrorCode.INVALID_AUTH_CODE);
+        }
+
+        UserEntity entity = userRepository.findByEmail(verifiedEmail)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 아이디와 비밀번호 맞는지 검증
+        if (!passwordEncoder.matches(reactivateAccountData.password(), entity.getPassword())) {
+            throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
+        }
+
+        // 유저 상태 Active(활성화)로 변경
+        entity.changeStatus(Status.ACTIVE);
+
+        // 마지막에 redis 키 삭제
+        redisRepository.delete(oneTimeKey);
+
+        return processLoginSuccess(entity);
+    }
+
+    /**
+     * 로그아웃
      * @param accessToken: 접근 토큰
      * @param refreshToken: 갱신 토큰
      */
@@ -114,8 +175,8 @@ public class AuthService {
                 jwtProvider.validateRefreshToken(refreshToken);
 
                 // 검증을 통과했다면 갱신 토큰 삭제
-                String username = jwtProvider.getUsername(refreshToken);
-                redisRepository.delete("RT:" + username);
+                String subject = jwtProvider.getSubject(refreshToken);
+                redisRepository.delete("RT:" + subject);
 
             } catch (BusinessException e) {
                 // 토큰이 이미 만료되었거나 손상된 경우
@@ -143,18 +204,21 @@ public class AuthService {
         jwtProvider.validateRefreshToken(refreshToken);
 
         // 아이디 조회 (jwt)
-        String username = jwtProvider.getUsername(refreshToken);
+        String subject = jwtProvider.getSubject(refreshToken);
+        Long userIdx = Long.valueOf(subject);
 
         // redis에 갱신 토큰이 있는지 확인
-        String savedRefreshToken = redisRepository.get("RT:" + username);
+        String savedRefreshToken = redisRepository.get("RT:" + subject);
         if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
 
-        UserEntity entity = userRepository.findByUsername(username)
+        UserEntity entity = userRepository.findById(userIdx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        return jwtProvider.createAccessToken(username, entity.getRole().toString());
+        String role = entity.getRole().name();
+
+        return jwtProvider.createAccessToken(subject, role);
     }
 
     /**
@@ -178,12 +242,16 @@ public class AuthService {
         }
 
         // 아이디 및 권한 조회 (jwt)
-        String username = jwtProvider.getUsername(accessToken);
+        String subject = jwtProvider.getSubject(accessToken);
         String role = jwtProvider.getRole(accessToken);
 
-        return new CheckTokenRes(username, role);
+        return new CheckTokenRes(subject, role);
     }
 
+    /**
+     * 게스트 로그인
+     * @param guestData: 게스트 로그인 정보
+     */
     public GuestRes guest(GuestReq guestData) {
 
         String guestId = UUID.randomUUID().toString();
@@ -194,5 +262,23 @@ public class AuthService {
         redisRepository.save(key, guestNickname, 5, TimeUnit.HOURS);
 
         return new GuestRes(guestId, guestNickname);
+    }
+
+    // 로그인 성공 후처리 로직 (로그인 시각 기록, JWT 토큰 생성)
+    private LoginRes processLoginSuccess(UserEntity entity) {
+        // todo. 로그인 로그 기록
+        //  - 현재는 로그인 하면 바로 DB에 현재시각 기록
+        //  - 여기서 통신 비용을 최소화한다면, redis에 로그인시간 기록 하고 특정 시간(ex. 04:00)에 DB로 옮기는 방식으로
+        entity.recordLogin();
+
+        String subject = String.valueOf(entity.getIdx());
+        String role = entity.getRole().name();
+
+        String accessToken = jwtProvider.createAccessToken(subject, role);
+        String refreshToken = jwtProvider.createRefreshToken(subject);
+
+        redisRepository.save("RT:" + subject, refreshToken, 14, TimeUnit.DAYS);
+
+        return authMapper.entityToLoginRes(accessToken, refreshToken, entity);
     }
 }

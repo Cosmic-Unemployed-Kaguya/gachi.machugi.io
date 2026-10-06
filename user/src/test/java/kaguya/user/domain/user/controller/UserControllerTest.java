@@ -2,7 +2,8 @@ package kaguya.user.domain.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kaguya.user.domain.auth.service.AuthService;
-import kaguya.user.domain.common.model.enums.Gender;
+import kaguya.user.domain.user.model.entity.UserProfileEntity;
+import kaguya.user.domain.user.model.enums.Gender;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
@@ -18,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -51,17 +53,19 @@ class UserControllerTest {
     void 마이페이지_성공 () throws Exception {
 
         UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        Long userIdx = user.getIdx();
 
         MyPageRes myPage = new MyPageRes(
-                user.getUsername(),
                 user.getEmail(),
-                user.getNickname()
+                user.getNickname(),
+                user.getJoinDate()
         );
 
-        given(userService.getMyPage(user.getUsername())).willReturn(myPage);
+        given(userService.getMyPage(userIdx)).willReturn(myPage);
 
         mockMvc.perform(get("/users/my")
-                        .header("X-User-Id", user.getUsername())
+                        .header("X-User-Idx", userIdx)
                         .header("X-User-Role", user.getRole()))
 
                 // 응답 검증
@@ -69,7 +73,6 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("마이페이지 조회"))
                 // 데이터
-                .andExpect(jsonPath("$.data.username").value("testID"))
                 .andExpect(jsonPath("$.data.email").value("aaaa@bbbb.com"))
                 .andExpect(jsonPath("$.data.nickname").value("user1"));
     }
@@ -79,17 +82,21 @@ class UserControllerTest {
     void 프로필_성공() throws Exception {
 
         UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        Long userIdx = user.getIdx();
+
+        UserProfileEntity profile = createUserProfile(userIdx);
         ProfileRes response = new ProfileRes(
-                user.getName(),
-                user.getBirth(),
-                user.getPhone(),
-                user.getGender().toString()
+                profile.getName(),
+                profile.getBirth(),
+                profile.getPhone(),
+                profile.getGender().toString()
         );
 
-        given(userService.getProfile(user.getUsername())).willReturn(response);
+        given(userService.getProfile(userIdx)).willReturn(response);
 
         mockMvc.perform(get("/users/my/profile")
-                        .header("X-User-Id", user.getUsername())
+                        .header("X-User-Idx", userIdx)
                         .header("X-User-Role", user.getRole()))
 
                 // 응답 검증
@@ -98,8 +105,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("프로필 조회"))
                 // 데이터
                 .andExpect(jsonPath("$.data.name").value("홍길동"))
-                .andExpect(jsonPath("$.data.birth").value(user.getBirth().toString()))
-                .andExpect(jsonPath("$.data.phone").value("010-1234-5678"))
+                .andExpect(jsonPath("$.data.phone").value("010-0000-0000"))
                 .andExpect(jsonPath("$.data.gender").value(Gender.MALE.toString()));
     }
 
@@ -108,6 +114,9 @@ class UserControllerTest {
     void 비밀번호_번경_성공() throws Exception {
 
         UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        Long userIdx = user.getIdx();
+
         UpdatePasswordReq request = new UpdatePasswordReq(
                 "encodedPassword12!@",
                 "changedPassword12!@"
@@ -116,7 +125,7 @@ class UserControllerTest {
         // 비밀번호 변경 return이 null이어서 given 의미 없음
 
         mockMvc.perform(patch("/users/my/password")
-                        .header("X-User-Id", user.getUsername())
+                        .header("X-User-Idx", userIdx)
                         .header("X-User-Role", user.getRole())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -132,6 +141,8 @@ class UserControllerTest {
     void 닉네임_번경_성공() throws Exception {
 
         UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        Long userIdx = user.getIdx();
         UpdateNicknameReq request = new UpdateNicknameReq(
                 user.getNickname()
         );
@@ -139,7 +150,7 @@ class UserControllerTest {
         // 닉네임 변경 return이 null이어서 given 의미 없음
 
         mockMvc.perform(patch("/users/my/nickname")
-                        .header("X-User-Id", user.getUsername())
+                        .header("X-User-Idx", userIdx)
                         .header("X-User-Role", user.getRole())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -155,9 +166,11 @@ class UserControllerTest {
     void 회원탈퇴() throws Exception {
 
         UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        Long userIdx = user.getIdx();
 
         mockMvc.perform(delete("/users/my/withdraw")
-                        .header("X-User-Id", user.getUsername())
+                        .header("X-User-Idx", userIdx)
                         .header("X-User-Role", user.getRole()))
 
                 // 응답 검증
@@ -196,13 +209,15 @@ class UserControllerTest {
     void 비밀번호_번경_정규식_위반() throws Exception {
 
         UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        Long userIdx = user.getIdx();
         UpdatePasswordReq request = new UpdatePasswordReq(
                 "encodedPassword12!@",
                 "changedPassword12"
         );
 
         mockMvc.perform(patch("/users/my/password")
-                        .header("X-User-Id", user.getUsername())
+                        .header("X-User-Idx", userIdx)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
 
@@ -217,16 +232,18 @@ class UserControllerTest {
     void 로그인_비밀번호_불일치() throws Exception {
 
         UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        Long userIdx = user.getIdx();
         UpdatePasswordReq request = new UpdatePasswordReq(
                 "encodedPassword12",  // 현재 비밀번호는 encodedPassword12!@
                 "changedPassword12!@"
         );
 
         willThrow(new BusinessException(ErrorCode.INVALID_CURRENT_PASSWORD))
-                .given(userService).updatePassword(user.getUsername(), request);
+                .given(userService).updatePassword(userIdx, request);
 
         mockMvc.perform(patch("/users/my/password")
-                        .header("X-User-Id", user.getUsername())
+                        .header("X-User-Idx", userIdx)
                         .header("X-User-Role", user.getRole())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -243,13 +260,18 @@ class UserControllerTest {
      */
     private UserEntity createUser() {
         return UserEntity.builder()
-                .username("testID")
-                .password("encodedPassword12!@#")
                 .email("aaaa@bbbb.com")
+                .password("encodedPassword123")
                 .nickname("user1")
+                .build();
+    }
+
+    private UserProfileEntity createUserProfile(Long userIdx) {
+        return UserProfileEntity.builder()
+                .userIdx(userIdx)
                 .name("홍길동")
                 .birth(LocalDate.now())
-                .phone("010-1234-5678")
+                .phone("010-0000-0000")
                 .gender(Gender.MALE)
                 .build();
     }
