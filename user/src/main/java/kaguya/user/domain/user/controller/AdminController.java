@@ -119,7 +119,7 @@ public class AdminController {
 
     @GetMapping("/users/block/list")
     public ResponseEntity<BaseRes<GetBlocksInfoRes>> getBlockList(
-            @RequestHeader(value = "x-user-id", required = false) Long idx,
+            @RequestHeader(value = "x-user-idx", required = false) Long idx,
             @RequestHeader(value = "x-user-role", required = false) String role
     ) {
 
