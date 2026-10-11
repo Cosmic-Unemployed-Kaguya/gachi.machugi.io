@@ -6,8 +6,11 @@ import java.util.Arrays;
 
 @Getter
 public enum VerificationType {
-    FIND_ID("아이디 찾기"),
-    RESET_PASSWORD("비밀번호 초기화");
+
+    REGISTER("회원 가입"),
+//    FIND_ID("아이디 찾기"),
+    RESET_PASSWORD("비밀번호 초기화"),
+    REACTIVATE_ACCOUNT("휴면상태 해제");
 
     private final String label;
 

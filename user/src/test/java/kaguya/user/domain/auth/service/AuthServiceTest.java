@@ -5,10 +5,12 @@ import kaguya.user.domain.auth.model.dto.request.*;
 import kaguya.user.domain.auth.model.dto.response.CheckTokenRes;
 import kaguya.user.domain.auth.model.dto.response.GuestRes;
 import kaguya.user.domain.auth.model.dto.response.LoginRes;
-import kaguya.user.domain.common.model.enums.Gender;
-import kaguya.user.domain.common.model.enums.Role;
 import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.user.model.entity.UserEntity;
+import kaguya.user.domain.user.model.entity.UserProfileEntity;
+import kaguya.user.domain.user.model.enums.Gender;
+import kaguya.user.domain.user.model.enums.Role;
+import kaguya.user.domain.user.repository.UserProfileRepository;
 import kaguya.user.domain.user.repository.UserRepository;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -43,6 +46,8 @@ class AuthServiceTest {
     @Mock
     UserRepository userRepository;
     @Mock
+    UserProfileRepository userProfileRepository;
+    @Mock
     RedisRepository redisRepository;
 
     @Spy
@@ -58,12 +63,14 @@ class AuthServiceTest {
     @DisplayName("회원가입 성공 - 데이터 매핑 및 암호화 검증")
     void 회원가입_테스트_성공() {
         // given
-        AccountReq account = new AccountReq("testID", "testPassword12!@", "aaaa@bbbb.com", "user1");
-        UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE.toString());
-        RegisterReq registerData = new RegisterReq(account, user);
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        AccountReq account = new AccountReq("testPassword12!@", "user1");
+        UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE);
+        RegisterReq registerData = new RegisterReq(oneTimeAuthCode, account, user);
 
-        given(userRepository.existsByUsername(registerData.account().username())).willReturn(false);
-        given(userRepository.existsByEmail(registerData.account().email())).willReturn(false);
+        String oneTimeKey = "verification:oneTimeAuthCode:REGISTER:" + registerData.oneTimeAuthCode();
+        given(redisRepository.get(oneTimeKey)).willReturn("test@email.com");
+
         given(userRepository.existsByNickname(registerData.account().nickname())).willReturn(false);
 
         String expectedEncodedPassword = "encodedPassword12!@";
@@ -76,8 +83,7 @@ class AuthServiceTest {
         verify(userRepository).save(userEntityCaptor.capture());
         UserEntity savedEntity = userEntityCaptor.getValue();
 
-        assertThat(savedEntity.getUsername()).isEqualTo("testID");
-        assertThat(savedEntity.getEmail()).isEqualTo("aaaa@bbbb.com");
+        assertThat(savedEntity.getEmail()).isEqualTo("test@email.com");
         assertThat(savedEntity.getPassword()).isEqualTo(expectedEncodedPassword);
     }
 
@@ -85,23 +91,26 @@ class AuthServiceTest {
     @DisplayName("로그인 성공 (쿠키 생성)")
     void 로그인_테스트_성공() {
         //given
-        LoginReq loginData = new LoginReq("testID", "testPassword12!@");
-        UserEntity mockEntity = createDefaultUser();
+        UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        Long userIdx = user.getIdx();
 
-        given(userRepository.findByUsername(loginData.username())).willReturn(Optional.of(mockEntity));
-        given(passwordEncoder.matches(loginData.password(), mockEntity.getPassword())).willReturn(true);
+        LoginReq loginData = new LoginReq("testID", "testPassword12!@");
+
+        given(userRepository.findByEmail(loginData.email())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(loginData.password(), user.getPassword())).willReturn(true);
 
         String accessToken = "accessToken-aaabbbccc";
         String refreshToken = "refreshToken-dddeeefff";
-        given(jwtProvider.createAccessToken(mockEntity.getUsername(), mockEntity.getRole().toString())).willReturn(accessToken);
-        given(jwtProvider.createRefreshToken(mockEntity.getUsername())).willReturn(refreshToken);
+        given(jwtProvider.createAccessToken(userIdx.toString(), user.getRole().toString())).willReturn(accessToken);
+        given(jwtProvider.createRefreshToken(userIdx.toString())).willReturn(refreshToken);
 
         // when
         LoginRes result = authService.login(loginData);
 
         // then
         verify(redisRepository).save(
-                eq("RT:" + mockEntity.getUsername()),
+                eq("RT:" + userIdx),
                 eq(refreshToken),
                 eq(14L),
                 eq(TimeUnit.DAYS)
@@ -109,7 +118,7 @@ class AuthServiceTest {
 
         assertThat(result.accessToken()).isEqualTo(accessToken);
         assertThat(result.refreshToken()).isEqualTo(refreshToken);
-        assertThat(result.nickname()).isEqualTo(mockEntity.getNickname());
+        assertThat(result.nickname()).isEqualTo(user.getNickname());
     }
 
     @Test
@@ -118,10 +127,13 @@ class AuthServiceTest {
         // given
         String accessToken = "accessToken-aaabbbccc";
         String refreshToken = "refreshToken-dddeeefff";
-        String username = "testID";
+
+        UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        Long userIdx = user.getIdx();
 
         willDoNothing().given(jwtProvider).validateRefreshToken(refreshToken);
-        given(jwtProvider.getUsername(refreshToken)).willReturn(username);
+        given(jwtProvider.getSubject(refreshToken)).willReturn(String.valueOf(userIdx));
 
         // when
         authService.logout(accessToken, refreshToken);
@@ -140,16 +152,17 @@ class AuthServiceTest {
     void 토큰갱신_성공() {
         // given
         String refreshToken = "refreshToken-dddeeefff";
-        String username = "testID";
         String accessToken = "accessToken-AAABBBCCC";
 
-        UserEntity mockEntity = createDefaultUser();
+        UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        Long userIdx = user.getIdx();
 
         willDoNothing().given(jwtProvider).validateRefreshToken(refreshToken);
-        given(jwtProvider.getUsername(refreshToken)).willReturn(username);
-        given(redisRepository.get("RT:" + username)).willReturn(refreshToken);
-        given(userRepository.findByUsername(username)).willReturn((Optional.of(mockEntity)));
-        given(jwtProvider.createAccessToken(mockEntity.getUsername(), mockEntity.getRole().toString())).willReturn(accessToken);
+        given(jwtProvider.getSubject(refreshToken)).willReturn(userIdx.toString());
+        given(redisRepository.get("RT:" + userIdx)).willReturn(refreshToken);
+        given(userRepository.findById(userIdx)).willReturn((Optional.of(user)));
+        given(jwtProvider.createAccessToken(userIdx.toString(), user.getRole().toString())).willReturn(accessToken);
 
         // when
         String result = authService.renewToken(refreshToken);
@@ -164,12 +177,15 @@ class AuthServiceTest {
     void 토큰확인_성공() {
         // given
         String accessToken = "accessToken-aaabbbccc";
-        String username = "testID";
         String role = Role.USER.toString();
+
+        UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        Long userIdx = user.getIdx();
 
         willDoNothing().given(jwtProvider).validateAccessToken(accessToken);
         given(redisRepository.exist("BL:" + accessToken)).willReturn(false);
-        given(jwtProvider.getUsername(accessToken)).willReturn(username);
+        given(jwtProvider.getSubject(accessToken)).willReturn(userIdx.toString());
         given(jwtProvider.getRole(accessToken)).willReturn(role);
 
         // when
@@ -177,7 +193,6 @@ class AuthServiceTest {
 
         // then
         verify(redisRepository).exist("BL:" + accessToken);
-        assertThat(result.username()).isEqualTo(username);
         assertThat(result.role()).isEqualTo(role);
     }
 
@@ -206,54 +221,57 @@ class AuthServiceTest {
     /**
      * 비정상 테스트 (Negative Test)
      */
-    @Test
-    @DisplayName("회원가입 - 이미 존재하는 아이디")
-    void 회원가입_존재하는_아이디() {
-        // given
-        AccountReq account = new AccountReq("testID", "testPassword12!@", "bbbb@cccc.com", "user2");
-        UserReq user = new UserReq("김철수", LocalDate.now(), "010-1111-2222", Gender.MALE.toString());
-        RegisterReq registerData = new RegisterReq(account, user);
+//    @Test
+//    @DisplayName("회원가입 - 이미 존재하는 아이디")
+//    void 회원가입_존재하는_아이디() {
+//        // given
+//        AccountReq account = new AccountReq("testID", "testPassword12!@", "bbbb@cccc.com", "user2");
+//        UserReq user = new UserReq("김철수", LocalDate.now(), "010-1111-2222", Gender.MALE.toString());
+//        RegisterReq registerData = new RegisterReq(account, user);
+//
+//        // existsByUsername 검사 했을 때 true 라고 나올 경우 (아이디 중복일 경우)
+//        given(userRepository.existsByUsername(registerData.account().username())).willReturn(true);
+//
+//        // when & then
+//        // 설정한 예외 처리가 올바르게 터지는지 확인
+//        assertThatThrownBy(() -> authService.register(registerData))
+//                .isInstanceOf(BusinessException.class)  // BusinessException 인지 체크
+//                .extracting("errorCode")  // errorCode 내용 가져와서
+//                .isEqualTo(ErrorCode.EXISTS_USERNAME);  // "EXISTS_USERNAME" 인지 확인
+//        // userRepository에 아무것도 저장되지 않음
+//        verify(userRepository, never()).save(any());
+//    }
 
-        // existsByUsername 검사 했을 때 true 라고 나올 경우 (아이디 중복일 경우)
-        given(userRepository.existsByUsername(registerData.account().username())).willReturn(true);
-
-        // when & then
-        // 설정한 예외 처리가 올바르게 터지는지 확인
-        assertThatThrownBy(() -> authService.register(registerData))
-                .isInstanceOf(BusinessException.class)  // BusinessException 인지 체크
-                .extracting("errorCode")  // errorCode 내용 가져와서
-                .isEqualTo(ErrorCode.EXISTS_USERNAME);  // "EXISTS_USERNAME" 인지 확인
-        // userRepository에 아무것도 저장되지 않음
-        verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("회원가입 - 이미 존재하는 이메일")
-    void 회원가입_존재하는_이메일() {
-        // given
-        AccountReq account = new AccountReq("test123", "testPassword12!@", "aaaa@bbbb.com", "user2");
-        UserReq user = new UserReq("김철수", LocalDate.now(), "010-1111-2222", Gender.MALE.toString());
-        RegisterReq registerData = new RegisterReq(account, user);
-
-        // 이메일 중복일 경우
-        given(userRepository.existsByEmail(registerData.account().email())).willReturn(true);
-
-        // when & then
-        assertThatThrownBy(() -> authService.register(registerData))
-                .isInstanceOf(BusinessException.class)
-                .extracting("errorCode")
-                .isEqualTo(ErrorCode.EXISTS_EMAIL);
-        verify(userRepository, never()).save(any());
-    }
+//    @Test
+//    @DisplayName("회원가입 - 이미 존재하는 이메일")
+//    void 회원가입_존재하는_이메일() {
+//        // given
+//        AccountReq account = new AccountReq("test123", "testPassword12!@", "aaaa@bbbb.com", "user2");
+//        UserReq user = new UserReq("김철수", LocalDate.now(), "010-1111-2222", Gender.MALE.toString());
+//        RegisterReq registerData = new RegisterReq(account, user);
+//
+//        // 이메일 중복일 경우
+//        given(userRepository.existsByEmail(registerData.account().email())).willReturn(true);
+//
+//        // when & then
+//        assertThatThrownBy(() -> authService.register(registerData))
+//                .isInstanceOf(BusinessException.class)
+//                .extracting("errorCode")
+//                .isEqualTo(ErrorCode.EXISTS_EMAIL);
+//        verify(userRepository, never()).save(any());
+//    }
 
     @Test
     @DisplayName("회원가입 - 이미 존재하는 닉네임")
     void 회원가입_존재하는_닉네임() {
         // given
-        AccountReq account = new AccountReq("test123", "testPassword12!@", "bbbb@cccc.com", "user1");
-        UserReq user = new UserReq("김철수", LocalDate.now(), "010-1111-2222", Gender.MALE.toString());
-        RegisterReq registerData = new RegisterReq(account, user);
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        AccountReq account = new AccountReq("testPassword12!@", "user2");
+        UserReq user = new UserReq("김철수", LocalDate.now(), "010-1111-2222", Gender.MALE);
+        RegisterReq registerData = new RegisterReq(oneTimeAuthCode, account, user);
 
+        String oneTimeKey = "verification:oneTimeAuthCode:REGISTER:" + registerData.oneTimeAuthCode();
+        given(redisRepository.get(oneTimeKey)).willReturn("test@email.com");
         // 닉네임 중복일 경우
         given(userRepository.existsByNickname(registerData.account().nickname())).willReturn(true);
 
@@ -266,13 +284,13 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("로그인 - 존재하지 않는 아이디")
-    void 로그인_존재하지_않는_아이디() {
+    @DisplayName("로그인 - 존재하지 않는 이메일")
+    void 로그인_존재하지_않는_이메일() {
         // given
-        LoginReq loginData = new LoginReq("test123", "testPassword12!@");
+        LoginReq loginData = new LoginReq("aaaa@bbbb.com", "testPassword12!@");
 
         // 로그인 할 아이디 찾지 못할 경우
-        given(userRepository.findByUsername(loginData.username())).willReturn(Optional.empty());
+        given(userRepository.findByEmail(loginData.email())).willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> authService.login(loginData))
@@ -280,8 +298,8 @@ class AuthServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
 
-        // findByUsername는 실행되었고
-        verify(userRepository).findByUsername(loginData.username());
+        // findByEmail 실행되었고
+        verify(userRepository).findByEmail(loginData.email());
         // 그 외(passwordEncoder, jwtProvider, redisRepository)는 실행되지 않음
         verifyNoInteractions(passwordEncoder, jwtProvider, redisRepository);
     }
@@ -291,11 +309,11 @@ class AuthServiceTest {
     void 로그인_비밀번호_불일치() {
         // given
         LoginReq loginData = new LoginReq("testID", "testPassword12!@");
-        UserEntity mockEntity = createDefaultUser();
+        UserEntity user = createUser();
 
-        given(userRepository.findByUsername(loginData.username())).willReturn(Optional.of(mockEntity));
+        given(userRepository.findByEmail(loginData.email())).willReturn(Optional.of(user));
         // 비밀번호 대조 결과 불일치
-        given(passwordEncoder.matches(loginData.password(), mockEntity.getPassword())).willReturn(false);
+        given(passwordEncoder.matches(loginData.password(), user.getPassword())).willReturn(false);
 
         // when & then
         assertThatThrownBy(() -> authService.login(loginData))
@@ -368,23 +386,22 @@ class AuthServiceTest {
                 .isEqualTo(ErrorCode.INVALID_TOKEN);
         verifyNoInteractions(redisRepository, userRepository);
         // 그 외 jwtProvider 동작(getUsername, createAccessToken) 안했는지 검증
-        verify(jwtProvider, never()).getUsername(anyString());
+        verify(jwtProvider, never()).getSubject(anyString());
         verify(jwtProvider, never()).createAccessToken(anyString(), anyString());
     }
 
     @Test
     @DisplayName("토큰갱신 - 아이디 찾을 수 없음")
-    void 토큰갱신_존재하지_않는_아이디() {
+    void 토큰갱신_존재하지_않는_IDX() {
         // given
         String refreshToken = "refreshToken-dddeeefff";
-        String username = null;
-
+        Long idx = 9999L; // DB에 없는 임의의 ID
 
         willDoNothing().given(jwtProvider).validateRefreshToken(refreshToken);
         // null 반환 (아이디 찾을 수 없음)
-        given(jwtProvider.getUsername(refreshToken)).willReturn(username);
+        given(jwtProvider.getSubject(refreshToken)).willReturn(String.valueOf(idx));
         // "RT:null" 이름으로 검색
-        given(redisRepository.get("RT:" + username)).willReturn(null);
+        given(redisRepository.get("RT:" + idx)).willReturn(null);
         // (service 로직) 실제 저장된 refreshToken이 null 이므로 에러 던짐
 
         // when & then
@@ -392,8 +409,8 @@ class AuthServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.INVALID_TOKEN);
-        // redisRepository에 "RT:null"로 검색했는지 검증
-        verify(redisRepository).get("RT:null");
+        // redisRepository에 "RT:9999L"로 검색했는지 검증
+        verify(redisRepository).get("RT:9999");
         // userRepository는 사용하지 않음
         verifyNoInteractions(userRepository);
     }
@@ -403,14 +420,17 @@ class AuthServiceTest {
     void 토큰갱신_오래된_RefreshToken_사용() {
         // given
         String oldRefreshToken = "refreshToken-old";  // 토큰이 만료는 안되었지만, Redis에 등록되지 않은(과거의) Refresh Token
-        String username = "testID";
         String currentRefreshToken = "refreshToken-dddeeefff";
+
+        UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        Long userIdx = user.getIdx();
 
         // 토큰 유효하고, username 까지는 정상적으로 조회가 됨
         willDoNothing().given(jwtProvider).validateRefreshToken(oldRefreshToken);
-        given(jwtProvider.getUsername(oldRefreshToken)).willReturn(username);
+        given(jwtProvider.getSubject(oldRefreshToken)).willReturn(userIdx.toString());
         // 가장 최신 Refresh Token 가져옴
-        given(redisRepository.get("RT:" + username)).willReturn(currentRefreshToken);
+        given(redisRepository.get("RT:" + userIdx)).willReturn(currentRefreshToken);
         // (service 로직) oldRefreshToken != currentRefreshToken 이므로 에러 던짐
 
         // when & then
@@ -419,7 +439,7 @@ class AuthServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.INVALID_TOKEN);
 
-        verify(redisRepository).get("RT:" + username);
+        verify(redisRepository).get("RT:" + userIdx);
         verifyNoInteractions(userRepository);
     }
 
@@ -444,15 +464,21 @@ class AuthServiceTest {
     /**
      * 헬퍼 메서드
      */
-    private UserEntity createDefaultUser() {
+    private UserEntity createUser() {
         return UserEntity.builder()
-                .username("testID")
-                .password("encodedPassword12!@")
-                .nickname("user1")
                 .email("aaaa@bbbb.com")
+                .password("encodedPassword123")
+                .nickname("user1")
+                .build();
+    }
+
+    // 테스할 땐 굳이 필요 없음
+    private UserProfileEntity createUserProfile(Long userIdx) {
+        return UserProfileEntity.builder()
+                .userIdx(userIdx)
                 .name("홍길동")
                 .birth(LocalDate.now())
-                .phone("010-1234-5678")
+                .phone("010-0000-0000")
                 .gender(Gender.MALE)
                 .build();
     }

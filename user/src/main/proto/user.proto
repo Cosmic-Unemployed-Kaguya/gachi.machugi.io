@@ -5,6 +5,7 @@ package machugi.user;
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "validate/validate.proto";
+import "google/rpc/error_details.proto";  // 에러 처리용
 
 option java_multiple_files = true;
 option java_package = "kaguya.grpc.user";
@@ -100,9 +101,10 @@ message ResetPasswordRequest {
 
 // --- Response Messages ---
 message MyPageResponse {
-  string username = 1;
-  string email = 2;
-  string nickname = 3;
+//  string username = 1;
+  string email = 1;
+  string nickname = 2;
+  string join_date = 3;
 }
 
 message ProfileResponse {
@@ -113,5 +115,5 @@ message ProfileResponse {
 }
 
 message FindUsernameResponse {
-  string maskedUsername = 1;
+  string masked_username = 1;
 }
