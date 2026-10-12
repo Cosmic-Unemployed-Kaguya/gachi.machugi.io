@@ -67,6 +67,15 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
+sourceSets {
+    main {
+        proto {
+            srcDir '../proto'
+            include 'machugi/user/**'  // user 서비스 proto만 컴파일
+        }
+    }
+}
+
 protobuf {
     protoc { artifact = 'com.google.protobuf:protoc:3.25.3' }
     plugins {
