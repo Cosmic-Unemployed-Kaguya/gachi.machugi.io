@@ -7,28 +7,28 @@ import "machugi/board/board_dto.proto";
 
 service BoardCommentGrpcService {
   rpc GetComment(GrpcPagingRequest) returns (GrpcCommentPageResponse) {
-    option (google.api.http) = {get: "/api/notice/{board_idx}/comment"};
+    option (google.api.http) = {get: "/api/notice/{board_idx}/comments"};
   }
 
   rpc AddComment(GrpcUpsertCommentRequest) returns (GrpcCommentResponse) {
     option (google.api.http) = {
-      post: "/api/notice/{board_idx}/comment"
+      post: "/api/notice/{board_idx}/comments"
       body: "*"
     };
   }
 
   rpc GetCommentReplies(GrpcPagingRequest) returns (GrpcCommentPageResponse) {
-    option (google.api.http) = {get: "/api/notice/comment/{comment_idx}"};
+    option (google.api.http) = {get: "/api/notice/comments/{comment_idx}"};
   }
 
   rpc UpdateComment(GrpcUpsertCommentRequest) returns (GrpcCommentResponse) {
     option (google.api.http) = {
-      put: "/api/notice/comment/{comment_idx}"
+      put: "/api/notice/comments/{comment_idx}"
       body: "*"
     };
   }
 
   rpc DeleteComment(GrpcCommentIdxRequest) returns (GrpcCommentIdxRequest) {
-    option (google.api.http) = {delete: "/api/notice/comment/{comment_idx}"};
+    option (google.api.http) = {delete: "/api/notice/comments/{comment_idx}"};
   }
 }

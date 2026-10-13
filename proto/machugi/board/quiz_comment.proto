@@ -7,28 +7,28 @@ import "machugi/board/board_dto.proto";
 
 service QuizCommentGrpcService {
   rpc GetQuizComment(GrpcPagingQuizCommentRequest) returns (GrpcCommentPageResponse) {
-    option (google.api.http) = {get: "/api/quiz/{quiz_idx}/comment"};
+    option (google.api.http) = {get: "/api/quiz/{quiz_idx}/comments"};
   }
 
   rpc AddQuizComment(GrpcUpsertQuizCommentRequest) returns (GrpcCommentResponse) {
     option (google.api.http) = {
-      post: "/api/quiz/{quiz_idx}/comment"
+      post: "/api/quiz/{quiz_idx}/comments"
       body: "*"
     };
   }
 
   rpc GetQuizCommentReplies(GrpcPagingQuizCommentRequest) returns (GrpcCommentPageResponse) {
-    option (google.api.http) = {get: "/api/quiz/comment/{comment_idx}"};
+    option (google.api.http) = {get: "/api/quiz/comments/{comment_idx}"};
   }
 
   rpc UpdateQuizComment(GrpcUpsertQuizCommentRequest) returns (GrpcCommentResponse) {
     option (google.api.http) = {
-      put: "/api/quiz/comment/{comment_idx}"
+      put: "/api/quiz/comments/{comment_idx}"
       body: "*"
     };
   }
 
   rpc DeleteQuizComment(GrpcCommentIdxRequest) returns (GrpcCommentIdxRequest) {
-    option (google.api.http) = {delete: "/api/quiz/comment/{comment_idx}"};
+    option (google.api.http) = {delete: "/api/quiz/comments/{comment_idx}"};
   }
 }

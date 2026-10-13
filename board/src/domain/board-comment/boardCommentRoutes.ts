@@ -15,7 +15,7 @@ const route = Router();
  *  댓글 조회, 추가
  */
 route
-  .route("/:boardIdx/comment")
+  .route("/:boardIdx/comments")
   // 로그인 확인 x
   .get(validate({ params: BoardIdxParamReq, query: PagingReq }), getComment)
   .post(validate({ params: BoardIdxParamReq, body: UpsertCommentReq }), getUserInfo, addComment);
@@ -24,7 +24,7 @@ route
  * 댓글 수정, 삭제
  */
 route
-  .route("/comment/:commentIdx")
+  .route("/comments/:commentIdx")
   // 대댓글~ 조회
   .get(validate({ params: CommentIdxParamReq, query: PagingReq }), getCommentReplies)
   // 본인 확인은 db 조회가 필요하기에 서비스 내에서
