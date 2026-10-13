@@ -5,7 +5,7 @@ import { CommentListRes } from "@dto/commentListRes";
 import { CommentRes } from "@dto/commentRes";
 import { Page } from "@dto/paging";
 
-import { GrpcCommentPageResponse, GrpcCommentResponse } from "@generated/machugi/board/common";
+import { GrpcCommentPageResponse, GrpcCommentResponse } from "@generated/machugi/board/board_dto";
 
 export const toCommentListRes = (
   entity: BoardCommentEntity | QuizCommentEntity,

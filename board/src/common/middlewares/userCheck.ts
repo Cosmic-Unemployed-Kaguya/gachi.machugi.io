@@ -8,7 +8,7 @@ import { UserRole as AppRole } from "../model/enum/userRole";
 import { AppRequest } from "./appRequest";
 import { catchAsync } from "./catchAsync";
 
-import { UserInfoResponse } from "@generated/machugi/board/user";
+import { UserInfoResponse } from "@generated/machugi/user/user_internal";
 
 /**
  * 유저 정보 가져오기 및 권환 확인까지

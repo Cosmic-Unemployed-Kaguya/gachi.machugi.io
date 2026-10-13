@@ -8,7 +8,7 @@ import {
   UserInfoRequest,
   UserInfoResponse,
   UserServiceClient,
-} from "@generated/machugi/board/user";
+} from "@generated/machugi/user/user_internal";
 
 @GrpcClient(UserServiceClient, config.userService)
 export default class UserClient {
