@@ -4,7 +4,7 @@ package machugi.user;
 option java_multiple_files = true;
 option java_package = "com.example.grpc.user";
 
-service UserService {
+service UserInternalService {
   rpc GetUserInfo(UserInfoRequest) returns (UserInfoResponse) {}
   rpc GetUserListInfo(UserInfoListRequset) returns (UserInfoListResponse) {}
 }

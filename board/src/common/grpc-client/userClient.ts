@@ -7,10 +7,10 @@ import {
   UserInfoListResponse,
   UserInfoRequest,
   UserInfoResponse,
-  UserServiceClient,
+  UserInternalServiceClient
 } from "@generated/machugi/user/user_internal";
 
-@GrpcClient(UserServiceClient, config.userService)
+@GrpcClient(UserInternalServiceClient, config.userService)
 export default class UserClient {
   @GrpcClientProperty()
   public getUserInfo: (userInfoReq: UserInfoRequest) => Promise<UserInfoResponse>;
