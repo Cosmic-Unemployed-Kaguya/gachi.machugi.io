@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package Proto.room;
+package machugi.room;
 
 option csharp_namespace = "Room.Service.Proto";
 
-service RoomGrpcManager {
+service RoomInternalService  {
   rpc FindRoomInfo(GrpcRoomIdxRequest) returns (GrpcRoomInfoResponse) {}
 }
 
