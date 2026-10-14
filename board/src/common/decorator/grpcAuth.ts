@@ -6,7 +6,7 @@ import { UserData } from "../middlewares/appRequest";
 
 import { AuthRequest } from "@dto/grpcBaseReq";
 
-import { UserRole } from "@generated/machugi/board/user";
+import { UserRole } from "@generated/machugi/user/user_internal";
 
 /**
  * 메타데이터를 까서 useridx와 role 이 있는지 확인,

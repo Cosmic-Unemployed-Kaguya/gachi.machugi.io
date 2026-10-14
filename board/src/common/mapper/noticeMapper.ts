@@ -6,7 +6,7 @@ import { NoticeDetailRes } from "@dto/noticeDetailDTO";
 import { NoticeListRes } from "@dto/noticeListDTO";
 import { Page } from "@dto/paging";
 
-import { GrpcNoticeDetailResponse, GrpcNoticeListResponse, GrpcNoticePageResponse } from "@generated/machugi/board/notice";
+import { GrpcNoticeDetailResponse, GrpcNoticeListResponse, GrpcNoticePageResponse } from "@generated/machugi/board/board_dto";
 
 export const toNoticeDetail = (boardEntity: BoardEntity): NoticeDetailRes => {
   return {

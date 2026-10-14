@@ -18,10 +18,8 @@ import { GrpcAuth } from "@decorator/grpcAuth";
 
 import {
   BoardCommentGrpcServiceService as BoardCommentGrpcService,
-  GrpcCommentIdxRequest,
-  GrpcUpsertCommentRequest,
 } from "@generated/machugi/board/board_comment";
-import { GrpcCommentPageResponse, GrpcCommentResponse, GrpcPagingRequest } from "@generated/machugi/board/common";
+import { GrpcCommentIdxRequest, GrpcCommentPageResponse, GrpcCommentResponse, GrpcPagingRequest, GrpcUpsertCommentRequest } from "@generated/machugi/board/board_dto";
 
 @GrpcServer(BoardCommentGrpcService)
 export default class BoardGrpcServer {

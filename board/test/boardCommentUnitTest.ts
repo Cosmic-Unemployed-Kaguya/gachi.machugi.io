@@ -13,7 +13,7 @@ import BoardCommentService from "@domain/board-comment/boardCommentService";
 import { BoardState } from "@enum/boardState";
 import { UserRole } from "@enum/userRole";
 
-import { UserInfoResponse } from "@generated/machugi/board/user";
+import { UserInfoResponse } from "@generated/machugi/user/user_internal";
 
 describe("BoardCommentService 단위 테스트, 성공 케이스", () => {
   let boardCommentService: BoardCommentService;
