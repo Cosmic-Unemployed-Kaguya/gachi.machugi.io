@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package Proto.game;
+package machugi.game;
 
 import "google/api/annotations.proto";
 

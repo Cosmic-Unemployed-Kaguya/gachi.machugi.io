@@ -3,6 +3,7 @@
 using Common;
 using Game.Service;
 using Quiz.Service.Proto;
+using Room.Service.Proto;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,10 +38,15 @@ builder.Services.AddScoped<GameService, GameServiceImpl>();
 builder.Services.AddSingleton<RedisPub>();
 builder.Services.AddSingleton<RedisSub>();
 
-builder.Services.AddGrpcClient<QuizGrpcManager.QuizGrpcManagerClient>(options =>
+builder.Services.AddGrpcClient<QuizInternalService.QuizInternalServiceClient>(options =>
 {
     options.Address = new Uri(builder.Configuration["Services:QuizServerUrl"] ?? "http://localhost:5064");
 });
+builder.Services.AddGrpcClient<RoomInternalService.RoomInternalServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["Services:RoomServerUrl"] ?? "http://localhost:5065");
+});
+
 
 builder.Services.AddControllers();
 var app = builder.Build();

@@ -11,8 +11,8 @@ public class GameManager
     // <RoomIdx , 게임상태>
     private ConcurrentDictionary<long, GameRoomState> _rooms = new();
     private readonly RedisPub _redisPub;
-    private readonly QuizGrpcManager.QuizGrpcManagerClient _quizGrpcClient;
-    public GameManager(RedisPub redisPub, QuizGrpcManager.QuizGrpcManagerClient quizGrpcClient)
+    private readonly QuizInternalService.QuizInternalServiceClient _quizGrpcClient;
+    public GameManager(RedisPub redisPub, QuizInternalService.QuizInternalServiceClient quizGrpcClient)
     {
         _redisPub = redisPub;
         _quizGrpcClient = quizGrpcClient;

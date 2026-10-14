@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package Proto.quiz;
+package machugi.quiz;
 
 option csharp_namespace = "Quiz.Service.Proto";
 
-service QuizGrpcManager {
+service QuizInternalService  {
   // 퀴즈 데이터 가져오기
   rpc GetAllQuiz(GrpcGetAllQuizRequest) returns (GrpcGetQuizListResponse) {}
   rpc GetPartQuiz(GrpcGetPartQuizRequest) returns (GrpcGetQuizListResponse) {}

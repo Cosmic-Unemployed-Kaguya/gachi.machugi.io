@@ -14,9 +14,14 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
     <PackageReference Include="StackExchange.Redis" Version="2.12.8" />
 
-    <Protobuf Include="Proto\game.proto" GrpcServices="Server" AdditionalImportDirs="Proto/" />
-    <Protobuf Include="Proto\quiz.proto" GrpcServices="Client" AdditionalImportDirs="Proto/" />
-    <Protobuf Include="Proto\room.proto" GrpcServices="Client" AdditionalImportDirs="Proto/" />
+    <Protobuf Include="..\..\..\proto\machugi\game\game.proto"
+            ProtoRoot="..\..\..\proto" GrpcServices="Server" />
+
+    <Protobuf Include="..\..\..\proto\machugi\quiz\quiz_internal.proto"
+            ProtoRoot="..\..\..\proto" GrpcServices="Client"/>
+            
+    <Protobuf Include="..\..\..\proto\machugi\room\room_internal.proto"
+            ProtoRoot="..\..\..\proto" GrpcServices="Client"/>
     
     
   </ItemGroup>
