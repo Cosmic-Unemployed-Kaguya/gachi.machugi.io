@@ -1,0 +1,14 @@
+syntax = "proto3";
+package machugi.chat;
+
+service UserChatGrpcService {
+  rpc GetUserNickname(GetUserNicknameRequest) returns (GetUserNicknameResponse) {}
+}
+
+message GetUserNicknameRequest {
+  uint64 user_idx = 1;
+}
+
+message GetUserNicknameResponse {
+  string nickname = 1;
+}
