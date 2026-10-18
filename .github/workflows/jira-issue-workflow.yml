@@ -1,0 +1,190 @@
+name: 이슈 지라와 연결 워크플로우
+
+on:
+  issues:
+    types:
+      - opened
+      
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  create-jira-issue:
+    name: Create Jira Issue
+    runs-on: ubuntu-latest
+
+    steps:
+      # GitHub Issue 정보에서 Jira 프로젝트 키를 찾는 단계
+      - name: Get issue data
+        id: issue-data
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const title = context.payload.issue.title;
+            const body = context.payload.issue.body || "";
+            const issueNumber = context.payload.issue.number;
+            const issueUrl = context.payload.issue.html_url;
+
+            let projectKey = "";
+
+            # 서비스명 스캔
+            const titleMatch = title.match(/\[(USER|BOARD|QUIZ|ROOM)\]/i);
+            const bodyMatch = body.match(/\b(USER|BOARD|QUIZ|ROOM)-\d+\b/i);
+
+            # 대소문자 구분 추가
+            if (titleMatch) {
+              projectKey = titleMatch[1].toUpperCase();
+            } else if (bodyMatch) {
+              projectKey = bodyMatch[1].toUpperCase();
+            }
+
+            # 없으면 일단 예외처리
+            if (!projectKey) {
+              core.setFailed("Jira project key를 찾을 수 없습니다. 제목에 [USER], [BOARD], [QUIZ], [ROOM] 중 하나를 포함해주세요.");
+              return;
+            }
+
+            # EPIC인지 TASK인지 구분하기 위해 스캔 ( IS / SUB )
+            const isMatch = title.match(/\[(IS\d{3})\]/i);
+            const subMatch = title.match(/\[(SUB\d{3})\]/i);
+
+            # 없으면 일단 예외처리
+            if (!isMatch) {
+              core.setFailed("IS 코드를 찾을 수 없습니다. 제목에 [IS{NUM}] 형식으로 입력해주세요.
+              return;
+            }
+
+            # 이슈 타입 설정
+            const isCode = isMatch[1].toUpperCase();
+            const subCode = subMatch ? subMatch[1].toUpperCase() : "";
+            const issueType = subCode ? "Task" : "Epic";
+            
+            core.setOutput("project_key", projectKey);
+            core.setOutput("title", title);
+            core.setOutput("body", body);
+            core.setOutput("issue_number", issueNumber);
+            core.setOutput("issue_url", issueUrl);
+            core.setOutput("is_code", isCode);
+            core.setOutput("sub_code", subCode);
+            core.setOutput("issue_type", issueType);
+
+      # 서브 이슈(Task)면 부모 찾기(epic)
+      - name: Find parent epic
+        id: find-parent-epic
+        if: steps.issue-data.outputs.issue_type == 'Task'
+        run: |
+          is_label=$(echo "${{ steps.issue-data.outputs.is_code }}" | tr '[:upper:]' '[:lower:]')
+
+          jql="project = ${{ steps.issue-data.outputs.project_key }} AND issuetype = Epic AND labels = $is_label ORDER BY created DESC"
+
+          encoded_jql=$(python3 -c "import urllib.parse; print(urllib.parse.quote('''$jql'''))")
+
+          response=$(curl -s -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -X GET \
+            -H "Accept: application/json" \
+            "${{ secrets.JIRA_BASE_URL }}/rest/api/3/search?jql=$encoded_jql&fields=key&maxResults=1")
+
+          echo "$response"
+
+          parent_key=$(echo "$response" | jq -r '.issues[0].key')
+
+          if [ "$parent_key" = "null" ] || [ -z "$parent_key" ]; then
+            echo "상위 Epic을 찾을 수 없습니다."
+            echo "먼저 [${{ steps.issue-data.outputs.project_key }}][${{ steps.issue-data.outputs.is_code }}] 형식의 Epic 이슈를 생성해주세요."
+            exit 1
+          fi
+
+          echo "parent_key=$parent_key" >> $GITHUB_OUTPUT
+      
+
+      # Jira API를 호출해서 Jira Issue를 생성하는 단계
+      - name: Create Jira issue
+        id: create-jira
+        run: |
+          is_label=$(echo "${{ steps.issue-data.outputs.is_code }}" | tr '[:upper:]' '[:lower:]')
+          sub_label=$(echo "${{ steps.issue-data.outputs.sub_code }}" | tr '[:upper:]' '[:lower:]')
+
+          if [ "${{ steps.issue-data.outputs.issue_type }}" = "Task" ]; then
+            parent_json=', "parent": { "key": "${{ steps.find-parent-epic.outputs.parent_key }}" }'
+          else
+            parent_json=''
+          fi
+
+          if [ -z "$sub_label" ]; then
+            labels_json='"labels": ["'"$is_label"'", "github"]'
+          else
+            labels_json='"labels": ["'"$is_label"'", "'"$sub_label"'", "github"]'
+          fi
+
+          response=$(curl -s -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -X POST \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.JIRA_BASE_URL }}/rest/api/3/issue" \
+            --data '{
+              "fields": {
+                "project": {
+                  "key": "${{ steps.issue-data.outputs.project_key }}"
+                },
+                "summary": "${{ steps.issue-data.outputs.title }}",
+                "description": {
+                  "type": "doc",
+                  "version": 1,
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "Github Issue: ${{ steps.issue-data.outputs.issue_url }}"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "${{ steps.issue-data.outputs.body }}"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "issuetype": {
+                  "name": "${{ steps.issue-data.outputs.issue_type }}"
+                },
+                '"$labels_json"'
+                '"$parent_json"'
+              }
+            }')
+
+          echo "$response"
+
+          jira_key=$(echo "$response" | jq -r '.key')
+          jira_url="${{ secrets.JIRA_BASE_URL }}/browse/$jira_key"
+
+          if [ "$jira_key" = "null" ] || [ -z "$jira_key" ]; then
+            echo "Jira Issue 생성 실패"
+            exit 1
+          fi
+
+          echo "jira_key=$jira_key" >> $GITHUB_OUTPUT
+          echo "jira_url=$jira_url" >> $GITHUB_OUTPUT
+
+      # 생성된 Jira Issue 링크를 GitHub Issue 댓글로 남기는 단계
+      - name: Comment Jira issue link
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const jiraKey = "${{ steps.create-jira.outputs.jira_key }}";
+            const jiraUrl = "${{ steps.create-jira.outputs.jira_url }}";
+            const issueType = "${{ steps.issue-data.outputs.issue_type }}";
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body: `Jira ${issueType}가 생성되었습니다.\n\n- ${jiraKey}: ${jiraUrl}`
+            });
