@@ -1,10 +1,3 @@
-admin:
-  access_log_path: /dev/null
-  address:
-    socket_address:
-      address: 0.0.0.0
-      port_value: 9901
-
 static_resources:
   listeners:
   - name: listener_0
@@ -121,6 +114,7 @@ static_resources:
               print_options:
                 add_whitespace: true
                 always_print_primitive_fields: true
+              convert_grpc_status: true
 
           # 라우팅 필터
           - name: envoy.filters.http.router

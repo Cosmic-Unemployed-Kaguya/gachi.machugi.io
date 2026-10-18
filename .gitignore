@@ -66,3 +66,4 @@ room/appsettings.json
 board/.env
 /board/node_modules
 /board/src/generated
+/chat_node/src/generated
