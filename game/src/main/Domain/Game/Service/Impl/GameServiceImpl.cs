@@ -8,11 +8,11 @@ namespace Game.Service;
 
 public class GameServiceImpl : GameService
 {
-    private readonly RoomGrpcManager.RoomGrpcManagerClient _roomGrpcClient;
+    private readonly RoomInternalService.RoomInternalServiceClient _roomGrpcClient;
     private readonly GameManager _gameManager;
     private readonly RedisSub _redisSub;
 
-    public GameServiceImpl(GameManager gameManager, RedisSub redisSub, RoomGrpcManager.RoomGrpcManagerClient roomGrpcClient)
+    public GameServiceImpl(GameManager gameManager, RedisSub redisSub, RoomInternalService.RoomInternalServiceClient roomGrpcClient)
     {
         _gameManager = gameManager;
         _redisSub = redisSub;
