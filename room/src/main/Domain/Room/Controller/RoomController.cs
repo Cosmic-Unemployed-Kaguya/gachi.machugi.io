@@ -70,6 +70,17 @@ public class RoomController : ControllerBase
     {
         return Ok(await _roomService.AddPlayerToRoom(idx, request));
     }
+
+    //방에 플레이어 추가 ver.2
+    [HttpPost("set/add/{idx}/ticket")]
+    public async Task<IActionResult> addPlayerToRoomByIdxWithTicket(
+        [FromRoute] long idx,
+        [FromBody] UpdateSetRequest request
+    )
+    {
+        return Ok(await _roomService.AddPlayerWithTicket(idx, request));
+    }
+
     //방에 플레이어 제거
     [HttpPost("set/remove/{idx}")]
     public async Task<IActionResult> RemovePlayerFromRoomByIdx(

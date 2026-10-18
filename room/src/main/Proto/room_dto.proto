@@ -56,3 +56,7 @@ message GrpcRoomResponse {
 message GrpcBoolResponse {
   bool is_success = 1;
 }
+
+message GrpcTicketUuidResponse {
+  string uuid = 1;
+}

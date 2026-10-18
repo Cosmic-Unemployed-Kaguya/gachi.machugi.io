@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>통합 방 입장 및 실시간 채팅 테스트</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f9; }
+        .box { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input, button { padding: 8px; margin: 4px; border-radius: 4px; border: 1px solid #ccc; }
+        button { background-color: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #218838; }
+        #chatBox { height: 250px; border: 1px solid #ddd; overflow-y: scroll; padding: 10px; background: #fafafa; }
+        .status-log { color: #d9534f; font-size: 0.95em; margin-top: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>🎮 Room & Chat 통합 테스트 클라이언트</h2>
+
+    <div class="box">
+        <h3>1. 방 접속 설정</h3>
+        <label>방 ID (roomIdx): <input type="number" id="roomIdx" value="777"></label>
+        <label>유저 ID (playerIdx): <input type="number" id="playerIdx" value="1001"></label>
+        
+        <button onclick="oneClickJoin()">🚀 방 입장하기 (원클릭 자동 진행)</button>
+        
+        <div id="statusLog" class="status-log">대기 중...</div>
+    </div>
+
+    <div class="box">
+        <h3>2. 실시간 채팅</h3>
+        <div id="chatBox"></div>
+        <input type="text" id="messageInput" placeholder="메시지 입력..." style="width: 300px;" onkeydown="if(event.key==='Enter') sendMessage()">
+        <button onclick="sendMessage()" style="background-color: #007bff;">전송</button>
+    </div>
+
+    <script>
+        const roomServerUrl = "http://localhost:8000"; 
+        const chatServerUrl = "http://localhost:5062"; 
+
+        let connection = null;
+
+        function log(message, isError = false) {
+            const statusDiv = document.getElementById("statusLog");
+            const color = isError ? "red" : "green";
+            statusDiv.innerHTML += `<br><span style="color:${color}">👉 ${message}</span>`;
+            console.log(message);
+        }
+
+        async function oneClickJoin() {
+            const roomIdx = parseInt(document.getElementById("roomIdx").value);
+            const playerIdx = parseInt(document.getElementById("playerIdx").value);
+            document.getElementById("statusLog").innerHTML = "⏳ 방 입장 프로세스 시작...";
+
+            try {
+                log(`1단계: Room 서버(${roomServerUrl}/api/room/set/add/${roomIdx}) 호출 시도...`);
+                
+                const roomResponse = await fetch(`${roomServerUrl}/api/room/set/add/${roomIdx}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        roomIdx: roomIdx,
+                        playerIdx: playerIdx
+                    })
+                });
+
+                if (!roomResponse.ok) {
+                    const errorText = await roomResponse.text();
+                    log(`❌ Room 서비스 응답 실패! (HTTP ${roomResponse.status} ${roomResponse.statusText})`, true);
+                    log(`상세 에러 내용: ${errorText || "내용 없음 (CORS 차단 또는 라우팅 없음)"}`, true);
+                    return;
+                }
+
+                const result = await roomResponse.json();
+                log(`✅ Room 등록 성공! 응답 데이터: ${JSON.stringify(result)}`);
+
+                log(`2단계: Chat 서버(${chatServerUrl}) 소켓 연결 중...`);
+                await connectSignalR(playerIdx.toString());
+
+            } catch (error) {
+                log(`❌ 네트워크/CORS 예외 발생: ${error.message}`, true);
+            }
+        }
+
+        async function connectSignalR(userIdx) {
+            if (connection) {
+                try {
+                    await connection.stop();
+                } catch (e) {
+                    console.warn("기존 연결 종료 중 경고:", e);
+                }
+            }
+
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl(`${chatServerUrl}/chat?userIdx=${userIdx}`)
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("Notice", (msg) => appendChat(`[공지] ${msg}`));
+            connection.on("BroadcastMessage", (user, msg) => appendChat(`[${user}]: ${msg}`));
+
+            await connection.start();
+            log(`🎉 Chat 소켓 연결 완료! (State: ${connection.state}, ConnectionId: ${connection.connectionId})`);
+        }
+
+        async function sendMessage() {
+            if (!connection) {
+                alert("채팅 연결 객체가 없습니다. [🚀 방 입장하기]를 먼저 눌러주세요!");
+                return;
+            }
+
+            if (connection.state !== "Connected" && connection.state !== signalR.HubConnectionState.Connected) {
+                alert(`채팅방 연결 상태가 아닙니다. (현재 상태: ${connection.state})`);
+                return;
+            }
+
+            const roomIdx = document.getElementById("roomIdx").value;
+            const playerIdx = document.getElementById("playerIdx").value;
+            const input = document.getElementById("messageInput");
+
+            if (!input.value.trim()) return;
+
+            try {
+                await connection.invoke("SendMessage", roomIdx.toString(), playerIdx.toString(), input.value);
+                input.value = "";
+            } catch (err) {
+                log(`❌ 메시지 전송 실패: ${err.message}`, true);
+            }
+        }
+
+        function appendChat(text) {
+            const chatBox = document.getElementById("chatBox");
+            chatBox.innerHTML += `<div>${text}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
