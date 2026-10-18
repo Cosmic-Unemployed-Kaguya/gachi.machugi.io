@@ -4,7 +4,7 @@ package machugi.chat;
 import "google/protobuf/empty.proto";
 
 // room > chat
-service ChatGrpcService {
+service ChatNodeGrpcService {
   rpc KickUser(KickUserRequest) returns (google.protobuf.Empty) {}
   rpc ExitUser(ExitUserRequest) returns (google.protobuf.Empty) {}
   rpc CreateRoom(CreateRoomRequest) returns (google.protobuf.Empty) {}

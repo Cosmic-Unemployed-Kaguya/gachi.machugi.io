@@ -1,0 +1,11 @@
+version: v2
+inputs:
+  - directory: ../proto
+    paths:
+      - ../proto/machugi/chat/chat_node.proto
+      - ../proto/machugi/room/room_internal.proto
+      - ../proto/machugi/user/user_internal.proto
+plugins:
+  - local: protoc-gen-ts_proto        # node_modules/.bin 사용
+    out: src/generated
+    opt: [outputServices=grpc-js, env=node, esModuleInterop=true, removeEnumPrefix=true]
