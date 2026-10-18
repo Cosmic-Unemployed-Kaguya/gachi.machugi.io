@@ -30,7 +30,6 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '9.0.x'
-          cache: true
       #.csproj이 있는 위치와 동일해야 함
       # - name: account test 세팅
       #   if: ${{ inputs.service-name == 'account-service' }}
@@ -55,7 +54,7 @@ jobs:
       - name: room test 의존성 세팅
         if: ${{ inputs.service-name == 'room' }}
         run: |
-          echo '${{ secrets.ROOM_TEST_APPSETTING }}' > ./room/appsettings.Test.json
+          echo '${{ secrets.ROOM_TEST_APPSETTING }}' > ./room/src/main/appsettings.Test.json
 
       # NuGet 패키지 복원 (Gradle의 의존성 다운로드와 유사)
       - name: 의존성 복원 (Restore)

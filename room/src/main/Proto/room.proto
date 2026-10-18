@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package Proto.room;
+
+import "google/api/annotations.proto";
+import "room_dto.proto";
+
+option csharp_namespace = "Room.Service.Proto";
+
+service RoomGrpcManager {
+  rpc CreateRoom(GrpcCreateRoomRequest) returns (GrpcRoomInfoResponse) {
+    option (google.api.http) = {
+      post: "/api/room"
+      body: "*"
+    };
+  }
+  rpc FindRoom(GrpcRoomIdxRequest) returns (GrpcRoomResponse) {
+    option (google.api.http) = {get: "/api/room/{room_idx}"};
+  }
+  rpc FindRoomInfo(GrpcRoomIdxRequest) returns (GrpcRoomInfoResponse) {
+    option (google.api.http) = {get: "/api/room/info/{room_idx}"};
+  }
+  rpc FindSetInfo(GrpcRoomIdxRequest) returns (GrpcRoomSetInfoResponse) {
+    option (google.api.http) = {get: "/api/room/set/{room_idx}"};
+  }
+  rpc UpdateRoomInfo(GrpcUpdateRoomRequest) returns (GrpcRoomInfoResponse) {
+    option (google.api.http) = {
+      patch: "/api/room/info/{room_idx}"
+      body: "*"
+    };
+  }
+  rpc AddPlayerToRoom(GrpcUpdateSetRequest) returns (GrpcBoolResponse) {
+    option (google.api.http) = {
+      post: "/api/room/set/add/{room_idx}"
+      body: "*"
+    };
+  }
+  rpc RemovePlayerFromRoom(GrpcUpdateSetRequest) returns (GrpcBoolResponse) {
+    option (google.api.http) = {
+      post: "/api/room/set/remove/{room_idx}"
+      body: "*"
+    };
+  }
+  rpc DeleteRoom(GrpcRoomIdxRequest) returns (GrpcBoolResponse) {
+    option (google.api.http) = {delete: "/api/room/{room_idx}"};
+  }
+}

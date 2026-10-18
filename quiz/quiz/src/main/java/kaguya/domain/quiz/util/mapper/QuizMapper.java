@@ -1,9 +1,13 @@
 package kaguya.domain.quiz.util.mapper;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
+import kaguya.domain.question.model.dto.response.QuestionResponse;
 import kaguya.domain.quiz.model.dto.request.QuizCreateRequest;
 import kaguya.domain.quiz.model.dto.response.QuizResponse;
+import kaguya.domain.quiz.model.dto.response.QuizStartResponse;
 import kaguya.domain.quiz.model.entity.QuizEntity;
 
 @Component
@@ -30,6 +34,20 @@ public class QuizMapper {
                 quizEntity.getCreatedDate(),
                 quizEntity.getUpdatedDate(),
                 quizEntity.getCategory()
+        );
+    }
+
+    public QuizStartResponse entityToStartResponse(
+            QuizEntity quiz,
+            List<QuestionResponse> questions
+    ) {
+        return new QuizStartResponse(
+                quiz.getIdx(),
+                quiz.getTitle(),
+                quiz.getDescription(),
+                quiz.getThumbnail(),
+                quiz.getCategory(),
+                questions
         );
     }
 }
