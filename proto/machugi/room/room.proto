@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package Proto.room;
+package machugi.room;
 
 import "google/api/annotations.proto";
-import "room_dto.proto";
+import "machugi/room/room_dto.proto";
 
 option csharp_namespace = "Room.Service.Proto";
 
@@ -32,6 +32,12 @@ service RoomGrpcManager {
   rpc AddPlayerToRoom(GrpcUpdateSetRequest) returns (GrpcBoolResponse) {
     option (google.api.http) = {
       post: "/api/room/set/add/{room_idx}"
+      body: "*"
+    };
+  }
+  rpc AddPlayerToRoomWithTicket(GrpcUpdateSetRequest) returns (GrpcTicketUuidResponse) {
+    option (google.api.http) = {
+      post: "/api/room/set/add/{room_idx}/ticket"
       body: "*"
     };
   }

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package Proto.room;
+package machugi.room;
 
 option csharp_namespace = "Room.Service.Proto";
 
@@ -55,4 +55,8 @@ message GrpcRoomResponse {
 
 message GrpcBoolResponse {
   bool is_success = 1;
+}
+
+message GrpcTicketUuidResponse {
+  string uuid = 1;
 }
