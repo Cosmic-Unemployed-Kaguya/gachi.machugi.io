@@ -16,7 +16,7 @@ import { UpsertCommentReqType } from "@dto/commentUpsertReq";
 import { BoardIdxParamReqType, CommentIdxParamReqType } from "@dto/idxParamReq";
 import { Page, PagingReqType } from "@dto/paging";
 
-import { UserInfoListResponse } from "@generated/machugi/board/user";
+import { UserInfoListResponse } from "@generated/machugi/user/user_internal";
 
 @Service()
 export default class BoardCommentService {

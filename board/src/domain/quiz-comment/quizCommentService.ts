@@ -16,7 +16,7 @@ import { UpsertCommentReqType } from "@dto/commentUpsertReq";
 import { CommentIdxParamReqType, QuizIdxParamReqType } from "@dto/idxParamReq";
 import { Page, PagingReqType } from "@dto/paging";
 
-import { UserInfoListResponse } from "@generated/machugi/board/user";
+import { UserInfoListResponse } from "@generated/machugi/user/user_internal";
 
 @Service()
 export default class QuizCommentService {

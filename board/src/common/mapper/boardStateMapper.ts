@@ -1,6 +1,6 @@
 import { BoardState as AppState } from "../model/enum/boardState";
 
-import { BoardState as GrpcState } from "@generated/machugi/board/common";
+import { BoardState as GrpcState } from "@generated/machugi/board/board_dto";
 
 export const toGrpcState: Record<AppState, GrpcState> = {
   [AppState.BLOCKED]: GrpcState.BLOCKED,

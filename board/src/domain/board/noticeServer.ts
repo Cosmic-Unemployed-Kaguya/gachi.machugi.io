@@ -14,15 +14,11 @@ import { PagingReq } from "@dto/paging";
 
 import { GrpcAuth } from "@decorator/grpcAuth";
 
-import { GrpcPagingRequest } from "@generated/machugi/board/common";
+import { GrpcBoardIdxRequest, GrpcNoticeDetailResponse, GrpcNoticePageResponse, GrpcPagingRequest, GrpcUpsertNoticeRequest } from "@generated/machugi/board/board_dto";
 import {
-  GrpcBoardIdxRequest,
-  GrpcNoticeDetailResponse,
-  GrpcNoticePageResponse,
-  GrpcUpsertNoticeRequest,
   NoticeGrpcServiceService as NoticeGrpcService,
 } from "@generated/machugi/board/notice";
-import { UserRole } from "@generated/machugi/board/user";
+import { UserRole } from "@generated/machugi/user/user_internal";
 
 @GrpcServer(NoticeGrpcService)
 export default class NoticeGrpcServer {

@@ -16,12 +16,8 @@ import { PagingReq } from "@dto/paging";
 
 import { GrpcAuth } from "@decorator/grpcAuth";
 
-import { GrpcCommentIdxRequest } from "@generated/machugi/board/board_comment";
-import { GrpcCommentPageResponse, GrpcCommentResponse } from "@generated/machugi/board/common";
+import { GrpcCommentIdxRequest, GrpcCommentPageResponse, GrpcCommentResponse, GrpcPagingQuizCommentRequest, GrpcUpsertQuizCommentRequest } from "@generated/machugi/board/board_dto";
 import {
-  GrpcPagingQuizCommentRequest,
-  GrpcQuizCommentIdxRequest,
-  GrpcUpsertQuizCommentRequest,
   QuizCommentGrpcServiceService as QuizCommentGrpcService,
 } from "@generated/machugi/board/quiz_comment";
 
@@ -97,7 +93,7 @@ export default class QuizCommentGrpcServer {
   }
 
   @GrpcAuth()
-  public async deleteQuizComment(req: AuthRequest<GrpcQuizCommentIdxRequest>): Promise<GrpcCommentIdxRequest> {
+  public async deleteQuizComment(req: AuthRequest<GrpcCommentIdxRequest>): Promise<GrpcCommentIdxRequest> {
     const commentIdxReq = await grpcValidate(CommentIdxParamReq, req);
 
     const userRes = await this.userClient.getUserInfo({
