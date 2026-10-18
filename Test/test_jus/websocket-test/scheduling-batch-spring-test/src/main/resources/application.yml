@@ -1,0 +1,46 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: scheduling-batch-spring-test
+
+  # DB 연결 (postgreSQL) - 배치 테스트용
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
+
+  # Redis 연결 - 분산 Lock 테스트용
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  # 배치 설정
+  batch:
+    job:
+      enabled: false  # 앱 시작 시 Job 자동 실행 끔 (스케줄러가 실행 할 경우)
+      name: skipRetryJob  # 시작 시 실행할 Job 설정 (Job 빈이 여러 개일 때)
+    jdbc:
+      initialize-schema: always  # 항상 테이블 생성 시도
+
+
+  task:
+    scheduling:
+      pool:
+        size: 2
+
+batch-test:
+  fail-order-id: 0  # 이 주문 번호에서 예외 발생 (0이면 실패 안 함)
+  skip-order-ids: 3,13  # 데이터 오류를 낼 주문 (Skip)
+  retry-order-id: 7  # 일시적 오류를 낼 주문 (Retry)
+  retry-fail-count: 5  # retry-order-id가 처음 몇 번 실패할지 (이후 시도는 성공)
+
+zone-test:
+  # 테스트할 시간 작성
+  cron: "0 10 00 * * *"
+
+logging:
+  level:
+    net.javacrumbs.shedlock: debug  # 락 획득/건너뜀 로그 확인용
