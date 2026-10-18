@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package Proto.chat;
+package machugi.chat_dotnet;
 
 import "google/api/annotations.proto";
 
