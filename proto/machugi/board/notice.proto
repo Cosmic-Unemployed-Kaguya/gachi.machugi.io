@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package machugi.board;
+
+import "google/api/annotations.proto";
+import "machugi/board/board_dto.proto";
+
+service NoticeGrpcService {
+  rpc GetNoticeList(GrpcPagingRequest) returns (GrpcNoticePageResponse) {
+    option (google.api.http) = {get: "/api/notice"};
+  }
+
+  rpc AddNotice(GrpcUpsertNoticeRequest) returns (GrpcNoticeDetailResponse) {
+    option (google.api.http) = {
+      post: "/api/notice"
+      body: "*"
+    };
+  }
+
+  rpc GetNoticeDetail(GrpcBoardIdxRequest) returns (GrpcNoticeDetailResponse) {
+    option (google.api.http) = {get: "/api/notice/{board_idx}"};
+  }
+
+  rpc UpdateNotice(GrpcUpsertNoticeRequest) returns (GrpcNoticeDetailResponse) {
+    option (google.api.http) = {
+      put: "/api/notice/{board_idx}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteNotice(GrpcBoardIdxRequest) returns (GrpcNoticePageResponse) {
+    option (google.api.http) = {delete: "/api/notice/{board_idx}"};
+  }
+}

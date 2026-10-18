@@ -1,14 +1,19 @@
 syntax = "proto3";
+
 package machugi.user;
 
+option java_multiple_files = true;
+option java_package = "kaguya.grpc.user";
+
 service UserInternalService {
-  rpc GetUserNickname(GetUserNicknameRequest) returns (GetUserNicknameResponse) {}
+
+  rpc GetNickname (GetNicknameRequest) returns (GetNicknameResponse);
 }
 
-message GetUserNicknameRequest {
-  uint64 user_idx = 1;
+message GetNicknameRequest {
+  int64 idx = 1;
 }
 
-message GetUserNicknameResponse {
+message GetNicknameResponse {
   string nickname = 1;
 }

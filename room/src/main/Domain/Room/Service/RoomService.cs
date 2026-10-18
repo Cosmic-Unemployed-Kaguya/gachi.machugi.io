@@ -15,6 +15,8 @@ public interface RoomService
     public Task<RoomSetInfoResponse> FindSetInfo(long roomIdx);
     public Task<RoomInfoResponse> UpdateRoomInfo(long roomIdx, UpdateRoomRequest request);
     public Task<bool> AddPlayerToRoom(long roomIdx, UpdateSetRequest request);
+    public Task<string> AddPlayerWithTicket(long roomIdx, UpdateSetRequest request);
+
     public Task<bool> RemovePlayerFromRoom(long roomIdx, UpdateSetRequest request);
     public Task<bool> DeleteRoom(long roomIdx);
 }

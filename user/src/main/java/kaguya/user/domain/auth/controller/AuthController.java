@@ -2,12 +2,13 @@ package kaguya.user.domain.auth.controller;
 
 import jakarta.validation.Valid;
 import kaguya.user.domain.auth.model.dto.request.GuestReq;
+import kaguya.user.domain.auth.model.dto.request.ReactivateAccountReq;
 import kaguya.user.domain.auth.model.dto.request.LoginReq;
 import kaguya.user.domain.auth.model.dto.request.RegisterReq;
 import kaguya.user.domain.auth.model.dto.response.GuestRes;
-import kaguya.user.domain.common.model.dto.BaseRes;
 import kaguya.user.domain.auth.model.dto.response.LoginRes;
 import kaguya.user.domain.auth.service.AuthService;
+import kaguya.user.domain.common.model.dto.BaseRes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -33,9 +34,10 @@ public class AuthController {
     ) {
 
         authService.register(request);
-        BaseRes<Void> response = new BaseRes<>("201", "회원가입 성공", null);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new BaseRes<>("201", "회원가입 성공", null)
+        );
     }
 
     /**
@@ -73,6 +75,43 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                 .body(new BaseRes<>("200", "로그인 성공", data.nickname()));  // 닉네임만 전달
+    }
+
+    /**
+     * 휴면상태 유저 로그인
+     * @param request: 휴면상태 유저 로그인 요청 DTO (oneTimeAuthCode)
+     * @return BaseRes<String>: HTTP 200 성공, nickname 전달
+     */
+    @PostMapping("/login/reactivate")
+    public ResponseEntity<BaseRes<String>> reactivateAccountReq(
+            @RequestBody @Valid ReactivateAccountReq request
+    ) {
+
+        LoginRes data = authService.reactivateAccount(request);
+
+        // Access Cookie 설정 (key: accessToken, value: AccessToken)
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", data.accessToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(10 * 60)
+                .sameSite("Lax")
+                .build();
+
+        // Refresh Cookie 설정 (key: refreshToken, value: RefreshToken)
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", data.refreshToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(14 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+
+        // cookie 세팅
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .body(new BaseRes<>("200", "로그인 성공", data.nickname()));
     }
 
     /**
@@ -138,6 +177,10 @@ public class AuthController {
                 .body(new BaseRes<>("200", "토큰 갱신", null));
     }
 
+    /**
+     * 게스트 로그인
+     * @param request: 닉네임
+     */
     @PostMapping("/guests")
     public ResponseEntity<BaseRes<String>> guest(
             @RequestBody @Valid GuestReq request
