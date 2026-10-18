@@ -1,9 +1,9 @@
 import config from "@common/config";
 import { GrpcClient, GrpcClientProperty } from "@cosmic-unemployed-kaguya/grpc-express";
-import { GetUserNicknameRequest, GetUserNicknameResponse, UserChatGrpcServiceClient } from "@generated/machugi/chat/user";
+import { GetUserNicknameRequest, GetUserNicknameResponse, UserInternalServiceClient } from "@generated/machugi/user/user_internal";
 
 
-@GrpcClient(UserChatGrpcServiceClient, config.userService)
+@GrpcClient(UserInternalServiceClient, config.userService)
 export class UserGrpcClient{
 
     @GrpcClientProperty()

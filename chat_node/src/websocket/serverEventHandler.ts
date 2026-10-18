@@ -3,7 +3,7 @@ import { UserGrpcClient } from "@common/grpc-client/userClient";
 import { CustomSocket } from "@common/model/customSocket";
 import logger from "@common/util/logger";
 import { ServerEvent } from "@decorator/serverEvent";
-import { GetUserNicknameResponse } from "@generated/machugi/chat/user";
+import { GetUserNicknameResponse } from "@generated/machugi/user/user_internal";
 import { IncomingMessage } from "node:http";
 import { Inject, Service } from "typedi";
 /**

@@ -1,10 +1,10 @@
 import { GrpcServer } from "@cosmic-unemployed-kaguya/grpc-express";
-import { ChatGrpcServiceService } from "@generated/machugi/chat/chat";
+import { ChatNodeGrpcServiceService } from "@generated/machugi/chat/chat_node";
 import { Inject } from "typedi";
 import { RedisPubClient } from "../redis/redisPubClient";
 
 
-@GrpcServer(ChatGrpcServiceService)
+@GrpcServer(ChatNodeGrpcServiceService)
 export default class ChatGrpcServer {
     constructor(
         @Inject() private redisPubClient : RedisPubClient,

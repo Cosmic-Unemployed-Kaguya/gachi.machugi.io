@@ -71,7 +71,9 @@ public class RoomServiceImpl : RoomService
         }
         return updatedroom.ToInfoResponse();
     }
+
     //플레이어 추가 (chat에 직접 알림)
+
     public async Task<bool> AddPlayerToRoom(long roomIdx, UpdateSetRequest request)
     {
         //레디스에 플레이어 추가
