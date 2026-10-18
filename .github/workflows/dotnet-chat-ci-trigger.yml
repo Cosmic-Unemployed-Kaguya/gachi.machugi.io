@@ -1,0 +1,15 @@
+name: chat CI 스크립트
+
+on:
+  pull_request:
+    branches:
+      - chat
+    paths: 
+      - './chat/**'
+
+jobs:
+   execute-test:
+    uses: ./.github/workflows/dotnet-ci-script.yml
+    secrets: inherit
+    with:
+      service-name: chat
