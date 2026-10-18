@@ -8,5 +8,6 @@ import kaguya.domain.question.model.entity.QuestionEntity;
 
 public interface QuestionRepository extends JpaRepository<QuestionEntity, Long> {
 
-    List<QuestionEntity> findByQuizIdxOrderBySortOrderAsc(Long quizIdx);
-}
+    // 퀴즈에 속한 질문 리스트 조회
+    List<QuestionEntity> findByQuizIdx(Long quizIdx);
+} 

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import kaguya.domain.quiz.model.dto.request.QuizCreateRequest;
 import kaguya.domain.quiz.model.dto.request.QuizUpdateRequest;
 import kaguya.domain.quiz.model.dto.response.QuizResponse;
+import kaguya.domain.quiz.model.dto.response.QuizStartResponse;
 import kaguya.domain.quiz.service.QuizService;
 import lombok.RequiredArgsConstructor;
 
@@ -63,5 +64,11 @@ public class QuizController {
     public ResponseEntity<Void> deleteQuiz(@PathVariable("quizIdx") Long quizIdx) {
         quizService.deleteQuiz(quizIdx);
         return ResponseEntity.noContent().build();
+    }
+
+    // 퀴즈 시작 API
+    @PostMapping("/{quizIdx}/start")
+    public ResponseEntity<QuizStartResponse> startQuiz(@PathVariable("quizIdx") Long quizIdx) {
+        return ResponseEntity.ok(quizService.startQuiz(quizIdx));
     }
 }
