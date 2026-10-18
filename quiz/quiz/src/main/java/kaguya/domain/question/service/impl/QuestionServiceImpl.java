@@ -1,6 +1,5 @@
 package kaguya.domain.question.service.impl;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -35,7 +34,7 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Transactional(readOnly = true)
     public List<QuestionResponse> getQuestionList(Long quizIdx) {
-        return questionRepository.findByQuizIdx(quizIdx)
+        return questionRepository.findByQuizIdxOrderBySortOrderAsc(quizIdx)
                 .stream()
                 .map(questionMapper::entityToResponse)
                 .toList();
@@ -74,23 +73,5 @@ public class QuestionServiceImpl implements QuestionService {
                 .orElseThrow(() -> new RuntimeException("문제가 존재하지 않습니다."));
 
         questionRepository.delete(question);
-    }
-
-    // 랜덤 문제 조회
-    @Override
-    @Transactional(readOnly = true)
-    public List<QuestionResponse> getRandomQuestionList(Long quizIdx) {
-        List<QuestionEntity> questions = questionRepository.findByQuizIdx(quizIdx);
-
-        if (questions.isEmpty()) {
-            throw new RuntimeException
-            ("해당 퀴즈에 문제가 존재하지 않습니다.");
-        }
-
-        Collections.shuffle(questions);
-
-        return questions.stream()
-                .map(questionMapper::entityToResponse)
-                .toList();
     }
 }
