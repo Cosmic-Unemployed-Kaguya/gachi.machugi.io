@@ -27,12 +27,14 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)  // 프론트가 따로 있으니 폼로그인 활성화할 필요 없음 (CSR)
                 .httpBasic(AbstractHttpConfigurer::disable)  // Basic 방식 사용하지 않아서 비활성화 (Bearer 방식 사용)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // 세션을 활성화하지 않음 (JWT 사용)
+                .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))  // todo. (개발용) H2 console frameset 사용. 운영시 삭제
 
                 // 페이지 접근 설정
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()  // 인증 관련은 전부 통과
                         .requestMatchers("/verifications/**").permitAll()  // 인증메일 관련은 전부 통과
                         .requestMatchers("/users/reset/password").permitAll()  // 비밀번호 재설정은 인증 없이 접근 허용
+                        .requestMatchers("/h2-console/**").permitAll()  // todo. (개발용) H2 console. 운영시 삭제
                         .anyRequest().authenticated()  // 나머지는 Envoy가 인증해준 유저만
                 )
 

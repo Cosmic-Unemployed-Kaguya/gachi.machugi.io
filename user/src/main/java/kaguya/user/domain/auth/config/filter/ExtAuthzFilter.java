@@ -46,7 +46,8 @@ public class ExtAuthzFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith("/auth");
+        return path.startsWith("/auth")
+                || path.startsWith("/h2-console");  // todo. (개발용) H2 console. 운영시 삭제
     }
 
     /**

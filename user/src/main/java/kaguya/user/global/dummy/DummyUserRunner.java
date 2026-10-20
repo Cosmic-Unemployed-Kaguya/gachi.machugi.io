@@ -40,7 +40,7 @@ public class DummyUserRunner implements ApplicationRunner {
         UserProfileEntity adminProfile = createUserProfile(admin, "관리자A", LocalDate.parse("2000-01-01"), "010-0000-0000", Gender.NONE);
         UserProfileEntity user1Profile = createUserProfile(user1, "홍길동", LocalDate.parse("2001-02-02"),"010-1111-1111", Gender.MALE);
         UserProfileEntity user2Profile = createUserProfile(user2, "김철수", LocalDate.parse("2002-03-03"),"010-2222-2222", Gender.MALE);
-        UserProfileEntity user3Profile = createUserProfile(user3, "최유리", LocalDate.parse("2003-04-04"),"010-3333-00333300", Gender.FEMALE);
+        UserProfileEntity user3Profile = createUserProfile(user3, "최유리", LocalDate.parse("2003-04-04"),"010-3333-0000", Gender.FEMALE);
         userProfileRepository.saveAll(List.of(adminProfile, user1Profile, user2Profile, user3Profile));
     }
 
