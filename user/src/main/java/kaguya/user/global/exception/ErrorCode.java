@@ -22,6 +22,7 @@ public enum ErrorCode {
     ADMIN_ONLY(HttpStatus.FORBIDDEN, "403_ADMIN_ONLY", "접근 권한이 없습니다. (관리자 전용)"),
     AUTH_LOCKED(HttpStatus.FORBIDDEN, "403_AUTH_LOCKED", "인증횟수 초과로 인증이 취소되었습니다."),
 
+    USER_ACTIVE(HttpStatus.FORBIDDEN, "403_USER_ACTIVE", "이미 활성화 된 계정입니다. 다시 로그인을 시도해주세요."),
     USER_DORMANT(HttpStatus.FORBIDDEN, "403_USER_DORMANT", "휴면 처리된 계정입니다. 본인 인증을 통해 계정을 활성화해주세요."),
     USER_SUSPENDED(HttpStatus.FORBIDDEN, "403_USER_SUSPENDED", "운영 정책 위반으로 일시 정지된 계정입니다."),
     USER_BANNED(HttpStatus.FORBIDDEN, "403_USER_BANNED", "운영 정책 위반으로 영구 정지된 계정입니다."),

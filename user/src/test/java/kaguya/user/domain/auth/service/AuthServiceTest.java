@@ -10,6 +10,7 @@ import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.model.entity.UserProfileEntity;
 import kaguya.user.domain.user.model.enums.Gender;
 import kaguya.user.domain.user.model.enums.Role;
+import kaguya.user.domain.user.model.enums.Status;
 import kaguya.user.domain.user.repository.UserProfileRepository;
 import kaguya.user.domain.user.repository.UserRepository;
 import kaguya.user.global.exception.BusinessException;
@@ -17,6 +18,8 @@ import kaguya.user.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -81,21 +84,24 @@ class AuthServiceTest {
 
         // then
         verify(userRepository).save(userEntityCaptor.capture());
-        UserEntity savedEntity = userEntityCaptor.getValue();
+        verify(userProfileRepository).save(any(UserProfileEntity.class));
+        verify(redisRepository).delete(oneTimeKey);
 
+        UserEntity savedEntity = userEntityCaptor.getValue();
         assertThat(savedEntity.getEmail()).isEqualTo("test@email.com");
         assertThat(savedEntity.getPassword()).isEqualTo(expectedEncodedPassword);
     }
 
     @Test
-    @DisplayName("로그인 성공 (쿠키 생성)")
+    @DisplayName("로그인 성공")
     void 로그인_테스트_성공() {
         //given
         UserEntity user = createUser();
         ReflectionTestUtils.setField(user, "idx", 1L);
+        ReflectionTestUtils.setField(user, "status", Status.ACTIVE);
         Long userIdx = user.getIdx();
 
-        LoginReq loginData = new LoginReq("testID", "testPassword12!@");
+        LoginReq loginData = new LoginReq("aaaa@bbbb.com", "testPassword12!@");
 
         given(userRepository.findByEmail(loginData.email())).willReturn(Optional.of(user));
         given(passwordEncoder.matches(loginData.password(), user.getPassword())).willReturn(true);
@@ -109,6 +115,49 @@ class AuthServiceTest {
         LoginRes result = authService.login(loginData);
 
         // then
+        assertThat(user.getLastLoginDate()).isNotNull();
+
+        verify(redisRepository).save(
+                eq("RT:" + userIdx),
+                eq(refreshToken),
+                eq(14L),
+                eq(TimeUnit.DAYS)
+        );
+
+        assertThat(result.accessToken()).isEqualTo(accessToken);
+        assertThat(result.refreshToken()).isEqualTo(refreshToken);
+        assertThat(result.nickname()).isEqualTo(user.getNickname());
+    }
+
+    @Test
+    @DisplayName("휴면로그인 성공")
+    void 휴면로그인_테스트_성공() {
+        //given
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+        ReflectionTestUtils.setField(user, "status", Status.DORMANT);
+        Long userIdx = user.getIdx();
+
+        ReactivateAccountReq reactivateData = new ReactivateAccountReq(oneTimeAuthCode, "aaaa@bbbb.com", "testPassword12!@");
+
+        String oneTimeKey = "verification:oneTimeAuthCode:REACTIVATE_ACCOUNT:" + reactivateData.oneTimeAuthCode();
+        given(redisRepository.get(oneTimeKey)).willReturn("aaaa@bbbb.com");
+
+        given(userRepository.findByEmail(reactivateData.email())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(reactivateData.password(), user.getPassword())).willReturn(true);
+
+        String accessToken = "accessToken-aaabbbccc";
+        String refreshToken = "refreshToken-dddeeefff";
+        given(jwtProvider.createAccessToken(userIdx.toString(), user.getRole().toString())).willReturn(accessToken);
+        given(jwtProvider.createRefreshToken(userIdx.toString())).willReturn(refreshToken);
+
+        // when
+        LoginRes result = authService.reactivateAccount(reactivateData);
+
+        // then
+        assertThat(user.getStatus()).isEqualTo(Status.ACTIVE);
+        verify(redisRepository).delete(oneTimeKey);
         verify(redisRepository).save(
                 eq("RT:" + userIdx),
                 eq(refreshToken),
@@ -199,9 +248,8 @@ class AuthServiceTest {
     @Test
     @DisplayName("게스트 성공")
     void 게스트_성공() {
-        // gievn
+        // given
         GuestReq request = new GuestReq("게스트1");
-        String guestId = UUID.randomUUID().toString();
 
         // when
         GuestRes result = authService.guest(request);
@@ -221,58 +269,45 @@ class AuthServiceTest {
     /**
      * 비정상 테스트 (Negative Test)
      */
-//    @Test
-//    @DisplayName("회원가입 - 이미 존재하는 아이디")
-//    void 회원가입_존재하는_아이디() {
-//        // given
-//        AccountReq account = new AccountReq("testID", "testPassword12!@", "bbbb@cccc.com", "user2");
-//        UserReq user = new UserReq("김철수", LocalDate.now(), "010-1111-2222", Gender.MALE.toString());
-//        RegisterReq registerData = new RegisterReq(account, user);
-//
-//        // existsByUsername 검사 했을 때 true 라고 나올 경우 (아이디 중복일 경우)
-//        given(userRepository.existsByUsername(registerData.account().username())).willReturn(true);
-//
-//        // when & then
-//        // 설정한 예외 처리가 올바르게 터지는지 확인
-//        assertThatThrownBy(() -> authService.register(registerData))
-//                .isInstanceOf(BusinessException.class)  // BusinessException 인지 체크
-//                .extracting("errorCode")  // errorCode 내용 가져와서
-//                .isEqualTo(ErrorCode.EXISTS_USERNAME);  // "EXISTS_USERNAME" 인지 확인
-//        // userRepository에 아무것도 저장되지 않음
-//        verify(userRepository, never()).save(any());
-//    }
+    @Test
+    @DisplayName("회원가입 실패 - 유효하지 않은 인증코드")
+    void 회원가입_인증코드_유효하지_않음() {
+        // given
+        AccountReq account = new AccountReq("testPassword12!@", "user1");
+        UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE);
+        RegisterReq registerData = new RegisterReq(null, account, user);
 
-//    @Test
-//    @DisplayName("회원가입 - 이미 존재하는 이메일")
-//    void 회원가입_존재하는_이메일() {
-//        // given
-//        AccountReq account = new AccountReq("test123", "testPassword12!@", "aaaa@bbbb.com", "user2");
-//        UserReq user = new UserReq("김철수", LocalDate.now(), "010-1111-2222", Gender.MALE.toString());
-//        RegisterReq registerData = new RegisterReq(account, user);
-//
-//        // 이메일 중복일 경우
-//        given(userRepository.existsByEmail(registerData.account().email())).willReturn(true);
-//
-//        // when & then
-//        assertThatThrownBy(() -> authService.register(registerData))
-//                .isInstanceOf(BusinessException.class)
-//                .extracting("errorCode")
-//                .isEqualTo(ErrorCode.EXISTS_EMAIL);
-//        verify(userRepository, never()).save(any());
-//    }
+        String oneTimeKey = "verification:oneTimeAuthCode:REGISTER:" + registerData.oneTimeAuthCode();
+        given(redisRepository.get(oneTimeKey)).willReturn(null);
+
+        // when & then
+        // 설정한 예외 처리가 올바르게 터지는지 확인
+        assertThatThrownBy(() -> authService.register(registerData))
+                .isInstanceOf(BusinessException.class)  // BusinessException 인지 체크
+                .extracting("errorCode")  // errorCode 내용 가져와서
+                .isEqualTo(ErrorCode.INVALID_AUTH_CODE);  // "INVALID_AUTH_CODE" 인지 확인
+
+        verify(userRepository, never()).existsByNickname(any());  // 닉네임 중복 체크까지 가지 않음
+        verify(passwordEncoder, never()).encode(any());  // 암호화 안 함
+        verify(userRepository, never()).save(any());  // 아무것도 저장하지 않음
+        verify(userProfileRepository, never()).save(any());  // 프로필도 저장 안 함
+        verify(redisRepository, never()).delete(any());  // 인증 키 유지
+    }
 
     @Test
-    @DisplayName("회원가입 - 이미 존재하는 닉네임")
+    @DisplayName("회원가입 실패 - 이미 존재하는 닉네임")
     void 회원가입_존재하는_닉네임() {
         // given
         String oneTimeAuthCode = UUID.randomUUID().toString();
-        AccountReq account = new AccountReq("testPassword12!@", "user2");
-        UserReq user = new UserReq("김철수", LocalDate.now(), "010-1111-2222", Gender.MALE);
+        AccountReq account = new AccountReq("testPassword12!@", "user1");
+        UserReq user = new UserReq("홍길동", LocalDate.now(), "010-1234-5678", Gender.MALE);
         RegisterReq registerData = new RegisterReq(oneTimeAuthCode, account, user);
 
         String oneTimeKey = "verification:oneTimeAuthCode:REGISTER:" + registerData.oneTimeAuthCode();
         given(redisRepository.get(oneTimeKey)).willReturn("test@email.com");
-        // 닉네임 중복일 경우
+        // 이메일 중복 체크는 VerificationService 에서 진행
+
+        // 닉네임 중복
         given(userRepository.existsByNickname(registerData.account().nickname())).willReturn(true);
 
         // when & then
@@ -280,11 +315,16 @@ class AuthServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.EXISTS_NICKNAME);
+
+        // 아래 동작 안 함
+        verify(passwordEncoder, never()).encode(any());
         verify(userRepository, never()).save(any());
+        verify(userProfileRepository, never()).save(any());
+        verify(redisRepository, never()).delete(any());
     }
 
     @Test
-    @DisplayName("로그인 - 존재하지 않는 이메일")
+    @DisplayName("로그인 실패 - 존재하지 않는 이메일")
     void 로그인_존재하지_않는_이메일() {
         // given
         LoginReq loginData = new LoginReq("aaaa@bbbb.com", "testPassword12!@");
@@ -305,10 +345,10 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("로그인 - 비밀번호 불일치")
+    @DisplayName("로그인 실패 - 비밀번호 불일치")
     void 로그인_비밀번호_불일치() {
         // given
-        LoginReq loginData = new LoginReq("testID", "testPassword12!@");
+        LoginReq loginData = new LoginReq("aaaa@bbbb.com", "testPassword12!@");
         UserEntity user = createUser();
 
         given(userRepository.findByEmail(loginData.email())).willReturn(Optional.of(user));
@@ -324,8 +364,150 @@ class AuthServiceTest {
         verifyNoInteractions(jwtProvider, redisRepository);
     }
 
+    @ParameterizedTest(name = "{0} 상태 → {1}")
+    @CsvSource({
+            "DORMANT, USER_DORMANT",
+            "SUSPENDED, USER_SUSPENDED",
+            "BANNED, USER_BANNED",
+            "WITHDRAWAL, USER_WITHDRAWN"
+    })
+    @DisplayName("로그인 실패 - 비활성 상태 계정")
+    void 로그인_비활성_상태_계정(Status status, ErrorCode expected) {
+        //given
+        UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "status", status);
+
+        LoginReq loginData = new LoginReq("aaaa@bbbb.com", "testPassword12!@");
+
+        given(userRepository.findByEmail(loginData.email())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(loginData.password(), user.getPassword())).willReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> authService.login(loginData))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(expected);
+
+        assertThat(user.getLastLoginDate()).isNull();  // 로그인 기록 안 찍힘
+        verifyNoInteractions(jwtProvider, redisRepository);  // 토큰 발급, RT 저장 안 됨
+    }
+
     @Test
-    @DisplayName("로그아웃 - AccessToken 누락")
+    @DisplayName("휴면로그인 실패 - 유효하지 않은 인증코드")
+    void 휴면로그인_인증코드_유효하지_않음() {
+        // given
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        ReactivateAccountReq reactivateData = new ReactivateAccountReq(oneTimeAuthCode, "aaaa@bbbb.com", "testPassword12!@");
+
+        String oneTimeKey = "verification:oneTimeAuthCode:REACTIVATE_ACCOUNT:" + reactivateData.oneTimeAuthCode();
+        given(redisRepository.get(oneTimeKey)).willReturn(null);  // 인증코드 없음 (만료 또는 잘못된 코드)
+
+        // when & then
+        assertThatThrownBy(() -> authService.reactivateAccount(reactivateData))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_AUTH_CODE);
+
+        verify(redisRepository).get(oneTimeKey);  // REACTIVATE_ACCOUNT 키로 조회했는지
+        verify(redisRepository, never()).delete(anyString());  // 인증 키 삭제 안 됨
+        verify(redisRepository, never()).save(anyString(), anyString(), anyLong(), any(TimeUnit.class));  // RT 저장 안 됨
+        verifyNoInteractions(userRepository, passwordEncoder, jwtProvider);  // 유저 조회부터 진행 안 됨
+    }
+
+    @Test
+    @DisplayName("휴면로그인 실패 - 존재하지 않는 유저")
+    void 휴면로그인_존재하지_않는_유저() {
+        // given
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        String verifiedEmail = "aaaa@bbbb.com";
+        ReactivateAccountReq reactivateData = new ReactivateAccountReq(oneTimeAuthCode, verifiedEmail, "testPassword12!@");
+
+        String oneTimeKey = "verification:oneTimeAuthCode:REACTIVATE_ACCOUNT:" + reactivateData.oneTimeAuthCode();
+        given(redisRepository.get(oneTimeKey)).willReturn(verifiedEmail);
+
+        // 인증은 됐지만 해당 이메일의 유저가 없음 (인증 후 탈퇴 처리 등)
+        given(userRepository.findByEmail(verifiedEmail)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> authService.reactivateAccount(reactivateData))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+
+        verify(redisRepository, never()).delete(anyString());
+        verify(redisRepository, never()).save(anyString(), anyString(), anyLong(), any(TimeUnit.class));
+        verifyNoInteractions(passwordEncoder, jwtProvider);  // 비밀번호 검증부터 진행 안 됨
+    }
+
+    @Test
+    @DisplayName("휴면로그인 실패 - 비밀번호 불일치")
+    void 휴면로그인_비밀번호_불일치() {
+        //given
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "status", Status.DORMANT);
+
+        ReactivateAccountReq reactivateData = new ReactivateAccountReq(oneTimeAuthCode, "aaaa@bbbb.com", "testPassword12!@");
+
+        String oneTimeKey = "verification:oneTimeAuthCode:REACTIVATE_ACCOUNT:" + reactivateData.oneTimeAuthCode();
+        given(redisRepository.get(oneTimeKey)).willReturn("aaaa@bbbb.com");
+
+        given(userRepository.findByEmail(reactivateData.email())).willReturn(Optional.of(user));
+        // 비밀번호 대조 결과 불일치
+        given(passwordEncoder.matches(reactivateData.password(), user.getPassword())).willReturn(false);
+
+        // when & then
+        assertThatThrownBy(() -> authService.reactivateAccount(reactivateData))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_CREDENTIALS);
+
+
+        assertThat(user.getStatus()).isEqualTo(Status.DORMANT);  // 상태가 바뀌지 않음
+        assertThat(user.getLastLoginDate()).isNull();
+        verify(redisRepository, never()).delete(anyString());  // 일회용 키 삭제 안 됨
+        verify(redisRepository, never()).save(anyString(), anyString(), anyLong(), any(TimeUnit.class));
+        verifyNoInteractions(jwtProvider);
+    }
+
+
+    @ParameterizedTest(name = "{0} 상태 → {1}")
+    @CsvSource({
+            "ACTIVE, USER_ACTIVE",
+            "SUSPENDED, USER_SUSPENDED",
+            "BANNED, USER_BANNED",
+            "WITHDRAWAL, USER_WITHDRAWN"
+    })
+    @DisplayName("휴면로그인 실패 - 휴면 상태가 아님")
+    void 휴면로그인_다른_상태(Status status, ErrorCode expected) {
+        //given
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "status", status);
+
+        ReactivateAccountReq reactivateData = new ReactivateAccountReq(oneTimeAuthCode, "aaaa@bbbb.com", "testPassword12!@");
+
+        String oneTimeKey = "verification:oneTimeAuthCode:REACTIVATE_ACCOUNT:" + reactivateData.oneTimeAuthCode();
+        given(redisRepository.get(oneTimeKey)).willReturn("aaaa@bbbb.com");
+
+        given(userRepository.findByEmail(reactivateData.email())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(reactivateData.password(), user.getPassword())).willReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> authService.reactivateAccount(reactivateData))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(expected);
+
+        assertThat(user.getStatus()).isEqualTo(status);
+        assertThat(user.getLastLoginDate()).isNull();
+        verify(redisRepository, never()).delete(anyString());
+        verify(redisRepository, never()).save(anyString(), anyString(), anyLong(), any(TimeUnit.class));
+        verifyNoInteractions(jwtProvider);
+    }
+
+    @Test
+    @DisplayName("로그아웃 실패 - AccessToken 누락")
     void 로그아웃_AccessToken_누락() {
         // given
         String accessToken = null;
@@ -342,12 +524,10 @@ class AuthServiceTest {
         verifyNoInteractions(jwtProvider, redisRepository);
         // redisRepository에 아무것도 삭제되지 않음
         verify(redisRepository, never()).delete(anyString());
-        // redisRepository에 아무것도 저장되지 않음
-        verify(redisRepository, never()).save(anyString(), anyString(), anyLong(), any(TimeUnit.class));
     }
 
     @Test
-    @DisplayName("로그아웃 - 유효하지 않는 RefreshToken")
+    @DisplayName("로그아웃 실패 - 유효하지 않는 RefreshToken")
     void 로그아웃_유효하지_않는_RefreshToken() {
         // given
         String accessToken = "accessToken-aaabbbccc";
@@ -372,7 +552,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("토큰갱신 - 유효하지 않는 RefreshToken")
+    @DisplayName("토큰갱신 실패 - 유효하지 않는 RefreshToken")
     void 토큰갱신_유효하지_않는_RefreshToken() {
         // given
         String refreshToken = "refreshToken-any";
@@ -391,7 +571,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("토큰갱신 - 아이디 찾을 수 없음")
+    @DisplayName("토큰갱신 실패 - 아이디 찾을 수 없음")
     void 토큰갱신_존재하지_않는_IDX() {
         // given
         String refreshToken = "refreshToken-dddeeefff";
@@ -416,7 +596,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("토큰갱신 - 오래된 RefreshToken 사용")
+    @DisplayName("토큰갱신 실패 - 오래된 RefreshToken 사용")
     void 토큰갱신_오래된_RefreshToken_사용() {
         // given
         String oldRefreshToken = "refreshToken-old";  // 토큰이 만료는 안되었지만, Redis에 등록되지 않은(과거의) Refresh Token
@@ -444,7 +624,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("토큰검사 - 블랙리스트에 등록된 AccessToken")
+    @DisplayName("토큰검사 실패 - 블랙리스트에 등록된 AccessToken")
     void 토큰검사_블랙리스트에_등록된_AccessToken() {
         // given
         String accessToken = "accessToken-aaabbbccc";

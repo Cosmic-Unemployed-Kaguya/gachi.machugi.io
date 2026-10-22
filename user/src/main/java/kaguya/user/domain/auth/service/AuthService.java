@@ -147,6 +147,17 @@ public class AuthService {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
 
+        // 유저 상태 체크
+        if (entity.getStatus() != Status.DORMANT) {
+            switch (entity.getStatus()) {
+                case ACTIVE -> throw new BusinessException(ErrorCode.USER_ACTIVE);
+                case SUSPENDED -> throw new BusinessException(ErrorCode.USER_SUSPENDED);
+                case BANNED -> throw new BusinessException(ErrorCode.USER_BANNED);
+                case WITHDRAWAL -> throw new BusinessException(ErrorCode.USER_WITHDRAWN);
+                default -> throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+            }
+        }
+
         // 유저 상태 Active(활성화)로 변경
         entity.changeStatus(Status.ACTIVE);
 
