@@ -3,6 +3,7 @@ syntax = "proto3";
 package machugi.game;
 
 import "google/api/annotations.proto";
+import "machugi/game/game_dto.proto";
 
 option csharp_namespace = "Game.Service.Proto";
 
@@ -14,14 +15,4 @@ service GameGrpcManager {
       body: "*"
     };
   }
-}
-
-message GrpcGameStartRequest {
-  // int32 room_idx = 1;
-  int64 room_idx = 2;
-}
-
-message GrpcGameStartResponse {
-  // 반환값은..딱히 없다!
-  bool is_success = 1;
 }
