@@ -8,6 +8,7 @@ service RoomInternalService {
   // rpc IsUserInRoom(IsUserInRoomRequest) returns (IsUserInRoomResponse) {}
   rpc ExitUser(ExitUserRequest) returns (google.protobuf.Empty) {}
   rpc DeleteRoom(DeleteRoomRequest) returns (google.protobuf.Empty) {}
+  rpc FindRoomInfo(GrpcRoomIdxRequest) returns (GrpcRoomInfoResponse) {}
 }
 
 // message IsUserInRoomRequest {
@@ -23,4 +24,18 @@ message ExitUserRequest {
 }
 message DeleteRoomRequest {
   uint64 room_idx = 1;
+}
+
+message GrpcRoomIdxRequest {
+  int64 room_idx = 1;
+}
+
+message GrpcRoomInfoResponse {
+  int64 idx = 1;
+  int64 host_idx = 2;
+  string name = 3;
+  int32 max_occupancy = 4;
+  int64 time_limit = 5;
+  bool is_public = 6;
+  int64 quiz_idx = 7;
 }
