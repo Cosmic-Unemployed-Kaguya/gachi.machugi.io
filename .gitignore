@@ -72,3 +72,5 @@ board/.env
 /chat_spring/.gradle
 
 /chat_node/src/generated
+
+infra/envoy/descriptor.pb
