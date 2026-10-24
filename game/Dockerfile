@@ -8,6 +8,8 @@ RUN dotnet restore "src/main/game.csproj"
 
 # 나머지 소스코드 전체 복사 및 빌드/퍼블리시
 COPY . .
+# 서비스 외부에 있는 proto 가져오기
+COPY --from=proto . /proto
 WORKDIR "/src/src/main"
 RUN dotnet publish "game.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
