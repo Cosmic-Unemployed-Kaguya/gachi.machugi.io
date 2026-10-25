@@ -5,14 +5,16 @@ var builder = WebApplication.CreateBuilder(args);
 //launchSettings.json의 기본 url 덮어쓰기 설정 무력화 및 포트 고정
 builder.WebHost.UseUrls(); //기본 URL 바인딩
 //Kestrel 포트 명시적 분리 (HTTPS 없이 HTTP/2 통과)
-builder.WebHost.ConfigureKestrel(options =>
-{
-    //8080 포트: SignalR 웹소켓 전용 (HTTP/1.1)
-    options.ListenLocalhost(8080, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1);
+// builder.WebHost.ConfigureKestrel(options =>
+// {
+//     //8080 포트: SignalR 웹소켓 전용 (HTTP/1.1)
+//     options.ListenLocalhost(8080, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1);
 
-    //9090 포트: Room -> Chat gRPC 내부 통신 전용 (HTTP/2)
-    options.ListenLocalhost(9090, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
-});
+//     //9090 포트: Room -> Chat gRPC 내부 통신 전용 (HTTP/2)
+//     options.ListenLocalhost(9090, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
+// });
+
+
 builder.Services.AddGrpc();
 builder.Services.AddScoped<ChatGrpcService>();
 builder.Services.AddSingleton<ChatService>();
