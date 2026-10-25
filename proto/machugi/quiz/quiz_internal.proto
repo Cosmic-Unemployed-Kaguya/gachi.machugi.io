@@ -2,12 +2,23 @@ syntax = "proto3";
 
 package machugi.quiz;
 
+option java_multiple_files = true;
+option java_package = "com.example.grpc.user";
 option csharp_namespace = "Quiz.Service.Proto";
 
 service QuizInternalService {
+  rpc IsQuiz(QuizIdxRequest) returns (IsQuizRespons) {}
   // 퀴즈 데이터 가져오기
   rpc GetAllQuiz(GrpcGetAllQuizRequest) returns (GrpcGetQuizListResponse) {}
   rpc GetPartQuiz(GrpcGetPartQuizRequest) returns (GrpcGetQuizListResponse) {}
+}
+
+message QuizIdxRequest {
+  uint64 quiz_idx = 1;
+}
+
+message IsQuizRespons {
+  bool is_quiz = 1;
 }
 
 message GrpcGetAllQuizRequest {
