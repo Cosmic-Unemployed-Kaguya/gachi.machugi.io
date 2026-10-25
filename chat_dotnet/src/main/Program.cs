@@ -10,8 +10,8 @@ builder.WebHost.ConfigureKestrel(options =>
     //8080 포트: SignalR 웹소켓 전용 (HTTP/1.1)
     options.ListenLocalhost(8080, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1);
 
-    //8081 포트: Room -> Chat gRPC 내부 통신 전용 (HTTP/2)
-    options.ListenLocalhost(8081, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
+    //9090 포트: Room -> Chat gRPC 내부 통신 전용 (HTTP/2)
+    options.ListenLocalhost(9090, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
 });
 builder.Services.AddGrpc();
 builder.Services.AddScoped<ChatGrpcService>();
