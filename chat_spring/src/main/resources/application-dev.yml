@@ -1,0 +1,17 @@
+server:
+  port: 8080
+
+grpc:
+  client:
+    user-service:
+      address: static://${USER_SERVICE}
+      negotiationType: plaintext
+
+spring:
+  application:
+    name: chat_spring
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}

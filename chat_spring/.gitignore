@@ -39,3 +39,4 @@ out/
 ### Spring Boot Settings ###
 **/application.yml
 **/application-*.yml
+!**/application-dev.yml

@@ -8,6 +8,7 @@ build/
 *.pem
 *.jar
 !**/application-test.yml
+!**/application-dev.yml
 !**/gradle.yml
 
 ### STS ###
