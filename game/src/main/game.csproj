@@ -22,7 +22,12 @@
             
     <Protobuf Include="..\..\..\proto\machugi\room\room_internal.proto"
             ProtoRoot="..\..\..\proto" GrpcServices="Client"/>
-    
+   
+    <Protobuf Include="..\..\..\proto\machugi\game\game_dto.proto"
+        ProtoRoot="..\..\..\proto" GrpcServices="None" />
+
+    <Protobuf Include="..\..\..\proto\machugi\room\room_dto.proto"
+            ProtoRoot="..\..\..\proto" GrpcServices="None" />
     
   </ItemGroup>
 

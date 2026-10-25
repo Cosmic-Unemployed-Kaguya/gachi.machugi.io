@@ -4,6 +4,7 @@ package machugi.room;
 import "google/protobuf/empty.proto";
 import "machugi/room/room_dto.proto";
 
+option csharp_namespace = "Room.Service.Proto";
 // chat > Room
 service RoomInternalService {
   // rpc IsUserInRoom(IsUserInRoomRequest) returns (IsUserInRoomResponse) {}
