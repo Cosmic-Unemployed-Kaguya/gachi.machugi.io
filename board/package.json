@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@bufbuild/protobuf": "^2.16.0",
-    "@cosmic-unemployed-kaguya/grpc-express": "^1.0.1",
+    "@cosmic-unemployed-kaguya/grpc-express": "^1.0.2",
     "@grpc/grpc-js": "^1.14.6",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
