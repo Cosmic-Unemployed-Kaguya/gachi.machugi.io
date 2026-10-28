@@ -1,0 +1,6 @@
+
+services:
+  quiz-service:
+    image: machugi-quiz:local
+    build:
+      context: ./quiz/quiz

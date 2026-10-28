@@ -1,0 +1,9 @@
+
+services:
+  chat-spring-service:
+    image: machugi-chat-spring:local
+    build:
+      context: ./chat_spring
+
+      additional_contexts:
+        proto: ./proto

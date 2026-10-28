@@ -1,0 +1,9 @@
+
+services:
+  room-service:
+    image: machugi-room:local
+    build:
+      context: ./room
+
+      additional_contexts:
+        proto: ./proto

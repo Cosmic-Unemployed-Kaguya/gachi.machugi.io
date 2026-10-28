@@ -1,0 +1,9 @@
+
+services:
+  board-service:
+    image: machugi-board:local
+    build:
+      context: ./board
+
+      additional_contexts:
+        proto: ./proto

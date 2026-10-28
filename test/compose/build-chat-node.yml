@@ -1,0 +1,10 @@
+
+services:
+  chat-node-service:
+    image: machugi-chat-node:local
+    build:
+      context: ./chat_node
+
+      additional_contexts:
+        proto: ./proto
+

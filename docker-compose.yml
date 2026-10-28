@@ -1,0 +1,132 @@
+services:
+  board-service:
+    env_file:
+      - .env
+    image: lujol/machugi-board:dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GRPC_SERVER_ADDRESS: 0.0.0.0:9090
+      PORT: 8080
+
+  quiz-service:
+    env_file:
+      - .env
+    image: lujol/machugi-quiz:dev
+    environment:
+      SPRING_PROFILES_ACTIVE: ${PROFILE} 
+    depends_on:
+      postgres:
+        condition: service_healthy  
+
+
+  room-service:
+    image: lujol/machugi-room:dev
+    depends_on:
+      - redis
+    environment:
+      Redis__ConnectionString: ${REDIS_HOST}:${REDIS_PORT}
+      Services__ChatServerUrl: http://chat-dotnet-service:9090
+      Services__QuizServerUrl: http://quiz-service:9090
+      ASPNETCORE_ENVIRONMENT: Development
+
+  game-service:
+    image: lujol/machugi-game:dev
+    depends_on:
+      - redis
+    environment:
+      Redis__ConnectionString: ${REDIS_HOST}:${REDIS_PORT}
+      Services__ChatServerUrl: http://chat-node-service:9090
+      Services__QuizServerUrl: http://quiz-service:9090
+      Services__RoomServerUrl: http://room-service:9090
+      ASPNETCORE_ENVIRONMENT: Development
+
+  user-service:
+    env_file:
+      - .env
+    image: lujol/machugi-user:dev
+    environment:
+      SPRING_PROFILES_ACTIVE: ${PROFILE} 
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  chat-node-service:
+    env_file:
+      - .env
+    image: lujol/machugi-chat-node:dev
+    depends_on:
+      - redis
+    environment:
+      REDIS_PUB: redis://${REDIS_HOST}:${REDIS_PORT}
+      REDIS_SUB: redis://${REDIS_HOST}:${REDIS_PORT}
+      REDIS_KV: redis://${REDIS_HOST}:${REDIS_PORT}
+      GRPC_SERVER_ADDRESS: 0.0.0.0:9090
+      PORT: 8080
+
+  chat-dotnet-service:
+    image: lujol/machugi-chat-dotnet:dev
+    depends_on:
+      - redis
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+
+  chat-spring-service:
+    env_file: .env
+    image: lujol/machugi-chat-spring:dev
+    environment:
+      SPRING_PROFILES_ACTIVE: ${PROFILE} 
+    
+    depends_on:
+      - redis
+
+  test-web:
+    image: nginx:stable-alpine
+    volumes:
+      - ./test/test-web:/usr/share/nginx/html:ro
+    restart: unless-stopped
+
+
+  redis:
+    image: redis:7-alpine
+    # port를 열 필요 없이 컨테이너명 작성해도 접근 가능하지만, 편의성을 위해 열어둠
+    ports:
+      - "127.0.0.1:6379:6379"
+    
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+      TZ: Asia/Seoul
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    # redis와 마찬가지로 편의성을 위함
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  envoy:
+    image: envoyproxy/envoy:v1.33-latest
+    ports:
+      - "8080:8080"  # 게이트웨이
+      - "9901:9901"  # 관리자 페이지
+    volumes:
+      - ./infra/envoy/envoy_dev.yml:/etc/envoy/envoy.yaml:ro
+      # test/machugi.bat 이 proto 로 새로 만든 descriptor 경로를 ENVOY_DESCRIPTOR 로 넘겨줌 (없으면 기존 파일 사용)
+      - ${ENVOY_DESCRIPTOR:-./infra/envoy/descriptor.pb}:/tmp/descriptor.pb:ro
+    restart: always
+      
+volumes:
+  postgres-data:
