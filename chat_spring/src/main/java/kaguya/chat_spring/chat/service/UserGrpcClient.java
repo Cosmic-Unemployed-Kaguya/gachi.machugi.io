@@ -16,7 +16,7 @@ public class UserGrpcClient {
 
         GetNicknameResponse response = userStub.getNickname(
                 GetNicknameRequest.newBuilder()
-                        .setUserId(userId)
+                        .setIdx(Long.parseLong(userId))
                         .build()
         );
 

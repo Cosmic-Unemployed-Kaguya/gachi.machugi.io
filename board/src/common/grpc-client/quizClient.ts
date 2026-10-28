@@ -2,9 +2,9 @@ import { GrpcClient, GrpcClientProperty } from "@cosmic-unemployed-kaguya/grpc-e
 
 import config from "../config";
 
-import { IsQuizRespons, QuizIdxRequest, QuizServiceClient } from "@generated/machugi/quiz/quiz_internal";
+import { IsQuizRespons, QuizIdxRequest, QuizInternalServiceClient } from "@generated/machugi/quiz/quiz_internal";
 
-@GrpcClient(QuizServiceClient, config.quizService)
+@GrpcClient(QuizInternalServiceClient, config.quizService)
 export default class QuizGrpcClient {
   @GrpcClientProperty()
   public isQuiz: (req: QuizIdxRequest) => Promise<IsQuizRespons>;

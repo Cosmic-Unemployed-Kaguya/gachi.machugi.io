@@ -34,7 +34,9 @@ redisOptions.ConnectTimeout = 5000;// 연결 타임아웃 (ms)
 var redis = ConnectionMultiplexer.Connect(redisOptions);
 
 builder.Services.AddScoped<GameService, GameServiceImpl>();
-
+builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
+builder.Services.AddSingleton<ISubscriber>(sp => sp.GetRequiredService<IConnectionMultiplexer>().GetSubscriber());
+builder.Services.AddSingleton<GameManager>();
 builder.Services.AddSingleton<RedisPub>();
 builder.Services.AddSingleton<RedisSub>();
 
