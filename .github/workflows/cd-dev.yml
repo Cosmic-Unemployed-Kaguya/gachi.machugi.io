@@ -1,0 +1,86 @@
+name: CD (dev) - 이미지 빌드 및 배포
+
+on:
+  push:
+    branches:
+      - dev
+
+env:
+  IMAGE_PREFIX: ${{ vars.DOCKER_USERNAME }}/machugi
+
+jobs:
+
+  changes:
+    name: 변경된 서비스 감지
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: 브랜치로 체크아웃
+        uses: actions/checkout@v5
+
+      - name: 변경 경로 필터링
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            board:       ['board/**']
+            room:        ['room/**']
+            game:        ['game/**']
+            user:        ['user/**']
+            chat_node:   ['chat_node/**']
+            chat_spring: ['chat_spring/**']
+            chat_dotnet: ['chat_dotnet/**']
+
+      # 이미지 태그 : ex) dev-20261029-a1b2c3d
+      - name: 버전 생성
+        id: version
+        run: echo "version=dev-$(TZ=Asia/Seoul date +'%Y%m%d')-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+
+  build:
+    name: ${{ matrix.service }} 이미지 빌드
+    needs: changes
+    if: ${{ needs.changes.outputs.services != '[]' }}
+    runs-on: ubuntu-latest
+    # 변경 된 서비스가 여러개 일 수 있으니, 작업을 분리하기위함
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.changes.outputs.services) }}
+    steps:
+      - name: 브랜치로 체크아웃
+        uses: actions/checkout@v5
+
+      # chat_node → lujol/machugi-chat-node
+      - name: 이미지 이름 설정
+        id: image
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: echo "name=${IMAGE_PREFIX}-${SERVICE//_/-}" >> "$GITHUB_OUTPUT"
+
+      - name: Docker Buildx 세팅
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker Hub 로그인
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 이미지 빌드 및 push
+        uses: docker/build-push-action@v6
+        with:
+          # 모든 서비스가 서비스 외부의 /proto 파일을 참조하기에 context 추가
+          context: ./${{ matrix.service }}
+          build-contexts: proto=./proto
+          push: true
+          # 태그를 dev와 버전이 쓰여진 태그로 둘 다 올림
+          # 로컬에서 테스트 할 때에는 dev로만 받아와도 되도록
+          tags: |
+            ${{ steps.image.outputs.name }}:dev
+            ${{ steps.image.outputs.name }}:${{ needs.changes.outputs.version }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+
