@@ -152,9 +152,8 @@ public class UserService {
         if (verifiedEmail == null) {
             throw new BusinessException(ErrorCode.INVALID_AUTH_CODE);
         }
-        redisRepository.delete(oneTimeKey);
 
-        // email로 username 찾기
+        // email로 유저 찾기
         UserEntity userEntity = userRepository.findByEmail(verifiedEmail)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
@@ -167,7 +166,8 @@ public class UserService {
         String encodedPassword = passwordEncoder.encode(newPassword);
         userEntity.changePassword(encodedPassword);
 
-        // 갱신토큰 삭제
+        // oneTimeKey 및 갱신토큰 삭제
+        redisRepository.delete(oneTimeKey);
         redisRepository.delete("RT:" + userEntity.getIdx());
     }
 

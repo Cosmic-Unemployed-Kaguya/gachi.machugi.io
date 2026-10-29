@@ -1,7 +1,9 @@
 package kaguya.user.domain.user.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kaguya.user.domain.auth.service.AuthService;
+import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
 import kaguya.user.domain.user.model.entity.UserProfileEntity;
 import kaguya.user.domain.user.model.enums.Gender;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
@@ -23,6 +25,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
@@ -179,6 +182,22 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("회원 탈퇴"));
     }
 
+    @Test
+    @DisplayName("비밀번호 초기화")
+    void 비밀번호_초기화() throws Exception {
+
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        ResetPasswordReq request = new ResetPasswordReq(oneTimeAuthCode, "newPassowrd123!@#");
+
+        mockMvc.perform(patch("/users//reset/password")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("200"))
+                .andExpect(jsonPath("$.message").value("비밀번호 수정 완료"));
+    }
+
 
     /**
      * 비정상 테스트 (Negative Test)
@@ -252,6 +271,22 @@ class UserControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("400_INVALID_CURRENT_PASSWORD"))
                 .andExpect(jsonPath("$.message").value("현재 비밀번호와 일치하지 않습니다."));
+    }
+
+    @Test
+    @DisplayName("누락된 oneTimeAuthCode")
+    void 누락된_oneTimeAuthCode() throws Exception {
+
+        String oneTimeAuthCode = null;
+        ResetPasswordReq request = new ResetPasswordReq(oneTimeAuthCode, "newPassowrd123!@#");
+
+        mockMvc.perform(patch("/users//reset/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("400_INVALID_INPUT_VALUE"))
+                .andExpect(jsonPath("$.message").value("인증 토큰이 필요합니다."));
     }
 
 

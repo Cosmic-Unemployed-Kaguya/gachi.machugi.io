@@ -2,6 +2,7 @@ package kaguya.user.domain.user.service;
 
 import kaguya.user.domain.common.repository.RedisRepository;
 import kaguya.user.domain.user.mapper.UserMapper;
+import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;
 import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
 import kaguya.user.domain.user.model.dto.request.UpdatePasswordReq;
 import kaguya.user.domain.user.model.dto.response.MyPageRes;
@@ -9,8 +10,10 @@ import kaguya.user.domain.user.model.dto.response.ProfileRes;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.model.entity.UserProfileEntity;
 import kaguya.user.domain.user.model.enums.Gender;
+import kaguya.user.domain.user.model.enums.Status;
 import kaguya.user.domain.user.repository.UserProfileRepository;
 import kaguya.user.domain.user.repository.UserRepository;
+import kaguya.user.domain.verification.model.enums.VerificationType;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
 import org.junit.jupiter.api.DisplayName;
@@ -25,11 +28,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -97,9 +102,7 @@ class UserServiceTest {
         UserEntity user = createUser();
         Long userIdx = user.getIdx();
 
-        UpdateNicknameReq request = new UpdateNicknameReq(
-                "changedNickname"
-        );
+        UpdateNicknameReq request = new UpdateNicknameReq("changedNickname");
 
         given(userRepository.findById(userIdx)).willReturn(Optional.of(user));
         given(userRepository.existsByNickname(request.nickname())).willReturn(false);
@@ -145,17 +148,45 @@ class UserServiceTest {
         // given
         UserEntity user = createUser();
         ReflectionTestUtils.setField(user, "idx", 1L);
+
         Long userIdx = user.getIdx();
 
         given(userRepository.findById(userIdx)).willReturn(Optional.of(user));
-//        willDoNothing().given(userRepository).delete(user);
 
         // when
         userService.withdraw(userIdx);
 
         // then
-        // verify(userRepository, times(1)).delete(user);
-        // todo. 탈퇴 처리
+        assertThat(user.getStatus()).isEqualTo(Status.WITHDRAWAL);
+        assertThat(user.getWithdrawalDate()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("비밀번호 초기화")
+    void 비밀번호_초기화() {
+        // given
+        UserEntity user = createUser();
+        ReflectionTestUtils.setField(user, "idx", 1L);
+
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        ResetPasswordReq request = new ResetPasswordReq(oneTimeAuthCode, "newPassword123!@#");
+
+        String oneTimeKey = "verification:oneTimeAuthCode:" + VerificationType.RESET_PASSWORD.name() + ":" + oneTimeAuthCode;
+        given(redisRepository.get(oneTimeKey)).willReturn(user.getEmail());
+
+        given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(request.newPassword(), user.getPassword())).willReturn(false);
+
+        String expectedEncodedNewPassword = "encodedNewPassword12!@";
+        given(passwordEncoder.encode(request.newPassword())).willReturn(expectedEncodedNewPassword);
+
+        // when
+        userService.resetPassword(request);
+
+        // then
+        assertThat(user.getPassword()).isEqualTo(expectedEncodedNewPassword);
+        verify(redisRepository).delete(oneTimeKey);
+        verify(redisRepository).delete("RT:" + user.getIdx());
     }
 
 
@@ -250,6 +281,94 @@ class UserServiceTest {
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.SAME_AS_OLD_PASSWORD);
     }
+
+    @Test
+    @DisplayName("회원탈퇴 - 회원이 없음")
+    void 탈퇴_회원을_찾을_수_없음() {
+
+        // given
+        Long userIdx = 123L;  // 없는 유저 idx
+        given(userRepository.findById(userIdx)).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userService.withdraw(userIdx))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("비밀번호 초기화 실패 - 유효하지 않은 인증코드")
+    void 비밀번호_초기화_인증코드_유효하지_않음() {
+        // given
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        ResetPasswordReq request = new ResetPasswordReq(oneTimeAuthCode, "newPassword123!@#");
+
+        String oneTimeKey = "verification:oneTimeAuthCode:" + VerificationType.RESET_PASSWORD.name() + ":" + oneTimeAuthCode;
+        given(redisRepository.get(oneTimeKey)).willReturn(null);  // 인증코드 조회되지 않음
+
+        // when & then
+        assertThatThrownBy(() -> userService.resetPassword(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.INVALID_AUTH_CODE);
+
+        // then
+        verify(redisRepository, never()).delete(anyString());  // 키 삭제 안됨
+        verifyNoInteractions(userRepository, passwordEncoder);  // userRepository, passwordEncode 동작하지 않음
+    }
+
+    @Test
+    @DisplayName("비밀번호 초기화 - 유저를 찾을 수 없음")
+    void 비밀번호_초기화_존재하지_않는_유저() {
+        // given
+        UserEntity user = createUser();
+
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        ResetPasswordReq request = new ResetPasswordReq(oneTimeAuthCode, "newPassword123!@#");
+
+        String oneTimeKey = "verification:oneTimeAuthCode:" + VerificationType.RESET_PASSWORD.name() + ":" + oneTimeAuthCode;
+        given(redisRepository.get(oneTimeKey)).willReturn(user.getEmail());
+
+        given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> userService.resetPassword(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+
+        // then
+        verify(redisRepository, never()).delete(anyString());
+        verifyNoInteractions(passwordEncoder);
+    }
+
+    @Test
+    @DisplayName("비밀번호 초기화 - 이전 비밀번호와 동일")
+    void 비밀번호_초기화_이전_비밀번호와_동일() {
+        // given
+        UserEntity user = createUser();
+
+        String oneTimeAuthCode = UUID.randomUUID().toString();
+        ResetPasswordReq request = new ResetPasswordReq(oneTimeAuthCode, "newPassword123!@#");
+
+        String oneTimeKey = "verification:oneTimeAuthCode:" + VerificationType.RESET_PASSWORD.name() + ":" + oneTimeAuthCode;
+        given(redisRepository.get(oneTimeKey)).willReturn(user.getEmail());
+
+        given(userRepository.findByEmail(user.getEmail())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(request.newPassword(), user.getPassword())).willReturn(true);
+
+        // when & then
+        assertThatThrownBy(() -> userService.resetPassword(request))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.SAME_AS_OLD_PASSWORD);
+
+        assertThat(user.getPassword()).isEqualTo("encodedPassword123");
+        verify(redisRepository, never()).delete(anyString());
+        verify(passwordEncoder, never()).encode(anyString());
+    }
+
 
     /**
      * 헬퍼 메서드
