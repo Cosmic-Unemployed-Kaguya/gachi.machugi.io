@@ -19,7 +19,7 @@ public class RedisPub
     private async Task PublishEvent<T>(long roomIdx, EventRequest<T> req)
     {
         string jsonData = JsonSerializer.Serialize(req);
-        string channel = "room" + roomIdx;
+        string channel = "room" + roomIdx + "base";
 
         // 정확히 일치하는 채널에
         var redisChannel = RedisChannel.Literal(channel); 
