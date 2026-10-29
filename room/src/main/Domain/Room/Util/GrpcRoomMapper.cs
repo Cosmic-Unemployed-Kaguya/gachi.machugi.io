@@ -84,4 +84,19 @@ public static class RoomGrpcMapper
             RoomSetInfo = response.setInfo.ToGrpcResponse()
         };
     }
+
+    //RoomInfoResponse -> InnerRoomInfoResponse
+    public static GrpcRoom.InnerRoomInfoResponse ToInnerResponse(this RoomInfoResponse response)
+    {
+        return new GrpcRoom.InnerRoomInfoResponse
+        {
+            Idx = response.Idx,
+            HostIdx = response.hostIdx,
+            Name = response.name,
+            MaxOccupancy = response.maxOccupancy,
+            TimeLimit = response.timeLimit,
+            IsPublic = response.isPublic,
+            QuizIdx = response.quizIdx
+        };
+    }
 }
