@@ -38,6 +38,9 @@ public class GameManager
         {
             roomState.QuizQueue.Enqueue(quiz);
         }
+
+        _ = StartGame(roomIdx);
+
     }
 
     // 다음 퀴즈 배포
@@ -67,6 +70,22 @@ public class GameManager
 
         // 진행도 1 추가
         roomState.Progress += 1;
+
+        _ = StartQuizTimer(roomIdx);
+    }
+
+    public async Task StartGame(long roomIdx)
+    {
+        try
+        {
+            // 5초 대기 후 문제 배포
+            await Task.Delay(5000);
+            await PubNextQuiz(roomIdx);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Game {roomIdx}] 게임 시작 실패 : {ex.Message}");
+        }
     }
 
     // 퀴즈 타이머

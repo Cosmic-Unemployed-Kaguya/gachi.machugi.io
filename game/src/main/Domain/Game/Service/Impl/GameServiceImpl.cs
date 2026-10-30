@@ -22,7 +22,7 @@ public class GameServiceImpl : GameService
     // 게임 시작
     public async Task<GameStartResponse> GameStart(long roomIdx)
     {
-        var roomInfoRequest = new GrpcRoomIdxRequest
+        var roomInfoRequest = new InnerRoomIdxRequest
         {
             RoomIdx = roomIdx
         };

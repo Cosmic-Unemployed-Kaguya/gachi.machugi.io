@@ -5,7 +5,7 @@ namespace Game.Util;
 
 public static class RoomGrpcMapper
 {
-    public static RoomInfoResponse ToNativeResponse(this GrpcRoomInfoResponse response)
+    public static RoomInfoResponse ToNativeResponse(this InnerRoomInfoResponse response)
     {
         return new RoomInfoResponse(
             response.Idx,
