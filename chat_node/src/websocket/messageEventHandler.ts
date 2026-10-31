@@ -34,7 +34,7 @@ export class MessageEventHandler{
         const roomIdx : number = req.roomIdx;
 
         // 2.티켓 확인
-        if(!this.redisKvClient.checkEnterTicket(socket.userIdx, req.roomIdx , req.ticketUuid)){
+        if(!await this.redisKvClient.checkEnterTicket(socket.userIdx, req.roomIdx , req.ticketUuid)){
             throw WsError.fromType('INVALID_REQUEST')
         }
 
@@ -78,6 +78,10 @@ export class MessageEventHandler{
                         userNickname : socket.userNickname, 
                         userIdx : socket.userIdx} as CorrectAnswerRes
             }
+            
+            //redis 전파
+            await this.redisPubClient.correctMessage(socket.roomIdx, res)
+
         }else{
             // 그 외(1등 아님, 오답 등)
             res = {
@@ -87,10 +91,12 @@ export class MessageEventHandler{
                     userNickname : socket.userNickname
                 } as MessageRes
             }
+
+            // redis로 전파
+            await this.redisPubClient.publishMessage(socket.roomIdx, res);
+
         }
 
-        // redis로 전파
-        await this.redisPubClient.publishMessage(socket.roomIdx, res);
 
         logger.info(`채팅 : ${socket.userNickname}  : ${req.msg}`)
     }

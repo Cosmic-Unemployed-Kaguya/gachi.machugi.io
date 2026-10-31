@@ -1,0 +1,9 @@
+
+services:
+  chat-dotnet-service:
+    image: machugi-chat-dotnet:local
+    build:
+      context: ./chat_dotnet
+
+      additional_contexts:
+        proto: ./proto

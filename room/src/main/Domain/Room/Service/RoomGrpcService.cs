@@ -56,6 +56,13 @@ public class RoomGrpcService : GrpcRoom.RoomGrpcManager.RoomGrpcManagerBase
         return new GrpcRoom.GrpcBoolResponse { IsSuccess = isSuccess };
     }
 
+    //플레이어 추가 (입장 티켓 발급 방식)
+    public override async Task<GrpcRoom.GrpcTicketUuidResponse> AddPlayerToRoomWithTicket(GrpcRoom.GrpcUpdateSetRequest request, ServerCallContext context)
+    {
+        string ticketUuid = await _roomService.AddPlayerWithTicket(request.RoomIdx, request.ToNativeRequest());
+        return new GrpcRoom.GrpcTicketUuidResponse { Uuid = ticketUuid };
+    }
+
     //플레이어 제거
     public override async Task<GrpcRoom.GrpcBoolResponse> RemovePlayerFromRoom(GrpcRoom.GrpcUpdateSetRequest request, ServerCallContext context)
     {

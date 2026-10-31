@@ -28,6 +28,8 @@ public class DummyUserRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
 
+        // 데이터가 이미 있으면 실행 x
+        if (userRepository.count() > 0) return;
         // 계정 생성
         UserEntity admin = createUser("admin@test.com", "admin", "어드민A");
         admin.changeRole(Role.ADMIN);

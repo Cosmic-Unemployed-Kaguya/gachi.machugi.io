@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package machugi.game;
+
+import "google/api/annotations.proto";
+import "machugi/game/game_dto.proto";
+
+option csharp_namespace = "Game.Service.Proto";
+
+service GameGrpcManager {
+  // 게임 시작
+  rpc GameStart(GrpcGameStartRequest) returns (GrpcGameStartResponse) {
+    option (google.api.http) = {
+      post: "/api/game/start/{room_idx}"
+      body: "*"
+    };
+  }
+}

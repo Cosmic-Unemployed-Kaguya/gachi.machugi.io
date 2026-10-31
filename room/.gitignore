@@ -27,7 +27,7 @@ bld/
 *.user
 *.userosscache
 *.sln.docstates
-appsettings.Development.json
+# appsettings.Development.json
 appsettings.Production.json
 appsettings.Local.json
 appsettings.json

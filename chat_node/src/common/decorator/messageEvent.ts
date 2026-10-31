@@ -29,7 +29,7 @@ export function MessageEvent( event : MessageEventType ,schema?: z.ZodTypeAny) :
             
             // 유효성 검사
             if(schema){
-                data = schema.parseAsync(baseReq.data);
+                data = await schema.parseAsync(baseReq.data);
             }
 
             await originalMethod.call(this, socket, data);

@@ -1,5 +1,4 @@
 import { BaseRes } from '@common/model/base';
-import { CorrectAnswerRes } from '@common/model/correctAnswer';
 import Redis from 'ioredis';
 import { Service } from 'typedi';
 import config from '../common/config';
@@ -22,7 +21,7 @@ export class RedisPubClient{
 
     }
 
-    public async correctMessage(roomIdx : number, data: CorrectAnswerRes){
+    public async correctMessage(roomIdx : number, data: BaseRes){
         this.pubClient.publish(`room:${roomIdx}:correct`, JSON.stringify(data));
     }
     

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>순수 WebSocket 테스트 패널</title>
+</head>
+<body>
+    <h2>순수 웹소켓(WS) 테스트 패널</h2>
+    
+    <div>
+        <label>서버 주소: </label>
+        <input type="text" id="serverUrl" value="ws://localhost:8080/chat" style="width: 250px;">
+        <button onclick="connectSocket()">1. 연결하기</button>
+    </div>
+    
+    <div style="margin-top: 10px;">
+        <label>유저 번호: </label>
+        <input type="number" id="playerIdx" value="1" style="width: 50px;">
+        <label>방 번호: </label>
+        <input type="number" id="roomIdx" value="1" style="width: 50px;">
+        <button onclick="joinRoom()">2. 방 입장</button>
+        <button onclick="exitRoom()">방 퇴장</button>
+        <!-- 🔥 게임 시작 버튼 추가 -->
+        <button onclick="startGame()" style="margin-left: 10px; font-weight: bold; color: blue;">▶ 게임 시작 (REST)</button>
+    </div>
+
+    <div style="margin-top: 10px;">
+        <label>메시지: </label>
+        <input type="text" id="messageInput" value="테스트 메시지입니다">
+        <button onclick="sendMessage()">3. 메시지 전송 (시간 측정)</button>
+    </div>
+
+    <hr>
+    <h3>로그 및 응답 속도</h3>
+    <div id="logArea" style="background: #f4f4f4; padding: 10px; height: 350px; overflow-y: auto; font-family: monospace;"></div>
+
+    <script>
+        let ws;
+        let sendTimestamp = 0; 
+
+        function printLog(text) {
+            const logArea = document.getElementById('logArea');
+            logArea.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${text}</div>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // 1. 소켓 연결
+        function connectSocket() {
+            const url = document.getElementById('serverUrl').value;
+            
+            ws = new WebSocket(url);
+
+            ws.onopen = () => {
+                printLog(`🟢 서버 연결 성공!`);
+            };
+
+            ws.onclose = () => {
+                printLog('🔴 서버와 연결이 끊어졌습니다.');
+            };
+
+            ws.onerror = (err) => {
+                printLog(`❌ 연결 에러 발생 (콘솔 확인)`);
+                console.error('WebSocket Error:', err);
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const res = JSON.parse(event.data);
+
+                    switch(res.event) {
+                        case "on_connect":
+                            printLog(`🏢 연결된 서버(Pod): <b>${res.data}</b>`);
+                            break;
+                            
+                        case "join_room":
+                            printLog(`✅ 방 입장 성공: ${res.data.userNickname}`);
+                            break;
+
+                        // 🔥 1. 게임 시작 수신
+                        case "game_start":
+                            printLog(`🏁 <b>게임이 시작되었습니다!</b> 문제를 준비하세요!`);
+                            break;
+
+                        // 🔥 2. 퀴즈 수신
+                        case "next_quiz":
+                            const quiz = res.data;
+                            printLog(`📝 <b>[${quiz.sortOrder}번 문제]</b> (타입: ${quiz.type})`);
+                            printLog(`💡 질문: ${quiz.problemText}`);
+                            if (quiz.problemUrl) {
+                                printLog(`🔗 첨부 URL: <a href="${quiz.problemUrl}" target="_blank">${quiz.problemUrl}</a>`);
+                            }
+                            break;
+
+                        // 🔥 3. 정답 수신
+                        case "correct":
+                            // 정답 이벤트로 넘어오는 구조에 따라 res.data.msg 등으로 수정 가능
+                            const correctMsg = res.data.msg || res.data; 
+                            printLog(`🎉 <b>[정답자 발생!]</b> ${correctMsg}`);
+                            break;
+
+                        case "chat":
+                            if (sendTimestamp !== 0) {
+                                const rtt = Date.now() - sendTimestamp;
+                                printLog(`📩 [수신] ${res.data.userNickname}: ${res.data.msg}`);
+                                printLog(`⏱️ [속도 측정] 요청부터 응답까지 <b>${rtt}ms</b> 걸렸습니다.`);
+                                sendTimestamp = 0; 
+                            } else {
+                                printLog(`📩 [수신] ${res.data.userNickname}: ${res.data.msg}`);
+                            }
+                            break;
+
+                        case "exit_room":
+                            printLog(`🚪 방 퇴장: ${res.data.userNickname}`);
+                            break;
+
+                        case "ERROR":
+                            printLog(`🚨 [에러] ${res.data.code}: ${res.data.message}`);
+                            break;
+
+                        default:
+                            printLog(`알 수 없는 이벤트 수신: ${res.event}`);
+                    }
+                } catch (e) {
+                    printLog(`⚠️ 메시지 파싱 에러: ${event.data}`);
+                }
+            };
+        }
+
+        // 2. 방 입장 요청
+        async function joinRoom() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('먼저 서버에 연결하세요!');
+            
+            const roomIdx = parseInt(document.getElementById('roomIdx').value);
+            const playerIdx = parseInt(document.getElementById('playerIdx').value);
+            
+            printLog(`🔄 Room 서비스에 티켓 발급 요청 중...`);
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/room/set/add/${roomIdx}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        room_idx: roomIdx,
+                        player_idx: playerIdx
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const ticketUuid = result.uuid;
+
+                printLog(`🎫 티켓 발급 완료: ${ticketUuid}`);
+                
+                const payload = {
+                    event: "join_room",
+                    data: { 
+                        roomIdx: roomIdx,
+                        ticketUuid: ticketUuid
+                    }
+                };
+                ws.send(JSON.stringify(payload));
+                printLog(`🏃 웹소켓 방 입장 요청 중... (Room: ${roomIdx})`);
+
+            } catch (error) {
+                printLog(`❌ REST API 요청 실패: ${error.message}`);
+                console.error('REST API Error:', error);
+            }
+        }
+
+        // 🔥 새로 추가된 게임 시작 REST 요청
+        async function startGame() {
+            const roomIdx = parseInt(document.getElementById('roomIdx').value);
+            
+            printLog(`🎮 Room 서비스에 게임 시작 요청 중... (Room: ${roomIdx})`);
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/room/gameStart`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    // 프로토버프 스펙에 맞춘 JSON payload
+                    body: JSON.stringify({
+                        room_idx: roomIdx
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
+                printLog(`✅ API 게임 시작 호출 성공! (서버에서 game_start 이벤트를 쏠 것입니다)`);
+
+            } catch (error) {
+                printLog(`❌ 게임 시작 REST API 요청 실패: ${error.message}`);
+                console.error('REST API Error:', error);
+            }
+        }
+
+        // 3. 메시지 전송
+        function sendMessage() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('먼저 서버에 연결하세요!');
+            
+            const msg = document.getElementById('messageInput').value;
+            
+            sendTimestamp = Date.now(); 
+            
+            const payload = {
+                event: "chat",
+                data: { msg: msg }
+            };
+            ws.send(JSON.stringify(payload));
+            printLog(`📤 [전송] ${msg}`);
+        }
+
+        // 4. 방 나가기
+        function exitRoom() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return alert('먼저 서버에 연결하세요!');
+            
+            const payload = {
+                event: "exit_room",
+                data: {}
+            };
+            ws.send(JSON.stringify(payload));
+        }
+    </script>
+</body>
+</html>

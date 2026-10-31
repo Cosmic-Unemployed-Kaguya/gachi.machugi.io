@@ -49,6 +49,7 @@ var app = builder.Build();
 //CORS, 이게 없으면 차단함
 app.UseCors("AllowAll");
 app.MapGrpcService<RoomGrpcService>();
+app.MapGrpcService<RoomGrpcInternalService>();
 //Https설정
 //app.UseHttpsRedirection();
 

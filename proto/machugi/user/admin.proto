@@ -5,53 +5,44 @@ package machugi.admin;
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "validate/validate.proto";
-import "google/rpc/error_details.proto";
 
 option java_multiple_files = true;
 option java_package = "kaguya.grpc.admin";
 
 service AdminService {
-
-  rpc GetUserList (GetUsersInfoRequest) returns (GetUsersInfoResponse) {
-    option (google.api.http) = {
-      get: "/admin/users/info"
-    };
+  rpc GetUserList(GetUsersInfoRequest) returns (GetUsersInfoResponse) {
+    option (google.api.http) = {get: "/admin/users/info"};
   }
 
-  rpc GetUserDetails (GetUserDetailsRequest) returns (GetUserDetailsResponse) {
-    option (google.api.http) = {
-      get: "/admin/users/{user_idx}"
-    };
+  rpc GetUserDetails(GetUserDetailsRequest) returns (GetUserDetailsResponse) {
+    option (google.api.http) = {get: "/admin/users/{user_idx}"};
   }
 
-  rpc UpdateNickname (UpdateNicknameRequest) returns (google.protobuf.Empty) {
+  rpc UpdateNickname(UpdateNicknameRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       patch: "/admin/users/{user_idx}/nickname"
       body: "*"
     };
   }
 
-  rpc UpdateRole (UpdateRoleRequest) returns (google.protobuf.Empty) {
+  rpc UpdateRole(UpdateRoleRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       patch: "/admin/users/{user_idx}/role"
       body: "*"
     };
   }
 
-  rpc BlockUser (BlockRequest) returns (google.protobuf.Empty) {
+  rpc BlockUser(BlockRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       post: "/admin/users/{user_idx}/block"
       body: "*"
     };
   }
 
-  rpc GetBlockList (GetBlockListRequest) returns (GetBlocksInfoResponse) {
-    option (google.api.http) = {
-      get: "/admin/users/block/list"
-    };
+  rpc GetBlockList(GetBlockListRequest) returns (GetBlocksInfoResponse) {
+    option (google.api.http) = {get: "/admin/users/block/list"};
   }
 }
-
 
 // --- Enums ---
 enum GrpcRole {
@@ -67,41 +58,41 @@ enum GrpcManagementType {
   PERM_BAN = 3;
 }
 
-
 // --- Request Messages ---
 message GetUsersInfoRequest {
   // todo. 페이징
 }
 
 message GetUserDetailsRequest {
-  int64 user_idx = 1 [(validate.rules).int64 = { gt: 0 }];  // idx는 1이상의 값
+  int64 user_idx = 1 [(validate.rules).int64 = {gt: 0}]; // idx는 1이상의 값
 }
 
 message UpdateNicknameRequest {
-  int64 user_idx = 1 [(validate.rules).int64 = { gt: 0 }];
+  int64 user_idx = 1 [(validate.rules).int64 = {gt: 0}];
   string nickname = 2 [(validate.rules).string = {
-    min_len: 1,
+    min_len: 1
     pattern: "^.*\\S.*$"
   }];
 }
 
 message UpdateRoleRequest {
-  int64 user_idx = 1 [(validate.rules).int64 = { gt: 0 }];
+  int64 user_idx = 1 [(validate.rules).int64 = {gt: 0}];
 
   GrpcRole role = 2 [(validate.rules).enum = {
-    defined_only: true,
-    not_in: [0]  // UNSPECIFIED(0) 값 허용 안 함 (@NotNull 역할)
+    defined_only: true
+    not_in: [0] /* UNSPECIFIED(0) 값 허용 안 함 (@NotNull 역할)
+    */
   }];
 }
 
 message BlockRequest {
-  int64 user_idx = 1 [(validate.rules).int64 = { gt: 0 }];
+  int64 user_idx = 1 [(validate.rules).int64 = {gt: 0}];
   GrpcManagementType management_type = 2 [(validate.rules).enum = {
-    defined_only: true,
+    defined_only: true
     not_in: [0]
   }];
   string reason = 3 [(validate.rules).string = {
-    min_len: 1,
+    min_len: 1
     pattern: "^.*\\S.*$"
   }];
   string end_date = 4;
@@ -110,7 +101,6 @@ message BlockRequest {
 message GetBlockListRequest {
   // todo. 페이징
 }
-
 
 // --- Response Messages ---
 message GetUsersInfoResponse {
@@ -130,7 +120,7 @@ message GetUserDetailsResponse {
 }
 
 message GetBlocksInfoResponse {
-    repeated GetBlockDetailsResponse block_list = 1;
+  repeated GetBlockDetailsResponse block_list = 1;
 }
 
 message GetBlockDetailsResponse {

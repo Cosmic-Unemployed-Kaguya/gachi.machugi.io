@@ -1,0 +1,9 @@
+
+services:
+  user-service:
+    image: machugi-user:local
+    build:
+      context: ./user
+
+      additional_contexts:
+        proto: ./proto

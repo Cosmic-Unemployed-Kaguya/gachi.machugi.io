@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>통합 흐름 테스트 패널</title>
+    <!--
+        전체 서비스 연동 테스트용 페이지
+        흐름 : 1. 회원가입/로그인/로그아웃 → 2. 방 생성/수정/삭제 → 3. 방 입장 + 채팅 → 4. 게임 시작/진행
+
+        반드시 envoy 를 거쳐서 열 것 → http://localhost:8080/test-integration.html
+        - 로그인 쿠키(accessToken, SameSite=Lax)가 같은 origin 이어야 REST/WS 요청에 실려감
+        - file:// 로 열면 쿠키가 안 실려서 인증이 전부 실패함
+
+        [미완성] quiz : 실제 quiz 서비스 대신 test/temp_quiz (고정 문제 3개 스텁 서버) 를 띄워서 사용
+    -->
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; margin: 0; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 460px); gap: 16px; }
+        @media (max-width: 960px) { body { grid-template-columns: minmax(0, 1fr); } }
+        fieldset { margin: 0 0 12px; border: 1px solid #ccc; border-radius: 6px; }
+        legend { font-weight: bold; }
+        .row { margin: 6px 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .row label { min-width: 90px; font-size: 13px; color: #444; }
+        input[type=text], input[type=number], input[type=email], input[type=password], input[type=date], select { padding: 3px 5px; }
+        input.short { width: 70px; }
+        button { cursor: pointer; }
+        .note { font-size: 12px; color: #a15c00; background: #fff6e5; padding: 4px 6px; border-radius: 4px; margin: 4px 0; }
+        .todo { font-size: 12px; color: #b00020; background: #fdecee; padding: 4px 6px; border-radius: 4px; margin: 4px 0; }
+        #status { position: sticky; top: 0; background: #222; color: #fff; padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; font-size: 13px; display: flex; flex-wrap: wrap; gap: 14px; z-index: 1; }
+        #quizBox { background: #eef4ff; border-radius: 6px; padding: 10px; min-height: 70px; font-size: 15px; white-space: pre-line; }
+        #quizTimer { font-weight: bold; font-family: monospace; }
+        #scoreBoard { font-size: 13px; margin: 4px 0 0; padding-left: 20px; }
+        .side { position: sticky; top: 16px; align-self: start; }
+        #logArea { background: #f4f4f4; padding: 8px; height: calc(100vh - 90px); overflow-y: auto; font-family: monospace; font-size: 12px; word-break: break-all; }
+        .log.req { color: #555; }
+        .log.ok { color: #0a6b2d; }
+        .log.err { color: #b00020; font-weight: bold; }
+        .log.ws { color: #1a4fb5; }
+        .log.game { color: #7a2bb5; font-weight: bold; }
+    </style>
+</head>
+<body>
+<main>
+    <h2>통합 흐름 테스트 패널</h2>
+
+    <div id="status">
+        <span>👤 로그인 : <b id="stLogin">-</b></span>
+        <span>🔌 WS : <b id="stWs">끊김</b></span>
+        <span>🚪 방 : <b id="stRoom">-</b></span>
+        <span>🎮 게임 : <b id="stGame">-</b></span>
+    </div>
+
+    <!-- 0. 공통 설정 -->
+    <fieldset>
+        <legend>0. 공통 설정</legend>
+        <div class="row">
+            <label>게이트웨이</label>
+            <input type="text" id="apiBase" style="width: 260px;">
+            <span style="font-size: 12px;">WS 는 <code>{게이트웨이}/chat</code></span>
+        </div>
+        <div class="row">
+            <label>내 userIdx</label>
+            <input type="number" id="myIdx" class="short" value="1">
+        </div>
+        <!-- 로그인 응답(닉네임)과 /users/my 응답에 유저 idx 가 없어서 직접 입력해야 함 (DB users 테이블 확인)
+             방 host_idx / player_idx 와 채팅 티켓 검증(ws 헤더의 x-user-idx 와 비교)에 쓰이므로 로그인한 계정과 같아야 함
+             [확인 필요] room 이 player_idx 를 body 에서 받음 → envoy 가 넣어주는 X-User-Idx 헤더를 쓰게 바뀌면 이 입력칸은 필요 없음 -->
+        <div class="note">
+            로그인한 계정의 idx 와 같아야 해요 (다르면 방 입장 시 "유저 인증에 실패했습니다").<br>
+            더미 계정 : admin@test.com / admin, user1~3@test.com / 1234 (빈 DB 기준 idx 1~4)
+        </div>
+    </fieldset>
+
+    <!-- 1. 회원가입 / 로그인 / 로그아웃 (user 서비스) -->
+    <fieldset>
+        <legend>1. 회원가입 · 로그인 · 로그아웃 (user)</legend>
+
+        <b style="font-size: 13px;">회원가입 : 메일 인증 → 일회용 코드 → 가입</b>
+        <!-- user 서비스에 MAIL_* 환경변수가 없으면 메일 발송 자체가 실패함 (더미 계정으로 로그인해서 넘어가도 됨) -->
+        <div class="row">
+            <label>이메일</label>
+            <input type="email" id="regEmail" placeholder="test@example.com" style="width: 200px;">
+            <button onclick="run(sendCode)">인증코드 발송</button>
+        </div>
+        <div class="row">
+            <label>인증코드</label>
+            <input type="text" id="regCode" placeholder="6자리" class="short">
+            <button onclick="run(checkCode)">인증 확인</button>
+            <input type="text" id="oneTimeAuthCode" placeholder="일회용 코드 (자동 입력)" style="width: 280px;">
+        </div>
+        <div class="row">
+            <label>비밀번호</label>
+            <input type="password" id="regPassword" value="test1234!" title="8~20자, 영문+숫자+특수문자">
+            <label>닉네임</label>
+            <input type="text" id="regNickname" placeholder="2~10자, 특수문자 X" style="width: 120px;">
+        </div>
+        <div class="row">
+            <label>이름</label>
+            <input type="text" id="regName" value="테스터" style="width: 90px;">
+            <label>생년월일</label>
+            <input type="date" id="regBirth" value="2000-01-01">
+        </div>
+        <div class="row">
+            <label>연락처</label>
+            <input type="text" id="regPhone" value="010-0000-0000" style="width: 130px;">
+            <label>성별</label>
+            <select id="regGender">
+                <option value="NONE">NONE</option>
+                <option value="MALE">MALE</option>
+                <option value="FEMALE">FEMALE</option>
+            </select>
+            <button onclick="run(register)">회원가입</button>
+        </div>
+
+        <hr>
+        <div class="row">
+            <label>로그인</label>
+            <input type="email" id="loginEmail" placeholder="이메일" value="admin@test.com" style="width: 200px;">
+            <input type="password" id="loginPassword" placeholder="비밀번호" value="admin">
+            <button onclick="run(login)">로그인</button>
+        </div>
+        <div class="row">
+            <label></label>
+            <button onclick="run(myPage)">내 정보 (/users/my)</button>
+            <button onclick="run(reissue)">토큰 갱신</button>
+            <button onclick="run(logout)">로그아웃</button>
+        </div>
+        <div class="note">accessToken 수명은 10분이에요. 401 이 뜨면 토큰 갱신 후 다시 시도하세요.</div>
+    </fieldset>
+
+    <!-- 2. 방 생성 / 수정 / 삭제 (room 서비스) -->
+    <fieldset>
+        <legend>2. 방 생성 · 조회 · 수정 · 삭제 (room)</legend>
+        <div class="row">
+            <label>방 이름</label>
+            <input type="text" id="roomName" value="테스트방">
+            <label>최대 인원</label>
+            <input type="number" id="roomMax" class="short" value="4">
+        </div>
+        <div class="row">
+            <label>제한시간(ms)</label>
+            <!-- game 서비스에서 Task.Delay((int)TimeLimit) 로 쓰므로 ms 단위 (초 단위로 넣으면 문제가 바로바로 넘어감) -->
+            <input type="number" id="roomTimeLimit" class="short" value="20000">
+            <label>공개</label>
+            <input type="checkbox" id="roomPublic" checked>
+            <label>비밀번호</label>
+            <input type="text" id="roomPassword" placeholder="선택" style="width: 100px;">
+        </div>
+        <div class="row">
+            <label>quiz_idx</label>
+            <!-- [미완성] quiz : temp_quiz 는 quiz_idx 와 상관없이 같은 문제 3개를 돌려줌 -->
+            <input type="number" id="roomQuizIdx" class="short" value="1">
+            <button onclick="run(createRoom)">방 생성</button>
+        </div>
+
+        <hr>
+        <div class="row">
+            <label>방 번호</label>
+            <input type="number" id="roomIdx" class="short" value="1">
+            <button onclick="run(findRoom)">조회 (수정칸 채움)</button>
+            <button onclick="run(updateRoom)">수정</button>
+            <button onclick="run(deleteRoom)">삭제</button>
+        </div>
+        <div class="row">
+            <label>수정 : 이름</label>
+            <input type="text" id="editName" style="width: 120px;">
+            <label>인원</label>
+            <input type="number" id="editMax" class="short">
+            <label>제한시간</label>
+            <input type="number" id="editTimeLimit" class="short">
+        </div>
+        <div class="row">
+            <label>수정 : 공개</label>
+            <input type="checkbox" id="editPublic">
+            <label>quiz_idx</label>
+            <input type="number" id="editQuizIdx" class="short">
+            <label>방장 idx</label>
+            <input type="number" id="editHostIdx" class="short">
+        </div>
+        <!-- [확인 필요] room GrpcRoomMapper 가 빠진 optional 필드를 null 이 아닌 0 으로 넘겨서
+             ERoom.UpdateInfo 의 ?? 가 동작하지 않음 → 안 보낸 필드가 0 으로 덮어써짐
+             그래서 여기서는 조회한 값으로 전 필드를 채워서 보냄
+             + ERoom.UpdateInfo 에서 Password = request.name 으로 되어 있음 (비번이 방 이름으로 바뀜) -->
+        <div class="todo">수정은 빠진 필드가 0 으로 덮어써지는 버그가 있어서, 조회한 값으로 전체 필드를 보내요.</div>
+        <!-- [확인 필요] room RoomRedis 의 방 TTL 이 1분 (생성/수정/입장/퇴장 때만 연장)
+             → 1분 넘게 아무 동작이 없으면 방이 사라져서 게임 시작 시 room is not found (grpc-status 2)
+             + AddPlayerToRoom 이 방 존재 확인 없이 SADD 해서, 사라진 방에도 입장이 되고 room:{idx}:players 만 다시 생김 -->
+        <div class="todo">방은 마지막 생성/수정/입장/퇴장 후 1분 뒤 사라져요. 방 생성 → 입장 → 게임 시작을 1분 안에 하세요.</div>
+    </fieldset>
+
+    <!-- 3. 방 입장 + 채팅 (room → chat_node) -->
+    <fieldset>
+        <legend>3. 방 입장 · 채팅 (room + chat_node)</legend>
+        <div class="row">
+            <button onclick="connectSocket()">WS 연결</button>
+            <button onclick="disconnectSocket()">WS 끊기</button>
+            <button onclick="run(joinRoom)">방 입장 (티켓 발급 → join)</button>
+            <button onclick="run(exitRoom)">방 퇴장</button>
+        </div>
+        <!-- 티켓 TTL 은 5초라 발급 즉시 join 을 보냄 -->
+        <div class="row">
+            <label>메시지</label>
+            <input type="text" id="messageInput" value="테스트 메시지입니다" style="width: 260px;" onkeydown="if (event.key === 'Enter') sendMessage('messageInput')">
+            <button onclick="sendMessage('messageInput')">전송 (응답시간 측정)</button>
+        </div>
+    </fieldset>
+
+    <!-- 4. 게임 시작 및 진행 (game → room, quiz → redis → chat_node) -->
+    <fieldset>
+        <legend>4. 게임 시작 · 진행 (game)</legend>
+        <!-- 흐름
+             1. POST /api/game/start/{idx} → game 이 room(FindRoomInfo) 으로 quiz_idx / time_limit 조회
+             2. game → quiz(GetAllQuiz) 로 문제 목록 조회   [미완성] quiz : temp_quiz 사용
+             3. game → redis room:{idx}:base 로 game_start 발행 → 5초 뒤 next_quiz 발행
+             4. 채팅으로 정답 입력 → chat_node 가 정답이면 room:{idx}:correct 로 발행 → game 이 타이머 종료 후 다음 문제
+             5. 제한시간이 지나면 game 이 quiz_timeout 발행 후 다음 문제, 다 풀면 game_over
+             chat_node 는 방에 누군가 입장해 있어야 room:{idx}:* 채널을 구독하므로 반드시 3번 방 입장 후 시작 -->
+        <div class="row">
+            <button onclick="run(startGame)" style="font-weight: bold; color: blue;">▶ 게임 시작</button>
+            <span style="font-size: 12px;">방 입장 후 시작 (시작 5초 뒤 첫 문제)</span>
+        </div>
+        <!-- [확인 필요] game GameRoomState.TotalQuizCount 를 설정하는 곳이 없음 (항상 0)
+             → 첫 PubNextQuiz 에서 Progress(0) == TotalQuizCount(0) 이 되어 문제 대신 game_over 가 바로 감
+             [확인 필요] chat_node redisSubClient 에 quiz_timeout case 가 없어서 시간초과 이벤트는 클라이언트로 전달 안 됨
+                        (game 쪽에서는 시간초과 후 다음 문제를 정상 발행함) -->
+
+        <div id="quizBox">아직 문제가 없어요.</div>
+        <div class="row">
+            <span>⏱️ 남은 시간 : <span id="quizTimer">-</span></span>
+            <label style="min-width: auto;">표시용 제한시간(ms)</label>
+            <input type="number" id="gameTimeLimit" class="short" value="20000" title="방의 제한시간과 맞춰야 정확해요">
+        </div>
+        <div class="row">
+            <label>정답 입력</label>
+            <input type="text" id="answerInput" placeholder="정답을 입력하세요" style="width: 260px;" onkeydown="if (event.key === 'Enter') sendMessage('answerInput', true)">
+            <button onclick="sendMessage('answerInput', true)">제출</button>
+        </div>
+        <div class="row" style="align-items: flex-start;">
+            <label>정답자</label>
+            <ol id="scoreBoard"></ol>
+        </div>
+    </fieldset>
+</main>
+
+<aside class="side">
+    <div class="row" style="margin-top: 0;">
+        <h3 style="margin: 0;">로그</h3>
+        <button onclick="document.getElementById('logArea').innerHTML = ''">지우기</button>
+    </div>
+    <div id="logArea"></div>
+</aside>
+
+<script>
+    const $ = (id) => document.getElementById(id);
+    const val = (id) => $(id).value.trim();
+
+    let ws;
+    let sendTimestamp = 0;
+
+    // 게임 화면 상태
+    let currentQuiz = null;
+    let timerId = null;
+
+    // 페이지를 envoy 로 열었으면 같은 origin, 아니면 기본 게이트웨이
+    $('apiBase').value = location.protocol.startsWith('http') ? location.origin : 'http://localhost:8080';
+
+    // ---------- 공통 ----------
+
+    function printLog(text, kind = 'info') {
+        const logArea = $('logArea');
+        const line = document.createElement('div');
+        line.className = `log ${kind}`;
+        // 다른 유저 채팅이 섞이므로 innerHTML 대신 textContent
+        line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+        logArea.appendChild(line);
+        logArea.scrollTop = logArea.scrollHeight;
+    }
+
+    function num(id) {
+        const n = Number(val(id));
+        if (!Number.isInteger(n) || n <= 0) throw new Error(`${id} 값이 올바르지 않습니다: "${val(id)}"`);
+        return n;
+    }
+
+    // 비어있으면 undefined (optional 필드용)
+    function optNum(id) {
+        return val(id) === '' ? undefined : Number(val(id));
+    }
+
+    function myIdx() {
+        return num('myIdx');
+    }
+
+    function apiBase() {
+        return val('apiBase').replace(/\/$/, '');
+    }
+
+    function setStatus(id, text) {
+        $(id).textContent = text;
+    }
+
+    // 버튼 핸들러 공통 에러 처리
+    async function run(fn) {
+        try {
+            await fn();
+        } catch (e) {
+            if (!e.logged) printLog(`❌ ${e.message}`, 'err');
+            console.error(e);
+        }
+    }
+
+    // REST 호출 (envoy grpc_json_transcoder 경유 시 gRPC 에러는 grpc-status / grpc-message 헤더로 옴)
+    async function api(method, path, body) {
+        const options = { method, credentials: 'include', headers: {} };
+        if (body !== undefined) {
+            options.headers['Content-Type'] = 'application/json';
+            options.body = JSON.stringify(body);
+        }
+
+        printLog(`➡️ ${method} ${path}${body !== undefined ? ' ' + JSON.stringify(body) : ''}`, 'req');
+
+        const res = await fetch(apiBase() + path, options);
+        const text = await res.text();
+
+        let data = null;
+        try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
+        const grpcStatus = res.headers.get('grpc-status');
+        const grpcMessage = res.headers.get('grpc-message');
+
+        if (!res.ok || (grpcStatus && grpcStatus !== '0')) {
+            let detail = text;
+            if (grpcMessage) {
+                try { detail = decodeURIComponent(grpcMessage); } catch { detail = grpcMessage; }
+            }
+            const err = new Error(`${method} ${path} → HTTP ${res.status}${grpcStatus ? ` / grpc-status ${grpcStatus}` : ''} ${detail || ''}`);
+            err.logged = true;
+            printLog(`❌ ${err.message}`, 'err');
+            throw err;
+        }
+
+        printLog(`✅ ${method} ${path} → ${res.status} ${text || '(empty)'}`, 'ok');
+        return data;
+    }
+
+    // ---------- 1. 회원가입 / 로그인 / 로그아웃 ----------
+
+    async function sendCode() {
+        await api('POST', '/verifications/send', {
+            verificationType: 'REGISTER',
+            email: val('regEmail')
+        });
+        printLog('📧 메일함에서 6자리 인증코드를 확인하세요.');
+    }
+
+    async function checkCode() {
+        const res = await api('POST', '/verifications/check', {
+            verificationType: 'REGISTER',
+            verificationCode: val('regCode'),
+            email: val('regEmail')
+        });
+
+        // REST 컨트롤러 응답 { data: { oneTimeAuthCode } } / gRPC 트랜스코딩 응답 { oneTimeAuthCode }
+        const code = res?.data?.oneTimeAuthCode ?? res?.oneTimeAuthCode;
+        if (code) {
+            $('oneTimeAuthCode').value = code;
+            printLog(`🔑 일회용 코드 발급 : ${code}`);
+        }
+    }
+
+    async function register() {
+        await api('POST', '/auth/register', {
+            oneTimeAuthCode: val('oneTimeAuthCode'),
+            account: {
+                password: $('regPassword').value,
+                nickname: val('regNickname')
+            },
+            user: {
+                name: val('regName'),
+                birth: val('regBirth'),
+                phone: val('regPhone'),
+                gender: val('regGender')
+            }
+        });
+
+        // 바로 로그인 할 수 있게 채워줌
+        $('loginEmail').value = val('regEmail');
+        $('loginPassword').value = $('regPassword').value;
+    }
+
+    async function login() {
+        const res = await api('POST', '/auth/login', {
+            email: val('loginEmail'),
+            password: $('loginPassword').value
+        });
+        // data 에 닉네임만 옴
+        setStatus('stLogin', res?.data ?? '로그인됨');
+    }
+
+    async function myPage() {
+        await api('GET', '/users/my');
+    }
+
+    async function reissue() {
+        await api('POST', '/auth/reissue');
+    }
+
+    async function logout() {
+        disconnectSocket();
+        await api('POST', '/auth/logout');
+        setStatus('stLogin', '-');
+    }
+
+    // ---------- 2. 방 생성 / 조회 / 수정 / 삭제 ----------
+
+    async function createRoom() {
+        const body = {
+            name: val('roomName'),
+            max_occupancy: num('roomMax'),
+            time_limit: num('roomTimeLimit'),
+            is_public: $('roomPublic').checked,
+            quiz_idx: num('roomQuizIdx'),
+            host_idx: myIdx()
+        };
+        if (val('roomPassword')) body.password = val('roomPassword');
+
+        const res = await api('POST', '/api/room', body);
+
+        // int64 는 JSON 에서 문자열로 옴
+        if (res?.idx) {
+            $('roomIdx').value = Number(res.idx);
+            $('gameTimeLimit').value = body.time_limit;
+            printLog(`🏠 방 생성 완료 : ${res.idx}번`);
+        }
+    }
+
+    async function findRoom() {
+        const roomIdx = num('roomIdx');
+        const res = await api('GET', `/api/room/${roomIdx}`);
+
+        const info = res?.roomInfo;
+        if (info) {
+            $('editName').value = info.name ?? '';
+            $('editMax').value = info.maxOccupancy ?? '';
+            $('editTimeLimit').value = info.timeLimit ?? '';
+            $('editPublic').checked = !!info.isPublic;
+            $('editQuizIdx').value = info.quizIdx ?? '';
+            $('editHostIdx').value = info.hostIdx ?? '';
+            if (info.timeLimit) $('gameTimeLimit').value = Number(info.timeLimit);
+        }
+        printLog(`👥 참여자 : [${(res?.roomSetInfo?.playerSet ?? []).join(', ')}]`);
+    }
+
+    async function updateRoom() {
+        const roomIdx = num('roomIdx');
+
+        // 빠진 필드가 0 으로 덮어써지는 버그 때문에 전부 채워서 보냄 (위 [확인 필요] 참고)
+        await api('PATCH', `/api/room/info/${roomIdx}`, {
+            name: val('editName'),
+            max_occupancy: optNum('editMax'),
+            time_limit: optNum('editTimeLimit'),
+            is_public: $('editPublic').checked,
+            quiz_idx: optNum('editQuizIdx'),
+            host_id: optNum('editHostIdx')
+        });
+    }
+
+    async function deleteRoom() {
+        const roomIdx = num('roomIdx');
+        if (!confirm(`${roomIdx}번 방을 삭제할까요?`)) return;
+        await api('DELETE', `/api/room/${roomIdx}`);
+    }
+
+    // ---------- 3. 방 입장 / 채팅 ----------
+
+    // WS 핸드셰이크에도 쿠키가 실려서 envoy ext_authz 가 x-user-idx 를 넣어줌
+    function connectSocket() {
+        if (ws && ws.readyState === WebSocket.OPEN) return printLog('이미 연결되어 있습니다.');
+
+        const url = apiBase().replace(/^http/, 'ws') + '/chat';
+        ws = new WebSocket(url);
+        setStatus('stWs', '연결 중...');
+
+        ws.onopen = () => {
+            setStatus('stWs', '연결됨');
+            printLog(`🟢 WS 연결 성공 (${url})`, 'ws');
+        };
+
+        ws.onclose = (e) => {
+            setStatus('stWs', '끊김');
+            setStatus('stRoom', '-');
+            printLog(`🔴 WS 연결 종료 (code ${e.code})`, 'ws');
+        };
+
+        ws.onerror = (err) => {
+            printLog('❌ WS 에러 (로그인 상태 / 콘솔 확인)', 'err');
+            console.error('WebSocket Error:', err);
+        };
+
+        ws.onmessage = (event) => {
+            let res;
+            try {
+                res = JSON.parse(event.data);
+            } catch {
+                return printLog(`⚠️ 메시지 파싱 에러 : ${event.data}`, 'err');
+            }
+            handleWsEvent(res);
+        };
+    }
+
+    function disconnectSocket() {
+        if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+    }
+
+    function handleWsEvent(res) {
+        const data = res.data ?? {};
+
+        switch (res.event) {
+            case 'join_room':
+                printLog(`✅ 방 입장 : ${data.userNickname}`, 'ws');
+                break;
+
+            case 'exit_room':
+                printLog(`🚪 방 퇴장 : ${data.userNickname}`, 'ws');
+                break;
+
+            case 'chat':
+                printLog(`📩 ${data.userNickname} : ${data.msg}`, 'ws');
+                if (sendTimestamp !== 0) {
+                    printLog(`⏱️ 전송 → 수신 ${Date.now() - sendTimestamp}ms`, 'ws');
+                    sendTimestamp = 0;
+                }
+                break;
+
+            // ----- 게임 이벤트 (game → redis → chat_node) -----
+            case 'game_start':
+                onGameStart();
+                break;
+
+            case 'next_quiz':
+                onNextQuiz(data);
+                break;
+
+            case 'correct':
+                onCorrect(data);
+                break;
+
+            // chat_node 가 아직 전달하지 않는 이벤트 (전달되게 바뀌면 바로 표시됨)
+            case 'quiz_timeout':
+                stopTimer();
+                printLog('⌛ 시간 초과', 'game');
+                $('quizBox').textContent += '\n⌛ 시간 초과! 다음 문제를 기다리는 중...';
+                break;
+
+            case 'game_over':
+                onGameOver();
+                break;
+
+            case 'ERROR':
+                printLog(`🚨 [WS 에러] ${data.code} : ${data.message}`, 'err');
+                break;
+
+            default:
+                printLog(`❓ 알 수 없는 이벤트 : ${JSON.stringify(res)}`, 'ws');
+        }
+    }
+
+    function ensureWs() {
+        if (!ws || ws.readyState !== WebSocket.OPEN) throw new Error('먼저 WS 연결을 하세요.');
+    }
+
+    async function joinRoom() {
+        ensureWs();
+        const roomIdx = num('roomIdx');
+
+        // 1. room 에 플레이어 추가 + 입장 티켓 발급 (TTL 5초)
+        const res = await api('POST', `/api/room/set/add/${roomIdx}/ticket`, {
+            room_idx: roomIdx,
+            player_idx: myIdx()
+        });
+        const ticketUuid = res?.uuid;
+        if (!ticketUuid) throw new Error('티켓(uuid)을 받지 못했습니다.');
+
+        // 2. 바로 chat 에 입장 요청
+        ws.send(JSON.stringify({
+            event: 'join_room',
+            data: { roomIdx, ticketUuid }
+        }));
+        setStatus('stRoom', `${roomIdx}번`);
+        printLog(`🏃 join_room 전송 (방 ${roomIdx}, 티켓 ${ticketUuid})`, 'ws');
+    }
+
+    async function exitRoom() {
+        ensureWs();
+        const roomIdx = num('roomIdx');
+
+        // chat 퇴장 (chat_node 는 exit_room 메시지로는 room 에 알리지 않음)
+        ws.send(JSON.stringify({ event: 'exit_room', data: {} }));
+        setStatus('stRoom', '-');
+
+        // room 에서도 플레이어 제거
+        await api('POST', `/api/room/set/remove/${roomIdx}`, {
+            room_idx: roomIdx,
+            player_idx: myIdx()
+        });
+    }
+
+    // 정답도 일반 채팅과 같은 chat 이벤트로 보냄 (chat_node 가 정답 여부를 판별)
+    function sendMessage(inputId, clear = false) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return printLog('❌ 먼저 WS 연결을 하세요.', 'err');
+
+        const msg = val(inputId);
+        if (!msg) return;
+
+        sendTimestamp = Date.now();
+        ws.send(JSON.stringify({ event: 'chat', data: { msg } }));
+        printLog(`📤 [전송] ${msg}`, 'ws');
+        if (clear) $(inputId).value = '';
+    }
+
+    // ---------- 4. 게임 ----------
+
+    async function startGame() {
+        const roomIdx = num('roomIdx');
+        if (!ws || ws.readyState !== WebSocket.OPEN || $('stRoom').textContent === '-') {
+            printLog('⚠️ 방에 입장하지 않으면 게임 이벤트를 받을 수 없어요 (chat_node 가 방 채널을 구독하지 않음).', 'err');
+        }
+        await api('POST', `/api/game/start/${roomIdx}`, {});
+        printLog('🎮 게임 시작 요청 성공 (game_start → 5초 뒤 next_quiz 대기)', 'game');
+    }
+
+    function onGameStart() {
+        currentQuiz = null;
+        stopTimer();
+        $('scoreBoard').innerHTML = '';
+        setStatus('stGame', '시작 대기');
+        printLog('🏁 게임 시작! 5초 뒤 첫 문제가 나와요.', 'game');
+        $('quizBox').textContent = '게임이 시작되었습니다. 첫 문제를 기다리는 중...';
+    }
+
+    function onNextQuiz(data) {
+        currentQuiz = data;
+        setStatus('stGame', `${data.sortOrder}번 문제`);
+        printLog(`📝 [${data.sortOrder}번 문제] (${data.type}) ${data.problemText}`, 'game');
+
+        let text = `[${data.sortOrder}번] ${data.problemText}`;
+        if (data.problemUrl) text += `\n🔗 ${data.problemUrl}`;
+        $('quizBox').textContent = text;
+
+        startTimer();
+        $('answerInput').focus();
+    }
+
+    function onCorrect(data) {
+        stopTimer();
+        printLog(`🎉 정답자 : ${data.userNickname} (idx ${data.userIdx}) → "${data.msg}"`, 'game');
+        $('quizBox').textContent += `\n🎉 정답 : ${data.userNickname} ("${data.msg}") — 다음 문제를 기다리는 중...`;
+
+        const item = document.createElement('li');
+        item.textContent = `${currentQuiz ? currentQuiz.sortOrder + '번' : '?'} : ${data.userNickname} ("${data.msg}")`;
+        $('scoreBoard').appendChild(item);
+
+        if (sendTimestamp !== 0) sendTimestamp = 0;
+    }
+
+    function onGameOver() {
+        stopTimer();
+        currentQuiz = null;
+        setStatus('stGame', '종료');
+        printLog('🏆 게임 종료', 'game');
+        $('quizBox').textContent = '게임이 종료되었습니다.';
+    }
+
+    // 화면 표시용 카운트다운 (실제 시간 판정은 game 서비스가 함)
+    function startTimer() {
+        stopTimer();
+        const limit = Number(val('gameTimeLimit')) || 0;
+        if (limit <= 0) return;
+
+        const endAt = Date.now() + limit;
+        const tick = () => {
+            const left = Math.max(0, endAt - Date.now());
+            $('quizTimer').textContent = `${(left / 1000).toFixed(1)}초`;
+            if (left === 0) stopTimer(false);
+        };
+        tick();
+        timerId = setInterval(tick, 100);
+    }
+
+    function stopTimer(reset = true) {
+        if (timerId) clearInterval(timerId);
+        timerId = null;
+        if (reset) $('quizTimer').textContent = '-';
+    }
+</script>
+</body>
+</html>

@@ -3,24 +3,29 @@ package machugi.room;
 
 import "google/protobuf/empty.proto";
 
-// chat > Room
+option csharp_namespace = "Room.Service.Proto";
+
 service RoomInternalService {
-  // rpc IsUserInRoom(IsUserInRoomRequest) returns (IsUserInRoomResponse) {}
-  rpc ExitUser(ExitUserRequest) returns (google.protobuf.Empty) {}
-  rpc DeleteRoom(DeleteRoomRequest) returns (google.protobuf.Empty) {}
+  rpc ExitUser(InnerExitUserRequest) returns (google.protobuf.Empty) {}
+  rpc DeleteRoom(InnerRoomIdxRequest) returns (google.protobuf.Empty) {}
+  rpc FindRoomInfo(InnerRoomIdxRequest) returns (InnerRoomInfoResponse) {}
 }
 
-// message IsUserInRoomRequest {
-//   uint64 room_idx = 1;
-//   uint64 user_idx = 2;
-// }
-// message IsUserInRoomResponse {
-//   bool is_user = 1;
-// }
-message ExitUserRequest {
+message InnerExitUserRequest {
   uint64 room_idx = 1;
   uint64 user_idx = 2;
 }
-message DeleteRoomRequest {
-  uint64 room_idx = 1;
+
+message InnerRoomIdxRequest {
+  int64 room_idx = 1;
+}
+
+message InnerRoomInfoResponse {
+  int64 idx = 1;
+  int64 host_idx = 2;
+  string name = 3;
+  int32 max_occupancy = 4;
+  int64 time_limit = 5;
+  bool is_public = 6;
+  int64 quiz_idx = 7;
 }
