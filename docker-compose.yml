@@ -20,6 +20,8 @@ services:
       postgres:
         condition: service_healthy  
 
+  quiz-test-service:
+    image: lujol/machugi-test-quiz:dev
 
   room-service:
     image: lujol/machugi-room:dev
@@ -27,8 +29,8 @@ services:
       - redis
     environment:
       Redis__ConnectionString: ${REDIS_HOST}:${REDIS_PORT}
-      Services__ChatServerUrl: http://chat-dotnet-service:9090
-      Services__QuizServerUrl: http://quiz-service:9090
+      Services__ChatServerUrl: http://${CHAT_DOTNET_SERVICE}
+      Services__QuizServerUrl: http://${QUIZ_SERVICE}
       ASPNETCORE_ENVIRONMENT: Development
 
   game-service:
@@ -37,9 +39,9 @@ services:
       - redis
     environment:
       Redis__ConnectionString: ${REDIS_HOST}:${REDIS_PORT}
-      Services__ChatServerUrl: http://chat-node-service:9090
-      Services__QuizServerUrl: http://quiz-service:9090
-      Services__RoomServerUrl: http://room-service:9090
+      Services__ChatServerUrl: http://${CHAT_NODE_SERVICE}
+      Services__QuizServerUrl: http://${QUIZ_SERVICE}
+      Services__RoomServerUrl: http://${ROOM_SERVICE}
       ASPNETCORE_ENVIRONMENT: Development
 
   user-service:

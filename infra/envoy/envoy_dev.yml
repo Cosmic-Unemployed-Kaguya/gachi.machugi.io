@@ -134,7 +134,11 @@ static_resources:
                 #   body: { inline_string: "{\"status\": 404, \"message\": \"존재하지 않는 API 입니다.\"}" }
                 route: { cluster: test_web_cluster }
 
-
+                typed_per_filter_config:
+                  envoy.filters.http.ext_authz:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute
+                    disabled: true    
+                    
           http_filters:
           # CORS 필터
           - name: envoy.filters.http.cors
@@ -178,6 +182,7 @@ static_resources:
               proto_descriptor: "/tmp/descriptor.pb"
               services: 
                 - "machugi.user.UserService"
+                - "machugi.verification.VerificationService"
                 # - "machugi.quiz.QuizGrpcManager"
                 - "machugi.room.RoomGrpcManager"
                 - "machugi.game.GameGrpcManager"

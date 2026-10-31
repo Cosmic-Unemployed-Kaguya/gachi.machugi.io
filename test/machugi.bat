@@ -44,7 +44,7 @@ set "SVC_7=chat-dotnet"
 set "SVC_8=chat-spring"
 
 rem 항상 같이 실행 (redis, postgres 는 depends_on 으로 필요할 때만 자동 실행)
-set "ALWAYS=envoy test-web"
+set "ALWAYS=envoy test-web quiz-test-service"
 
 if /i "%~1"=="down" goto :cmd_down
 if /i "%~1"=="ps"   goto :cmd_ps

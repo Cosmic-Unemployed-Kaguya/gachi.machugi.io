@@ -1,0 +1,13 @@
+{
+  "name": "temp-quiz",
+  "private": true,
+  "description": "quiz 서비스 미완성 기간 동안 사용하는 QuizInternalService gRPC 스텁 서버",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.12.0",
+    "@grpc/proto-loader": "^0.7.13"
+  }
+}
