@@ -224,10 +224,7 @@
              → 첫 PubNextQuiz 에서 Progress(0) == TotalQuizCount(0) 이 되어 문제 대신 game_over 가 바로 감
              [확인 필요] chat_node redisSubClient 에 quiz_timeout case 가 없어서 시간초과 이벤트는 클라이언트로 전달 안 됨
                         (game 쪽에서는 시간초과 후 다음 문제를 정상 발행함) -->
-        <div class="todo">
-            game 의 TotalQuizCount 가 설정되지 않아, 지금은 시작 5초 뒤 문제 대신 game_over 가 올 수 있어요.<br>
-            시간초과(quiz_timeout)는 chat_node 가 전달하지 않아서 화면에 안 보이고, 다음 문제만 와요.
-        </div>
+
         <div id="quizBox">아직 문제가 없어요.</div>
         <div class="row">
             <span>⏱️ 남은 시간 : <span id="quizTimer">-</span></span>
