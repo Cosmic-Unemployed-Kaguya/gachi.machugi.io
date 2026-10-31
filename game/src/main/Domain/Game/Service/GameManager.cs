@@ -38,6 +38,8 @@ public class GameManager
         {
             roomState.QuizQueue.Enqueue(quiz);
         }
+        
+        roomState.TotalQuizCount = roomState.QuizQueue.Count;
 
         _ = StartGame(roomIdx);
 
