@@ -8,7 +8,7 @@ export class Room{
     private sockets :  Set<CustomSocket> = new Set();
     // private kickedUsers : Set<number> = new Set();
 
-    private currentAnswer : string[];
+    private currentAnswer : string[] = [];
 
     constructor(){}
 
@@ -44,8 +44,8 @@ export class Room{
         this.sockets.clear();
     }
     
-    public setAnswer(answer : string[]){
-        this.currentAnswer = answer;
+    public setAnswer(answer : string[] | undefined){
+        this.currentAnswer = answer ?? [];
     }
 
     public checkAnswer(userAnswer : string) : boolean{
