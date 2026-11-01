@@ -1,6 +1,5 @@
 package kaguya.user.domain.user.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kaguya.user.domain.auth.service.AuthService;
 import kaguya.user.domain.user.model.dto.request.ResetPasswordReq;

@@ -60,6 +60,15 @@ enum GrpcRole {
   ADMIN = 2;
 }
 
+enum GrpcStatus {
+  STATUS_UNSPECIFIED = 0;
+  ACTIVE = 1;
+  DORMANT = 2;
+  SUSPENDED = 3;
+  BANNED = 4;
+  WITHDRAWAL = 5;
+}
+
 enum GrpcManagementType {
   MANAGEMENT_TYPE_UNSPECIFIED = 0;
   WARNING = 1;
@@ -67,10 +76,41 @@ enum GrpcManagementType {
   PERM_BAN = 3;
 }
 
+enum GrpcSearchType {
+  SEARCH_TYPE_UNSPECIFIED = 0;
+  EMAIL = 1;
+  NICKNAME = 2;
+}
+
 
 // --- Request Messages ---
 message GetUsersInfoRequest {
-  // todo. 페이징
+  UserSearchRequest condition = 1;
+  PageParam page_param = 2;
+  reserved 3;
+  reserved "sort";
+  string order_by = 4 [(validate.rules).string = {
+    max_len: 200,
+    // 문법만 검사: "필드[ asc|desc]"를 쉼표로 연결. 빈 문자열 허용
+    pattern: "^$|^[a-z_]+( (asc|desc))?(, ?[a-z_]+( (asc|desc))?)*$"
+  }];
+}
+
+// 검색, 필터
+message UserSearchRequest {
+  // 0(UNSPECIFIED) 허용 = 필터 미적용
+  GrpcSearchType search_type = 1 [(validate.rules).enum.defined_only = true];
+  string keyword = 2;
+  GrpcRole role = 3 [(validate.rules).enum.defined_only = true];
+  GrpcStatus status = 4 [(validate.rules).enum.defined_only = true];
+}
+
+// 페이징 (공통)
+message PageParam {
+  reserved 3;
+  reserved "sort";
+  int32 page = 1 [(validate.rules).int32.gte = 0];
+  int32 size = 2 [(validate.rules).int32 = { gte: 0, lte: 100 }];  // 0 = 기본값 사용
 }
 
 message GetUserDetailsRequest {
@@ -115,6 +155,11 @@ message GetBlockListRequest {
 // --- Response Messages ---
 message GetUsersInfoResponse {
   repeated GetUserDetailsResponse user_list = 1;
+  int32 page = 2;
+  int32 size = 3;
+  int64 total_elements = 4;
+  int32 total_pages = 5;
+  bool has_next = 6;
 }
 
 message GetUserDetailsResponse {
@@ -130,7 +175,7 @@ message GetUserDetailsResponse {
 }
 
 message GetBlocksInfoResponse {
-    repeated GetBlockDetailsResponse block_list = 1;
+  repeated GetBlockDetailsResponse block_list = 1;
 }
 
 message GetBlockDetailsResponse {

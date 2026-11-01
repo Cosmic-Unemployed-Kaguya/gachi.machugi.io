@@ -2,6 +2,7 @@ package kaguya.user.domain.user.service;
 
 import kaguya.user.domain.user.mapper.AdminMapper;
 import kaguya.user.domain.user.model.dto.request.BlockReq;
+import kaguya.user.domain.user.model.dto.request.UserSearchReq;
 import kaguya.user.domain.user.model.dto.response.GetBlocksInfoRes;
 import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
 import kaguya.user.domain.user.model.dto.response.GetUsersInfoRes;
@@ -14,6 +15,8 @@ import kaguya.user.domain.user.repository.UserRepository;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,9 +32,9 @@ public class AdminService {
     private final AdminMapper adminMapper;
 
     @Transactional(readOnly = true)
-    public GetUsersInfoRes getUserList() {
+    public GetUsersInfoRes getUserList(UserSearchReq condition ,Pageable pageable) {
 
-        List<UserEntity> userList = userRepository.findAll();
+        Page<UserEntity> userList = userRepository.findByCondition(condition, pageable);
 
         return adminMapper.userListToGetUsersInfoReq(userList);
     }
@@ -42,7 +45,7 @@ public class AdminService {
         UserEntity userEntity = userRepository.findById(idx)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        return adminMapper.userEntityToGetUserDetailsReq(userEntity);
+        return adminMapper.userEntityToGetUserDetailsRes(userEntity);
     }
 
     @Transactional

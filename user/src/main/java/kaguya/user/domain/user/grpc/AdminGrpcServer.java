@@ -5,24 +5,43 @@ import io.grpc.stub.StreamObserver;
 import kaguya.grpc.admin.*;
 import kaguya.user.domain.user.grpc.interceptor.GrpcContextKeys;
 import kaguya.user.domain.user.model.dto.request.BlockReq;
+import kaguya.user.domain.user.model.dto.request.UserSearchReq;
 import kaguya.user.domain.user.model.dto.response.GetBlocksInfoRes;
 import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
 import kaguya.user.domain.user.model.dto.response.GetUsersInfoRes;
 import kaguya.user.domain.user.model.enums.ManagementType;
 import kaguya.user.domain.user.model.enums.Role;
+import kaguya.user.domain.user.model.enums.SearchType;
+import kaguya.user.domain.user.model.enums.Status;
 import kaguya.user.domain.user.service.AdminService;
 import kaguya.user.global.exception.BusinessException;
 import kaguya.user.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import net.devh.boot.grpc.server.service.GrpcService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @GrpcService
 @RequiredArgsConstructor
 public class AdminGrpcServer extends AdminServiceGrpc.AdminServiceImplBase {
 
+    // @PageableDefault, max-page-size 역할
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int MAX_PAGE_SIZE = 100;
+
+    private static final Map<String, String> SORTABLE_FIELDS = Map.of(
+            "join_date", "joinDate",
+            "last_login_date", "lastLoginDate"
+    );
+    private static final List<Sort.Order> DEFAULT_ORDERS = List.of(Sort.Order.desc("joinDate"));
 
     private final AdminService adminService;
 
@@ -39,26 +58,20 @@ public class AdminGrpcServer extends AdminServiceGrpc.AdminServiceImplBase {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        GetUsersInfoRes resData = adminService.getUserList();
+        UserSearchReq condition = toSearchReq(request.getCondition());
+        Pageable pageable = toPageable(request.getPageParam(), request.getOrderBy());
 
-        // todo. 페이징 처리
-        List<GetUserDetailsResponse> protoUserList = resData.userList().stream()
-                .map(userDto -> GetUserDetailsResponse.newBuilder()
-                        .setIdx(userDto.idx())
-                        .setEmail(userDto.email())
-                        .setNickname(userDto.nickname())
-                        .setPoint(userDto.point())
-                        .setRole(userDto.role())
-                        .setStatus(userDto.status())
-                        .setJoinDate(userDto.joinDate().toString())
-                        .setLastLoginDate(userDto.lastLoginDate() != null ? userDto.lastLoginDate().toString() : "")  // null -> 빈 문자열
-                        .setWithdrawalDate(userDto.withdrawalDate() != null ? userDto.withdrawalDate().toString() : "")
-                        .build()
-                )
-                .toList();
+        GetUsersInfoRes resData = adminService.getUserList(condition, pageable);
 
         GetUsersInfoResponse response = GetUsersInfoResponse.newBuilder()
-                .addAllUserList(protoUserList)
+                .addAllUserList(resData.userList().stream()
+                        .map(this::toUserDetailsResponse)
+                        .toList())
+                .setPage(resData.page())
+                .setSize(resData.size())
+                .setTotalElements(resData.totalElements())
+                .setTotalPages(resData.totalPages())
+                .setHasNext(resData.hasNext())
                 .build();
 
         responseObserver.onNext(response);
@@ -79,17 +92,7 @@ public class AdminGrpcServer extends AdminServiceGrpc.AdminServiceImplBase {
 
         GetUserDetailsRes resData = adminService.getUserDetails(request.getUserIdx());
 
-        GetUserDetailsResponse response = GetUserDetailsResponse.newBuilder()
-                .setIdx(resData.idx())
-                .setEmail(resData.email())
-                .setNickname(resData.nickname())
-                .setPoint(resData.point())
-                .setRole(resData.role())
-                .setStatus(resData.status())
-                .setJoinDate(resData.joinDate().toString())
-                .setLastLoginDate(resData.lastLoginDate() != null ? resData.lastLoginDate().toString() : "")
-                .setWithdrawalDate(resData.withdrawalDate() != null ? resData.withdrawalDate().toString() : "")
-                .build();
+        GetUserDetailsResponse response = toUserDetailsResponse(resData);
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -196,5 +199,102 @@ public class AdminGrpcServer extends AdminServiceGrpc.AdminServiceImplBase {
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+    }
+
+
+    /**
+     * 헬퍼 메서드
+     */
+    // UserSearchRequest -> UserSearchReq
+    private UserSearchReq toSearchReq(UserSearchRequest c) {
+
+        SearchType searchType = switch (c.getSearchType()) {
+            case EMAIL -> SearchType.EMAIL;
+            case NICKNAME -> SearchType.NICKNAME;
+            case SEARCH_TYPE_UNSPECIFIED, UNRECOGNIZED -> null;
+        };
+
+        Role userRole = switch (c.getRole()) {
+            case USER -> Role.USER;
+            case ADMIN -> Role.ADMIN;
+            case ROLE_UNSPECIFIED, UNRECOGNIZED -> null;
+        };
+
+        Status status = switch (c.getStatus()) {
+            case ACTIVE -> Status.ACTIVE;
+            case DORMANT -> Status.DORMANT;
+            case SUSPENDED -> Status.SUSPENDED;
+            case BANNED -> Status.BANNED;
+            case WITHDRAWAL -> Status.WITHDRAWAL;
+            case STATUS_UNSPECIFIED, UNRECOGNIZED -> null;
+        };
+
+        String keyword = c.getKeyword().isBlank() ? null : c.getKeyword().trim();
+
+        return new UserSearchReq(searchType, keyword, userRole, status);
+    }
+
+    // PageParam + OrderBy -> Pageable
+    private Pageable toPageable(PageParam p, String orderBy) {
+
+        int page = Math.max(p.getPage(), 0);
+        int size = p.getSize() <= 0 ? DEFAULT_PAGE_SIZE : Math.min(p.getSize(), MAX_PAGE_SIZE);
+        Sort sort = toSort(orderBy);
+
+        return PageRequest.of(page, size, sort);
+    }
+
+    private Sort toSort(String orderBy) {
+
+        List<Sort.Order> orders = orderBy.isBlank()
+                ? DEFAULT_ORDERS
+                : parseOrderBy(orderBy);
+
+        return Sort.by(orders);
+    }
+
+    private static List<Sort.Order> parseOrderBy(String orderBy) {
+
+        List<Sort.Order> orders = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+
+        for (String clause : orderBy.split(",")) {
+            String[] tokens = clause.trim().split(" ");
+            String field = tokens[0];
+            boolean desc = tokens.length > 1 && tokens[1].equals("desc");
+
+            String property = SORTABLE_FIELDS.get(field);
+
+            if (property == null) {
+                throw io.grpc.Status.INVALID_ARGUMENT
+                        .withDescription("정렬할 수 없는 필드: " + field)
+                        .asRuntimeException();
+            }
+            if (!seen.add(field)) {
+                throw io.grpc.Status.INVALID_ARGUMENT
+                        .withDescription("정렬 필드 중복: " + field)
+                        .asRuntimeException();
+            }
+
+            Sort.Direction direction = desc ? Sort.Direction.DESC : Sort.Direction.ASC;
+            orders.add(new Sort.Order(direction, property, Sort.NullHandling.NULLS_LAST));
+        }
+
+        return orders;
+    }
+
+    // GetUserDetailsRes → proto
+    private GetUserDetailsResponse toUserDetailsResponse(GetUserDetailsRes dto) {
+        return GetUserDetailsResponse.newBuilder()
+                .setIdx(dto.idx())
+                .setEmail(dto.email())
+                .setNickname(dto.nickname())
+                .setPoint(dto.point())
+                .setRole(dto.role())
+                .setStatus(dto.status())
+                .setJoinDate(dto.joinDate().toString())
+                .setLastLoginDate(dto.lastLoginDate() != null ? dto.lastLoginDate().toString() : "")  // null -> 빈 문자열
+                .setWithdrawalDate(dto.withdrawalDate() != null ? dto.withdrawalDate().toString() : "")
+                .build();
     }
 }

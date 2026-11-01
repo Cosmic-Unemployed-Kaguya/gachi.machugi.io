@@ -7,6 +7,7 @@ import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
 import kaguya.user.domain.user.model.dto.response.GetUsersInfoRes;
 import kaguya.user.domain.user.model.entity.UserEntity;
 import kaguya.user.domain.user.model.entity.UserManagementEntity;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -18,21 +19,24 @@ public class AdminMapper {
     // 메서드명 긴거 실화냐
 
     // List<UserEntity> -> GetUsersInfoReq
-    public GetUsersInfoRes userListToGetUsersInfoReq(List<UserEntity> list) {
+    public GetUsersInfoRes userListToGetUsersInfoReq(Page<UserEntity> page) {
 
-        // todo. findAll 말고 페이징/검색으로 변경
-        // 임시 방편 (findAll)
-        List<GetUserDetailsRes> userList = new ArrayList<>();
-        for (UserEntity userEntity : list) {
-            GetUserDetailsRes userInfo = userEntityToGetUserDetailsReq(userEntity);
-            userList.add(userInfo);
-        }
+        List<GetUserDetailsRes> userList = page.getContent().stream()
+                .map(this::userEntityToGetUserDetailsRes)
+                .toList();
 
-        return new GetUsersInfoRes(userList);
+        return new GetUsersInfoRes(
+                userList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext()
+        );
     }
 
     // UserEntity -> GetUserDetailsReq
-    public GetUserDetailsRes userEntityToGetUserDetailsReq(UserEntity entity) {
+    public GetUserDetailsRes userEntityToGetUserDetailsRes(UserEntity entity) {
         return new GetUserDetailsRes(
                 entity.getIdx(),
                 entity.getEmail(),
@@ -64,7 +68,7 @@ public class AdminMapper {
         // 임시 방편 (findAll)
         List<GetBlockDetailsRes> blockList = new ArrayList<>();
         for (UserManagementEntity userManagementEntity : list) {
-            GetBlockDetailsRes blockInfo = userEntityToGetUserDetailsReq(userManagementEntity);
+            GetBlockDetailsRes blockInfo = userEntityToGetUserDetailsRes(userManagementEntity);
             blockList.add(blockInfo);
         }
 
@@ -72,7 +76,7 @@ public class AdminMapper {
     }
 
     // UserManagementEntity -> GetBlockDetailsRes
-    private GetBlockDetailsRes userEntityToGetUserDetailsReq(UserManagementEntity entity) {
+    private GetBlockDetailsRes userEntityToGetUserDetailsRes(UserManagementEntity entity) {
         return new GetBlockDetailsRes(
                 entity.getIdx(),
                 entity.getUser().getEmail(),
