@@ -37,6 +37,12 @@ jobs:
         run: |
           mkdir -p ./${{ inputs.service-name }}/src/test/resources
           echo '${{ secrets.USER_TEST_YML }}' > ./${{ inputs.service-name }}/src/test/resources/application.yml
+          
+      - name: quiz test yml 세팅
+        if: ${{ inputs.service-name == 'quiz/quiz' }}
+        run: |
+          mkdir -p ./${{ inputs.service-name }}/src/test/resources
+          echo '${{ secrets.QUIZ_TEST_YML }}' > ./${{ inputs.service-name }}/src/test/resources/application.yml
 
       # - name: account test yml pem 세팅
       #   if: ${{ inputs.service-name == 'account-service' }}

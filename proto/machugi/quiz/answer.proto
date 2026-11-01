@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package machugi.quiz;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "validate/validate.proto";
+
+option java_multiple_files = true;
+option java_package = "kaguya.grpc.quiz";
+
+service AnswerService {
+
+  rpc CreateAnswer (CreateAnswerRequest) returns (AnswerResponse) {
+    option (google.api.http) = {
+      post: "/questions/{question_idx}/answers"
+      body: "*"
+    };
+  }
+
+  rpc GetAnswerList (GetAnswerListRequest) returns (GetAnswerListResponse) {
+    option (google.api.http) = {
+      get: "/questions/{question_idx}/answers"
+    };
+  }
+
+  rpc UpdateAnswer (UpdateAnswerRequest) returns (AnswerResponse) {
+    option (google.api.http) = {
+      patch: "/answers/{answer_idx}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteAnswer (DeleteAnswerRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/answers/{answer_idx}"
+    };
+  }
+}
+
+// --- Request Messages ---
+
+message CreateAnswerRequest {
+  int64 question_idx = 1 [(validate.rules).int64 = { gt: 0 }];
+
+  string answer = 2 [(validate.rules).string = {
+    min_len: 1,
+    max_len: 255,
+    pattern: "^.*\\S.*$"
+  }];
+}
+
+message GetAnswerListRequest {
+  int64 question_idx = 1 [(validate.rules).int64 = { gt: 0 }];
+}
+
+message UpdateAnswerRequest {
+  int64 answer_idx = 1 [(validate.rules).int64 = { gt: 0 }];
+
+  optional string answer = 2 [(validate.rules).string = {
+    min_len: 1,
+    max_len: 255,
+    pattern: "^.*\\S.*$"
+  }];
+}
+
+message DeleteAnswerRequest {
+  int64 answer_idx = 1 [(validate.rules).int64 = { gt: 0 }];
+}
+
+// --- Response Messages ---
+
+message AnswerResponse {
+  int64 idx = 1;
+  int64 question_idx = 2;
+  string answer = 3;
+  string created_date = 4;
+  string updated_date = 5;
+}
+
+message GetAnswerListResponse {
+  repeated AnswerResponse answer_list = 1;
+}
