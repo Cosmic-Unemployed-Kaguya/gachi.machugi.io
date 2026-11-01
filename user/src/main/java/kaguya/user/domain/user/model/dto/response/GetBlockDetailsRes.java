@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public record GetBlockDetailsRes (
         Long idx,
+        Long userIdx,
         String userEmail,
         String userNickname,
         String managementType,

@@ -5,6 +5,7 @@ import io.grpc.stub.StreamObserver;
 import kaguya.grpc.admin.*;
 import kaguya.user.domain.user.grpc.interceptor.GrpcContextKeys;
 import kaguya.user.domain.user.model.dto.request.BlockReq;
+import kaguya.user.domain.user.model.dto.request.BlockSearchReq;
 import kaguya.user.domain.user.model.dto.request.UserSearchReq;
 import kaguya.user.domain.user.model.dto.response.GetBlocksInfoRes;
 import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
@@ -37,11 +38,19 @@ public class AdminGrpcServer extends AdminServiceGrpc.AdminServiceImplBase {
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int MAX_PAGE_SIZE = 100;
 
-    private static final Map<String, String> SORTABLE_FIELDS = Map.of(
+    // 정렬 허용 필드의 화이트리스트
+    private static final Map<String, String> USER_SORTABLE_FIELDS = Map.of(
             "join_date", "joinDate",
             "last_login_date", "lastLoginDate"
     );
-    private static final List<Sort.Order> DEFAULT_ORDERS = List.of(Sort.Order.desc("joinDate"));
+    private static final Map<String, String> BLOCK_SORTABLE_FIELDS = Map.of(
+            "start_date", "startDate",
+            "end_date", "endDate"
+    );
+
+    // order_by를 보내지 않았을 때 쓰는 기본 정렬
+    private static final List<Sort.Order> USER_DEFAULT_ORDERS = List.of(Sort.Order.desc("joinDate"));
+    private static final List<Sort.Order> BLOCK_DEFAULT_ORDERS = List.of(Sort.Order.desc("startDate"));
 
     private final AdminService adminService;
 
@@ -59,7 +68,7 @@ public class AdminGrpcServer extends AdminServiceGrpc.AdminServiceImplBase {
         }
 
         UserSearchReq condition = toSearchReq(request.getCondition());
-        Pageable pageable = toPageable(request.getPageParam(), request.getOrderBy());
+        Pageable pageable = toPageable(request.getPageParam(), request.getOrderBy(), USER_SORTABLE_FIELDS, USER_DEFAULT_ORDERS);
 
         GetUsersInfoRes resData = adminService.getUserList(condition, pageable);
 
@@ -176,12 +185,15 @@ public class AdminGrpcServer extends AdminServiceGrpc.AdminServiceImplBase {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        GetBlocksInfoRes resData = adminService.getBlockList();
+        BlockSearchReq condition = toBlockSearchReq(request.getCondition());
+        Pageable pageable = toPageable(request.getPageParam(), request.getOrderBy(), BLOCK_SORTABLE_FIELDS, BLOCK_DEFAULT_ORDERS);
 
-        // todo. 페이징 처리
+        GetBlocksInfoRes resData = adminService.getBlockList(condition, pageable);
+
         List<GetBlockDetailsResponse> protoBlockList = resData.blockList().stream()
                 .map(blockDto -> GetBlockDetailsResponse.newBuilder()
                         .setIdx(blockDto.idx())
+                        .setUserIdx(blockDto.userIdx())
                         .setUserEmail(blockDto.userEmail())
                         .setUserNickname(blockDto.userNickname())
                         .setManagementType(blockDto.managementType())
@@ -195,6 +207,11 @@ public class AdminGrpcServer extends AdminServiceGrpc.AdminServiceImplBase {
 
         GetBlocksInfoResponse response = GetBlocksInfoResponse.newBuilder()
                 .addAllBlockList(protoBlockList)
+                .setPage(resData.page())
+                .setSize(resData.size())
+                .setTotalElements(resData.totalElements())
+                .setTotalPages(resData.totalPages())
+                .setHasNext(resData.hasNext())
                 .build();
 
         responseObserver.onNext(response);
@@ -234,46 +251,65 @@ public class AdminGrpcServer extends AdminServiceGrpc.AdminServiceImplBase {
         return new UserSearchReq(searchType, keyword, userRole, status);
     }
 
+    // BlockSearchRequest -> BlockSearchReq
+    private BlockSearchReq toBlockSearchReq(BlockSearchRequest c) {
+
+        SearchType searchType = switch (c.getSearchType()) {
+            case EMAIL -> SearchType.EMAIL;
+            case NICKNAME -> SearchType.NICKNAME;
+            case SEARCH_TYPE_UNSPECIFIED, UNRECOGNIZED -> null;
+        };
+
+        ManagementType managementType = switch (c.getManagementType()) {
+            case WARNING -> ManagementType.WARNING;
+            case TEMP_BAN -> ManagementType.TEMP_BAN;
+            case PERM_BAN -> ManagementType.PERM_BAN;
+            case MANAGEMENT_TYPE_UNSPECIFIED, UNRECOGNIZED -> null;
+        };
+
+        String keyword = c.getKeyword().isBlank() ? null : c.getKeyword().trim();
+
+        return new BlockSearchReq(searchType, keyword, managementType);
+    }
+
     // PageParam + OrderBy -> Pageable
-    private Pageable toPageable(PageParam p, String orderBy) {
+    private Pageable toPageable(
+            PageParam p, String orderBy,
+            Map<String, String> sortableFields, List<Sort.Order> defaultOrders
+    ) {
 
         int page = Math.max(p.getPage(), 0);
         int size = p.getSize() <= 0 ? DEFAULT_PAGE_SIZE : Math.min(p.getSize(), MAX_PAGE_SIZE);
-        Sort sort = toSort(orderBy);
+        Sort sort = toSort(orderBy, sortableFields, defaultOrders);
 
         return PageRequest.of(page, size, sort);
     }
 
-    private Sort toSort(String orderBy) {
+    private Sort toSort(String orderBy, Map<String, String> sortableFields, List<Sort.Order> defaultOrders) {
 
-        List<Sort.Order> orders = orderBy.isBlank()
-                ? DEFAULT_ORDERS
-                : parseOrderBy(orderBy);
+        List<Sort.Order> orders = orderBy.isBlank() ? defaultOrders : parseOrderBy(orderBy, sortableFields);
 
         return Sort.by(orders);
     }
 
-    private static List<Sort.Order> parseOrderBy(String orderBy) {
+    // 정렬 항목 검사 (화이트리스트 기준)
+    private static List<Sort.Order> parseOrderBy(String orderBy, Map<String, String> sortableFields) {
 
         List<Sort.Order> orders = new ArrayList<>();
         Set<String> seen = new HashSet<>();
 
         for (String clause : orderBy.split(",")) {
-            String[] tokens = clause.trim().split(" ");
+            String[] tokens = clause.trim().split("\\s+");
             String field = tokens[0];
             boolean desc = tokens.length > 1 && tokens[1].equals("desc");
 
-            String property = SORTABLE_FIELDS.get(field);
+            String property = sortableFields.get(field);
 
             if (property == null) {
-                throw io.grpc.Status.INVALID_ARGUMENT
-                        .withDescription("정렬할 수 없는 필드: " + field)
-                        .asRuntimeException();
+                throw new BusinessException(ErrorCode.INVALID_SORT_FIELD);
             }
             if (!seen.add(field)) {
-                throw io.grpc.Status.INVALID_ARGUMENT
-                        .withDescription("정렬 필드 중복: " + field)
-                        .asRuntimeException();
+                throw new BusinessException(ErrorCode.DUPLICATE_SORT_FIELD);
             }
 
             Sort.Direction direction = desc ? Sort.Direction.DESC : Sort.Direction.ASC;

@@ -2,10 +2,7 @@ package kaguya.user.domain.user.controller;
 
 import jakarta.validation.Valid;
 import kaguya.user.domain.common.model.dto.BaseRes;
-import kaguya.user.domain.user.model.dto.request.BlockReq;
-import kaguya.user.domain.user.model.dto.request.UpdateNicknameReq;
-import kaguya.user.domain.user.model.dto.request.UpdateRoleReq;
-import kaguya.user.domain.user.model.dto.request.UserSearchReq;
+import kaguya.user.domain.user.model.dto.request.*;
 import kaguya.user.domain.user.model.dto.response.GetBlocksInfoRes;
 import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
 import kaguya.user.domain.user.model.dto.response.GetUsersInfoRes;
@@ -21,7 +18,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -34,9 +30,14 @@ import java.util.Set;
 public class AdminController {
 
     // 정렬할 필드의 화이트리스트
-    private static final Set<String> SORTABLE_PROPERTIES = Set.of(
+    private static final Set<String> USER_SORTABLE_PROPERTIES = Set.of(
             "joinDate",
             "lastLoginDate"
+            // 필요하면 추가
+    );
+    private static final Set<String> BLOCK_SORTABLE_PROPERTIES = Set.of(
+            "startDate",
+            "endDate"
             // 필요하면 추가
     );
 
@@ -54,7 +55,8 @@ public class AdminController {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        GetUsersInfoRes data = adminService.getUserList(condition, validateSort(pageable));
+        Pageable validatedPageable = validateSort(pageable, USER_SORTABLE_PROPERTIES);
+        GetUsersInfoRes data = adminService.getUserList(condition, validatedPageable);
 
         return ResponseEntity.ok(
                 new BaseRes<>("200", "유저 리스트 조회", data)
@@ -139,22 +141,25 @@ public class AdminController {
     @GetMapping("/users/block/list")
     public ResponseEntity<BaseRes<GetBlocksInfoRes>> getBlockList(
             @RequestHeader(value = "x-user-idx", required = false) Long idx,
-            @RequestHeader(value = "x-user-role", required = false) String role
+            @RequestHeader(value = "x-user-role", required = false) String role,
+            @ModelAttribute BlockSearchReq condition,
+            @PageableDefault(size = 20, sort = "startDate", direction = Sort.Direction.DESC) Pageable pageable
     ) {
 
         if (!Role.ADMIN.name().equals(role) || idx == null) {
             throw new BusinessException(ErrorCode.DENIED_PERMISSION);
         }
 
-        GetBlocksInfoRes data = adminService.getBlockList();
+        Pageable validatedPageable = validateSort(pageable, BLOCK_SORTABLE_PROPERTIES);
+        GetBlocksInfoRes data = adminService.getBlockList(condition, validatedPageable);
 
         return ResponseEntity.ok(
-                new BaseRes<>("200", "유저 제제 리스트 조회", data)
+                new BaseRes<>("200", "유저 제재 리스트 조회", data)
         );
     }
 
-    // 정렬 항목 검사 (화이트리스트 기준)
-    private static Pageable validateSort(Pageable pageable) {
+    // 정렬 항목 검사 (허용 필드 + 중복) 후 NULLS_LAST를 적용한 새 Pageable 반환
+    private static Pageable validateSort(Pageable pageable, Set<String> sortableProperties) {
 
         List<Sort.Order> orders = new ArrayList<>();
         Set<String> seen = new HashSet<>();
@@ -162,19 +167,13 @@ public class AdminController {
         for (Sort.Order order : pageable.getSort()) {
             String property = order.getProperty();
 
-            // 화이트리스트(SORTABLE_PROPERTIES)에 포함되어있는지 검사
-            if (!SORTABLE_PROPERTIES.contains(property)) {
-                // todo. 커스텀 exception으로 변경
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "정렬할 수 없는 필드: " + property
-                );
+            // 화이트리스트에 포함되어있는지 검사
+            if (!sortableProperties.contains(property)) {
+                throw new BusinessException(ErrorCode.INVALID_SORT_FIELD);
             }
             // 중복 확인
             if (!seen.add(property)) {
-                // todo. 커스텀 exception으로 변경
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "정렬 필드 중복: " + property
-                );
+                throw new BusinessException(ErrorCode.DUPLICATE_SORT_FIELD);
             }
 
             // 검사 통과 -> NULLS_LAST 설정을 붙여 추가

@@ -18,7 +18,7 @@ public class AdminMapper {
 
     // 메서드명 긴거 실화냐
 
-    // List<UserEntity> -> GetUsersInfoReq
+    // Page<UserEntity> -> GetUsersInfoReq
     public GetUsersInfoRes userListToGetUsersInfoReq(Page<UserEntity> page) {
 
         List<GetUserDetailsRes> userList = page.getContent().stream()
@@ -61,24 +61,29 @@ public class AdminMapper {
         );
     }
 
-    // List<UserManagementEntity> -> GetBlocksInfoRes
-    public GetBlocksInfoRes userManagementListToGetBlocksInfoRes(List<UserManagementEntity> list) {
+    // Page<UserManagementEntity> -> GetBlocksInfoRes
+    public GetBlocksInfoRes userManagementPageToGetBlocksInfoRes(Page<UserManagementEntity> page) {
 
-        // todo. findAll 말고 페이징/검색으로 변경
-        // 임시 방편 (findAll)
         List<GetBlockDetailsRes> blockList = new ArrayList<>();
-        for (UserManagementEntity userManagementEntity : list) {
-            GetBlockDetailsRes blockInfo = userEntityToGetUserDetailsRes(userManagementEntity);
-            blockList.add(blockInfo);
+        for (UserManagementEntity userManagementEntity : page.getContent()) {
+            blockList.add(userManagementToGetBlockDetailsRes(userManagementEntity));
         }
 
-        return new GetBlocksInfoRes(blockList);
+        return new GetBlocksInfoRes(
+                blockList,
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext()
+        );
     }
 
     // UserManagementEntity -> GetBlockDetailsRes
-    private GetBlockDetailsRes userEntityToGetUserDetailsRes(UserManagementEntity entity) {
+    private GetBlockDetailsRes userManagementToGetBlockDetailsRes(UserManagementEntity entity) {
         return new GetBlockDetailsRes(
                 entity.getIdx(),
+                entity.getUser().getIdx(),
                 entity.getUser().getEmail(),
                 entity.getUser().getNickname(),
                 entity.getManagementType().name(),

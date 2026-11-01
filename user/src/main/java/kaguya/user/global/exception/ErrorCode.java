@@ -8,6 +8,8 @@ public enum ErrorCode {
     INVALID_CURRENT_PASSWORD(HttpStatus.BAD_REQUEST, "400_INVALID_CURRENT_PASSWORD", "현재 비밀번호와 일치하지 않습니다."),
     SAME_AS_OLD_PASSWORD(HttpStatus.BAD_REQUEST, "400_SAME_AS_OLD_PASSWORD", "이전 비밀번호와 같습니다."),
     SAME_AS_OLD_NICKNAME(HttpStatus.BAD_REQUEST, "400_SAME_AS_OLD_NICKNAME", "이전 닉네임과 같습니다."),
+    INVALID_SORT_FIELD(HttpStatus.BAD_REQUEST, "400_INVALID_SORT_FIELD", "정렬할 수 없는 필드입니다."),
+    DUPLICATE_SORT_FIELD(HttpStatus.BAD_REQUEST, "400_DUPLICATE_SORT_FIELD", "정렬 필드가 중복되었습니다."),
 
     // 401 Unauthorized
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "401_INVALID_TOKEN", "토큰이 유효하지 않습니다."),  // (Front) 아무런 동작 안함 or 로그인 페이지로

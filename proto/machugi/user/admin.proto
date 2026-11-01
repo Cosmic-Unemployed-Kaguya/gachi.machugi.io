@@ -84,33 +84,30 @@ enum GrpcSearchType {
 
 
 // --- Request Messages ---
+
+// 페이징 (공통)
+message PageParam {
+  int32 page = 1 [(validate.rules).int32.gte = 0];
+  int32 size = 2 [(validate.rules).int32 = { gte: 0, lte: 100 }];  // 0 = 기본값 사용
+}
+
+// 유저 전체 조회 (검색/필터/페이징)
 message GetUsersInfoRequest {
   UserSearchRequest condition = 1;
   PageParam page_param = 2;
-  reserved 3;
-  reserved "sort";
-  string order_by = 4 [(validate.rules).string = {
+  string order_by = 3 [(validate.rules).string = {
     max_len: 200,
-    // 문법만 검사: "필드[ asc|desc]"를 쉼표로 연결. 빈 문자열 허용
-    pattern: "^$|^[a-z_]+( (asc|desc))?(, ?[a-z_]+( (asc|desc))?)*$"
+    // 문법만 검사: '필드[ asc|desc]'를 쉼표로 연결(default는 asc). 공백은 자유롭게 허용, 빈 문자열 허용
+    // ex. join_date desc, last_login_date
+    pattern: "^\\s*$|^\\s*[a-z_]+(\\s+(asc|desc))?\\s*(,\\s*[a-z_]+(\\s+(asc|desc))?\\s*)*$"
   }];
 }
-
-// 검색, 필터
 message UserSearchRequest {
   // 0(UNSPECIFIED) 허용 = 필터 미적용
   GrpcSearchType search_type = 1 [(validate.rules).enum.defined_only = true];
   string keyword = 2;
   GrpcRole role = 3 [(validate.rules).enum.defined_only = true];
   GrpcStatus status = 4 [(validate.rules).enum.defined_only = true];
-}
-
-// 페이징 (공통)
-message PageParam {
-  reserved 3;
-  reserved "sort";
-  int32 page = 1 [(validate.rules).int32.gte = 0];
-  int32 size = 2 [(validate.rules).int32 = { gte: 0, lte: 100 }];  // 0 = 기본값 사용
 }
 
 message GetUserDetailsRequest {
@@ -147,8 +144,20 @@ message BlockRequest {
   string end_date = 4;
 }
 
+// 블락 유저 전체 조회 (검색/필터/페이징)
 message GetBlockListRequest {
-  // todo. 페이징
+  BlockSearchRequest condition = 1;
+  PageParam page_param = 2;
+  string order_by = 3 [(validate.rules).string = {
+    max_len: 200,
+    pattern: "^\\s*$|^\\s*[a-z_]+(\\s+(asc|desc))?\\s*(,\\s*[a-z_]+(\\s+(asc|desc))?\\s*)*$"
+  }];
+}
+message BlockSearchRequest {
+  // 0(UNSPECIFIED) 허용 = 필터 미적용
+  GrpcSearchType search_type = 1 [(validate.rules).enum.defined_only = true];
+  string keyword = 2;
+  GrpcManagementType management_type = 3 [(validate.rules).enum.defined_only = true];
 }
 
 
@@ -176,15 +185,21 @@ message GetUserDetailsResponse {
 
 message GetBlocksInfoResponse {
   repeated GetBlockDetailsResponse block_list = 1;
+  int32 page = 2;
+  int32 size = 3;
+  int64 total_elements = 4;
+  int32 total_pages = 5;
+  bool has_next = 6;
 }
 
 message GetBlockDetailsResponse {
   int64 idx = 1;
-  string userEmail = 2;
-  string userNickname = 3;
-  string managementType = 4;
-  string reason = 5;
-  string startDate = 6;
-  string endDate = 7;
-  string adminNickname = 8;
+  int64 user_idx = 2;
+  string user_email = 3;
+  string user_nickname = 4;
+  string management_type = 5;
+  string reason = 6;
+  string start_date = 7;
+  string end_date = 8;
+  string admin_nickname = 9;
 }

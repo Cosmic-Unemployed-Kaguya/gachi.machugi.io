@@ -2,6 +2,7 @@ package kaguya.user.domain.user.service;
 
 import kaguya.user.domain.user.mapper.AdminMapper;
 import kaguya.user.domain.user.model.dto.request.BlockReq;
+import kaguya.user.domain.user.model.dto.request.BlockSearchReq;
 import kaguya.user.domain.user.model.dto.request.UserSearchReq;
 import kaguya.user.domain.user.model.dto.response.GetBlocksInfoRes;
 import kaguya.user.domain.user.model.dto.response.GetUserDetailsRes;
@@ -99,10 +100,10 @@ public class AdminService {
     }
 
     @Transactional(readOnly = true)
-    public GetBlocksInfoRes getBlockList() {
+    public GetBlocksInfoRes getBlockList(BlockSearchReq condition , Pageable pageable) {
 
-        List<UserManagementEntity> blockList = userManagementRepository.findAll();
+        Page<UserManagementEntity> page = userManagementRepository.findByCondition(condition, pageable);
 
-        return adminMapper.userManagementListToGetBlocksInfoRes(blockList);
+        return userMapper.userManagementPageToGetBlocksInfoRes(page);
     }
 }
