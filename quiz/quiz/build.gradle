@@ -28,6 +28,8 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
+	testRuntimeOnly 'com.h2database:h2'
+
     // gRPC
     implementation 'net.devh:grpc-spring-boot-starter:3.1.0.RELEASE'
     implementation 'io.grpc:grpc-stub:1.63.0'
