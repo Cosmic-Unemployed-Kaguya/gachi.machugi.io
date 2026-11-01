@@ -1,0 +1,121 @@
+syntax = "proto3";
+
+package machugi.quiz;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "validate/validate.proto";
+
+option java_multiple_files = true;
+option java_package = "kaguya.grpc.quiz";
+
+service QuizService {
+
+  rpc CreateQuiz (CreateQuizRequest) returns (QuizResponse) {
+    option (google.api.http) = {
+      post: "/quizzes"
+      body: "*"
+    };
+  }
+
+  rpc GetQuiz (GetQuizRequest) returns (QuizResponse) {
+    option (google.api.http) = {
+      get: "/quizzes/{quiz_idx}"
+    };
+  }
+
+  rpc GetQuizList (google.protobuf.Empty) returns (GetQuizListResponse) {
+    option (google.api.http) = {
+      get: "/quizzes"
+    };
+  }
+
+  rpc UpdateQuiz (UpdateQuizRequest) returns (QuizResponse) {
+    option (google.api.http) = {
+      patch: "/quizzes/{quiz_idx}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteQuiz (DeleteQuizRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/quizzes/{quiz_idx}"
+    };
+  }
+}
+
+// --- Request Messages ---
+
+message CreateQuizRequest {
+  string title = 1 [(validate.rules).string = {
+    min_len: 1,
+    max_len: 100,
+    pattern: "^.*\\S.*$"
+  }];
+
+  string description = 2 [(validate.rules).string = {
+    max_len: 500
+  }];
+
+  optional string thumbnail = 3 [(validate.rules).string = {
+    max_len: 255
+  }];
+
+  optional string category = 4 [(validate.rules).string = {
+    max_len: 50
+  }];
+}
+
+message GetQuizRequest {
+  int64 quiz_idx = 1 [(validate.rules).int64 = {
+    gt: 0
+  }];
+}
+
+message UpdateQuizRequest {
+  int64 quiz_idx = 1 [(validate.rules).int64 = {
+    gt: 0
+  }];
+
+  optional string title = 2 [(validate.rules).string = {
+    min_len: 1,
+    max_len: 100,
+    pattern: "^.*\\S.*$"
+  }];
+
+  optional string description = 3 [(validate.rules).string = {
+    max_len: 500
+  }];
+
+  optional string thumbnail = 4 [(validate.rules).string = {
+    max_len: 255
+  }];
+
+  optional string category = 5 [(validate.rules).string = {
+    max_len: 50
+  }];
+}
+
+message DeleteQuizRequest {
+  int64 quiz_idx = 1 [(validate.rules).int64 = {
+    gt: 0
+  }];
+}
+
+// --- Response Messages ---
+
+message QuizResponse {
+  int64 idx = 1;
+  string title = 2;
+  string description = 3;
+  int32 question_count = 4;
+  string thumbnail = 5;
+  int64 creator_id = 6;
+  string created_date = 7;
+  string updated_date = 8;
+  string category = 9;
+}
+
+message GetQuizListResponse {
+  repeated QuizResponse quiz_list = 1;
+}

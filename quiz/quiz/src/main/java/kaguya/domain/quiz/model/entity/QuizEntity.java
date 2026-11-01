@@ -70,10 +70,22 @@ public class QuizEntity {
             String thumbnail,
             String category
     ) {
+    if (title != null) {
         this.title = title;
+    }
+
+    if (description != null) {
         this.description = description;
+    }
+
+    if (thumbnail != null) {
         this.thumbnail = thumbnail;
+    }
+
+    if (category != null) {
         this.category = category;
-        this.updatedDate = OffsetDateTime.now();
+    }
+
+    this.updatedDate = OffsetDateTime.now();
     }
 }
